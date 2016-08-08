@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = os_failures
+omit = os_failures/openstack/*
+
+[report]
+ignore_errors = True
