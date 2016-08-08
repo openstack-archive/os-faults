@@ -14,6 +14,13 @@
 
 import pbr.version
 
+from os_failures.drivers import fuel
 
 __version__ = pbr.version.VersionInfo(
     'os_failures').version_string()
+
+
+def build_client(cloud_config):
+    cloud_management = cloud_config.get('cloud_management') or {}
+    if 'fuel' in cloud_management:
+        return fuel.FuelClient(cloud_management['fuel'])
