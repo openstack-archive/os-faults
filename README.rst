@@ -1,19 +1,22 @@
-===============================
+===========
 os_failures
-===============================
+===========
 
 OpenStack failures library
 
-Please fill here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+This is a library. It does different destructive actions against OpenStack
+cloud. It is an abstraction layer, actions are implemented as drivers
+(e.g. Fuel driver, KVM driver, IPMI driver).
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/os_failures
-* Source: http://git.openstack.org/cgit/openstack/os_failures
+* Documentation: http://os_failures.readthedocs.io
+* Source: https://github.com/shakhat/os-failures
 * Bugs: http://bugs.launchpad.net/os_failures
 
-Features
---------
+Sample usage
+------------
 
-* TODO
+.. code-block:: python
+
+  failures_client = os_failures.build_client(cloud_params)
+  failures_client.kill_rabbitmq()
