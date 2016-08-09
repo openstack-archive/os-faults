@@ -1,8 +1,10 @@
 import abc
 
+import six
 
-class ServiceCollection(object):
-    __metaclass__ = abc.ABCMeta
+
+@six.add_metaclass(abc.ABCMeta)
+class Service(object):
 
     @abc.abstractmethod
     def get_nodes(self):

@@ -9,5 +9,5 @@ class Client(object):
         pass
 
     @abc.abstractmethod
-    def get_services(self, name):
+    def get_service(self, name):
         pass

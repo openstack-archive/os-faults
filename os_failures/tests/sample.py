@@ -23,16 +23,23 @@ def main():
         'region_name': 'RegionOne',
         'cloud_management': {
             'fuel': {
-                'ip': '172.18.171.149',
+                'master_node_host': '172.18.171.149',
                 'username': 'root',
                 'password': 'r00tme',
             }
         }
     }
     client = os_failures.build_client(cloud_config)
-    services = client.get_services(name='keystone-api')
-    print(services)
-    services.get_nodes().reboot()
+    service = client.get_service(name='keystone-api')
+    print(service)
+    service.stop()
+
+    nodes = service.get_nodes()
+    print(nodes)
+    nodes.reboot()
+
+    one = nodes.pick()
+    one.poweroff()
 
 
 if __name__ == '__main__':

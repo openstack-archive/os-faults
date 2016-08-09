@@ -15,12 +15,23 @@
 import pbr.version
 
 from os_failures.drivers import fuel
+from os_failures.drivers import kvm
 
 __version__ = pbr.version.VersionInfo(
     'os_failures').version_string()
 
 
 def build_client(cloud_config):
-    cloud_management = cloud_config.get('cloud_management') or {}
-    if 'fuel' in cloud_management:
-        return fuel.FuelClient(cloud_management['fuel'])
+    cloud_management = None
+    cloud_management_params = cloud_config.get('cloud_management') or {}
+
+    if 'fuel' in cloud_management_params:
+        cloud_management = fuel.FuelClient(cloud_management_params['fuel'])
+
+    power_management = None
+    power_management_params = cloud_config.get('power_management') or {}
+
+    if 'kvm' in power_management_params:
+        power_management = kvm.KVM(power_management_params['kvm'])
+
+    return cloud_management
