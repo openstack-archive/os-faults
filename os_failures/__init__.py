@@ -25,14 +25,14 @@ def build_client(cloud_config):
     cloud_management = None
     cloud_management_params = cloud_config.get('cloud_management') or {}
 
-    if 'fuel' in cloud_management_params:
-        cloud_management = fuel.FuelManagement(cloud_management_params['fuel'])
+    if cloud_management_params.get('driver') == 'fuel':
+        cloud_management = fuel.FuelManagement(cloud_management_params)
 
     power_management = None
     power_management_params = cloud_config.get('power_management') or {}
 
-    if 'kvm' in power_management_params:
-        power_management = kvm.KVM(power_management_params['kvm'])
+    if power_management_params.get('driver') == 'kvm':
+        power_management = kvm.KVM(power_management_params)
 
     cloud_management.set_power_management(power_management)
 

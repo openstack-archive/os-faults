@@ -22,17 +22,15 @@ def main():
         },
         'region_name': 'RegionOne',
         'cloud_management': {
-            'fuel': {
-                'master_node_host': '172.18.171.149',
-                'username': 'root',
-                'password': 'r00tme',
-            }
+            'driver': 'fuel',
+            'address': '172.18.171.149',
+            'username': 'root',
+            'password': 'r00tme',
         },
         'power_management': {
-            'kvm': {
-                'host': '172.18.171.5',
-                'username': 'root',
-            }
+            'driver': 'kvm',
+            'address': '172.18.171.5',
+            'username': 'root',
         }
     }
     client = os_failures.build_client(cloud_config)

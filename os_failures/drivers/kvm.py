@@ -4,7 +4,7 @@ from os_failures.api import power_management
 
 class KVM(power_management.PowerManagement):
     def __init__(self, params):
-        self.host = params['host']
+        self.host = params['address']
         self.username = params.get('username')
         self.password = params.get('password')
 

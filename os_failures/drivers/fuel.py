@@ -70,7 +70,7 @@ class FuelManagement(cloud_manager.CloudManagement):
     def __init__(self, params):
         super(FuelManagement, self).__init__()
 
-        self.master_node_address = params['master_node_host']
+        self.master_node_address = params['address']
         self.username = params['username']
         self.password = params['password']
 
