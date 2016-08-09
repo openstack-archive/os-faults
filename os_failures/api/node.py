@@ -1,17 +1,17 @@
 import abc
 
 
-class Node(object):
+class NodeCollection(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def kill_process(self, group):
+    def kill_process(self):
         pass
 
     @abc.abstractmethod
-    def oom(self, group):
+    def oom(self):
         pass
 
     @abc.abstractmethod
-    def reboot(self, group):
+    def reboot(self):
         pass

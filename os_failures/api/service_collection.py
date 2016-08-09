@@ -1,7 +1,7 @@
 import abc
 
 
-class Client(object):
+class ServiceCollection(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
@@ -9,5 +9,5 @@ class Client(object):
         pass
 
     @abc.abstractmethod
-    def get_services(self, name):
+    def stop(self):
         pass

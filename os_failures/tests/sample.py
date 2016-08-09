@@ -30,8 +30,9 @@ def main():
         }
     }
     client = os_failures.build_client(cloud_config)
-    cloud = client.get_cloud()
-    keystone_nodes = cloud.get_nodes(role='keystone-api')
+    services = client.get_services(name='keystone-api')
+    print(services)
+    services.get_nodes().reboot()
 
 
 if __name__ == '__main__':
