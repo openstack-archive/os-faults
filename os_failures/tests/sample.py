@@ -27,6 +27,12 @@ def main():
                 'username': 'root',
                 'password': 'r00tme',
             }
+        },
+        'power_management': {
+            'kvm': {
+                'host': '172.18.171.5',
+                'username': 'root',
+            }
         }
     }
     client = os_failures.build_client(cloud_config)

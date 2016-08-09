@@ -2,7 +2,7 @@ import json
 import random
 
 from os_failures.ansible import runner
-from os_failures.api import client as client_pkg
+from os_failures.api import cloud_manager
 from os_failures.api import node_collection
 from os_failures.api import service
 
@@ -12,52 +12,64 @@ ROLE_MAPPING = {
 }
 
 
-class FuelNodes(node_collection.NodeCollection):
-    def __init__(self, client=None, hosts=None):
-        self.client = client
+class FuelNodeCollection(node_collection.NodeCollection):
+    def __init__(self, cloud_management=None, power_management=None,
+                 hosts=None):
+        self.cloud_management = cloud_management
+        self.power_management = power_management
         self.hosts = hosts
 
     def reboot(self):
         task = {
             'command': 'ps aux'
         }
-        self.client.execute_on_cloud(self.hosts, task)
+        ips = [n['ip'] for n in self.hosts]
+        self.cloud_management.execute_on_cloud(ips, task)
 
     def oom(self):
         print('OOM!')
 
     def pick(self):
-        return FuelNodes(self.client, random.choice(self.hosts))
+        return FuelNodeCollection(cloud_management=self.cloud_management,
+                                  power_management=self.power_management,
+                                  hosts=[random.choice(self.hosts)])
 
     def poweroff(self):
-        super(FuelNodes, self).poweroff()
+        self.power_management.poweroff([n['mac'] for n in self.hosts])
 
 
 class FuelService(service.Service):
 
-    def __init__(self, client=None, name=None):
-        self.client = client
+    def __init__(self, cloud_management=None, power_management=None,
+                 name=None):
+        self.cloud_management = cloud_management
+        self.power_management = power_management
         self.name = name
 
     def _get_hosts(self):
-        cloud_hosts = self.client.get_cloud_hosts()
-        return [n['ip'] for n in cloud_hosts if 'controller' in n['roles']]
+        cloud_hosts = self.cloud_management.get_cloud_hosts()
+        return [n for n in cloud_hosts if 'controller' in n['roles']]
 
     def get_nodes(self):
         if self.name == 'keystone-api':
             hosts = self._get_hosts()
-            return FuelNodes(client=self.client, hosts=hosts)
+            return FuelNodeCollection(cloud_management=self.cloud_management,
+                                      power_management=self.power_management,
+                                      hosts=hosts)
 
     def stop(self):
         if self.name == 'keystone-api':
             task = {
                 'command': 'service apache2 restart'
             }
-            print(self.client.execute_on_cloud(self._get_hosts(), task))
+            ips = [n['ip'] for n in self._get_hosts()]
+            print(self.cloud_management.execute_on_cloud(ips, task))
 
 
-class FuelClient(client_pkg.Client):
+class FuelManagement(cloud_manager.CloudManagement):
     def __init__(self, params):
+        super(FuelManagement, self).__init__()
+
         self.master_node_address = params['master_node_host']
         self.username = params['username']
         self.password = params['password']
@@ -65,14 +77,16 @@ class FuelClient(client_pkg.Client):
         self.master_node_executor = runner.AnsibleRunner(
             remote_user=self.username)
 
-        print(self.get_cloud_hosts())
+        hosts = self.get_cloud_hosts()
+        print(hosts)
 
         self.cloud_executor = runner.AnsibleRunner(
             remote_user=self.username,
             ssh_common_args='-o ProxyCommand="ssh -W %%h:%%p %s@%s"' %
                             (self.username, self.master_node_address))
         task = {'command': 'hostname'}
-        print(self.execute_on_cloud(['10.20.0.3', '10.20.0.4'], task))
+        host_addrs = [n['ip'] for n in hosts]
+        print(self.execute_on_cloud(host_addrs, task))
 
     def get_cloud_hosts(self):
         task = {'command': 'fuel2 node list -f json'}
@@ -87,7 +101,11 @@ class FuelClient(client_pkg.Client):
 
     def get_nodes(self):
         hosts = self.get_cloud_hosts()
-        return FuelNodes(client=self, hosts=hosts)
+        return FuelNodeCollection(cloud_management=self,
+                                  power_management=self.power_management,
+                                  hosts=hosts)
 
     def get_service(self, name):
-        return FuelService(client=self, name=name)
+        return FuelService(cloud_management=self,
+                           power_management=self.power_management,
+                           name=name)
