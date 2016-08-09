@@ -29,6 +29,22 @@ from os_failures import utils
 LOG = logging.getLogger(__name__)
 
 
+STATUS_OK = 'OK'
+STATUS_FAILED = 'FAILED'
+STATUS_UNREACHABLE = 'UNREACHABLE'
+STATUS_SKIPPED = 'SKIPPED'
+
+DEFAULT_ERROR_STATUSES = [STATUS_FAILED, STATUS_UNREACHABLE]
+
+
+class AnsibleExecutionException(Exception):
+    pass
+
+
+class AnsibleExecutionUnreachable(AnsibleExecutionException):
+    pass
+
+
 def _light_rec(result):
     for r in result:
         c = copy.deepcopy(r)
@@ -63,19 +79,19 @@ class MyCallback(callback_pkg.CallbackBase):
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
         super(MyCallback, self).v2_runner_on_failed(result)
-        self._store(result, 'FAILED')
+        self._store(result, STATUS_FAILED)
 
     def v2_runner_on_ok(self, result):
         super(MyCallback, self).v2_runner_on_ok(result)
-        self._store(result, 'OK')
+        self._store(result, STATUS_OK)
 
     def v2_runner_on_skipped(self, result):
         super(MyCallback, self).v2_runner_on_skipped(result)
-        self._store(result, 'SKIPPED')
+        self._store(result, STATUS_SKIPPED)
 
     def v2_runner_on_unreachable(self, result):
         super(MyCallback, self).v2_runner_on_unreachable(result)
-        self._store(result, 'UNREACHABLE')
+        self._store(result, STATUS_UNREACHABLE)
 
 
 Options = namedtuple('Options',
@@ -151,6 +167,26 @@ class AnsibleRunner(object):
 
         return result
 
-    def execute(self, hosts, task):
+    def execute(self, hosts, task, raise_on_statuses=DEFAULT_ERROR_STATUSES):
         task_play = {'hosts': hosts, 'tasks': [task]}
-        return self.run([task_play])
+        result = self.run([task_play])
+
+        if raise_on_statuses:
+            errors = []
+            only_unreachable = True
+
+            for r in result:
+                if r['status'] in raise_on_statuses:
+                    if r['status'] != STATUS_UNREACHABLE:
+                        only_unreachable = False
+                    errors.append(r)
+
+            if errors:
+                msg = 'Execution failed: %s' % ', '.join((
+                    '(host: %s, status: %s)' % (r['host'], r['status']))
+                    for r in errors)
+                ek = (AnsibleExecutionUnreachable if only_unreachable
+                      else AnsibleExecutionException)
+                raise ek(msg)
+
+        return result

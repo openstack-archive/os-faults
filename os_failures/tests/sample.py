@@ -34,6 +34,8 @@ def main():
         }
     }
     client = os_failures.build_client(cloud_config)
+    client.verify()
+
     service = client.get_service(name='keystone-api')
     print(service)
     service.stop()
