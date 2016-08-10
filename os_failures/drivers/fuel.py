@@ -34,6 +34,11 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.power_management = power_management
         self.hosts = hosts
 
+    def pick(self):
+        return FuelNodeCollection(cloud_management=self.cloud_management,
+                                  power_management=self.power_management,
+                                  hosts=[random.choice(self.hosts)])
+
     def reboot(self):
         task = {
             'command': 'ps aux'
@@ -43,11 +48,6 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
     def oom(self):
         print('OOM!')
-
-    def pick(self):
-        return FuelNodeCollection(cloud_management=self.cloud_management,
-                                  power_management=self.power_management,
-                                  hosts=[random.choice(self.hosts)])
 
     def poweroff(self):
         self.power_management.poweroff([n['mac'] for n in self.hosts])
@@ -78,7 +78,7 @@ class KeystoneService(FuelService):
     def get_nodes(self):
         return self.get_fuel_nodes(role='controller')
 
-    def stop(self):
+    def restart(self):
         task = {
             'command': 'service apache2 restart'
         }

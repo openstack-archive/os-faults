@@ -38,7 +38,7 @@ def main():
 
     service = client.get_service(name='keystone-api')
     print(service)
-    service.stop()
+    service.restart()
 
     nodes = service.get_nodes()
     print(nodes)

@@ -21,8 +21,23 @@ class Service(object):
 
     @abc.abstractmethod
     def get_nodes(self):
+        """Get nodes where this Service is running
+
+        :return: NodesCollection
+        """
         pass
 
-    @abc.abstractmethod
-    def stop(self):
-        pass
+    def restart(self):
+        """Restart the Service
+        """
+        raise NotImplementedError
+
+    def terminate(self):
+        """Terminate the Service gracefully
+        """
+        raise NotImplementedError
+
+    def kill(self):
+        """Terminate the Service abruptly
+        """
+        raise NotImplementedError

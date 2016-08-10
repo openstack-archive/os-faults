@@ -20,17 +20,29 @@ import six
 class NodeCollection(object):
 
     @abc.abstractmethod
-    def oom(self):
-        pass
-
-    @abc.abstractmethod
-    def reboot(self):
-        pass
-
-    @abc.abstractmethod
     def pick(self):
+        """Pick one Node out of collection
+
+        :return: NodeCollection consisting just one node
+        """
         pass
 
-    @abc.abstractmethod
+    def reboot(self):
+        """Reboot all nodes gracefully
+        """
+        raise NotImplementedError
+
+    def oom(self):
+        """Fill all node's RAM
+        """
+        raise NotImplementedError
+
     def poweroff(self):
-        pass
+        """Power off all nodes abruptly
+        """
+        raise NotImplementedError
+
+    def reset(self):
+        """Reset (cold restart) all nodes
+        """
+        raise NotImplementedError
