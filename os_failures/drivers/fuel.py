@@ -22,17 +22,16 @@ from os_failures.api import node_collection
 from os_failures.api import service
 
 
-ROLE_MAPPING = {
-    'keystone-api': 'controller',
-}
-
-
 class FuelNodeCollection(node_collection.NodeCollection):
     def __init__(self, cloud_management=None, power_management=None,
                  hosts=None):
         self.cloud_management = cloud_management
         self.power_management = power_management
         self.hosts = hosts
+
+    def __repr__(self):
+        return '%s(%s)' % (type(self),
+                           [(h['ip'], h['mac']) for h in self.hosts])
 
     def pick(self):
         return FuelNodeCollection(cloud_management=self.cloud_management,
@@ -107,6 +106,9 @@ class FuelManagement(cloud_management.CloudManagement):
             ssh_common_args='-o ProxyCommand="ssh -W %%h:%%p %s@%s"' %
                             (self.username, self.master_node_address))
 
+        self.cached_cloud_hosts = None
+        self.fqdn_to_hosts = dict()
+
     def verify(self):
         hosts = self.get_cloud_hosts()
         print(hosts)
@@ -116,9 +118,11 @@ class FuelManagement(cloud_management.CloudManagement):
         print(self.execute_on_cloud(host_addrs, task))
 
     def get_cloud_hosts(self):
-        task = {'command': 'fuel2 node list -f json'}
-        r = self.execute_on_master_node(task)
-        return json.loads(r[0].payload['stdout'])
+        if not self.cached_cloud_hosts:
+            task = {'command': 'fuel2 node list -f json'}
+            r = self.execute_on_master_node(task)
+            self.cached_cloud_hosts = json.loads(r[0].payload['stdout'])
+        return self.cached_cloud_hosts
 
     def execute_on_master_node(self, task):
         return self.master_node_executor.execute(
@@ -127,8 +131,25 @@ class FuelManagement(cloud_management.CloudManagement):
     def execute_on_cloud(self, hosts, task):
         return self.cloud_executor.execute(hosts, task)
 
-    def get_nodes(self):
-        hosts = self.get_cloud_hosts()
+    def _retrieve_hosts_fqdn(self):
+        for host in self.get_cloud_hosts():
+            task = {'command': 'fuel2 node show %s -f json' % host['id']}
+            r = self.execute_on_master_node(task)
+            host_ext = json.loads(r[0].payload['stdout'])
+            self.fqdn_to_hosts[host_ext['fqdn']] = host_ext
+
+    def get_nodes(self, fqdns=None):
+        if not fqdns:
+            # return all hosts
+            hosts = self.get_cloud_hosts()
+            return FuelNodeCollection(cloud_management=self,
+                                      power_management=self.power_management,
+                                      hosts=hosts)
+        # return only specified
+        if not self.fqdn_to_hosts:
+            self._retrieve_hosts_fqdn()
+
+        hosts = [self.fqdn_to_hosts[k] for k in fqdns]
         return FuelNodeCollection(cloud_management=self,
                                   power_management=self.power_management,
                                   hosts=hosts)

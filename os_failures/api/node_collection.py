@@ -29,20 +29,24 @@ class NodeCollection(object):
 
     def reboot(self):
         """Reboot all nodes gracefully
+
         """
         raise NotImplementedError
 
     def oom(self):
         """Fill all node's RAM
+
         """
         raise NotImplementedError
 
     def poweroff(self):
         """Power off all nodes abruptly
+
         """
         raise NotImplementedError
 
     def reset(self):
         """Reset (cold restart) all nodes
+
         """
         raise NotImplementedError

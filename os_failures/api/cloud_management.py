@@ -26,12 +26,25 @@ class CloudManagement(object):
 
     @abc.abstractmethod
     def verify(self):
+        """Verifies connection to the cloud
+
+        """
         pass
 
     @abc.abstractmethod
-    def get_nodes(self):
+    def get_nodes(self, fqdns=None):
+        """Get NodesCollection with nodes that match specified criteria
+
+        :param fqdns list of FQDNs or None to retrieve all nodes
+        :return: NodesCollection
+        """
         pass
 
     @abc.abstractmethod
     def get_service(self, name):
+        """Get service with specified name
+
+        :param name: name of the serives
+        :return: Service
+        """
         pass

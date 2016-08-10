@@ -24,4 +24,4 @@ class KVM(power_management.PowerManagement):
         self.executor = executor.AnsibleRunner(remote_user=self.username)
 
     def poweroff(self, hosts):
-        print('Power off hosts %s', hosts)
+        print('Power off hosts %s' % hosts)

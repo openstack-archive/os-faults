@@ -29,15 +29,18 @@ class Service(object):
 
     def restart(self):
         """Restart the Service
+
         """
         raise NotImplementedError
 
     def terminate(self):
         """Terminate the Service gracefully
+
         """
         raise NotImplementedError
 
     def kill(self):
         """Terminate the Service abruptly
+
         """
         raise NotImplementedError

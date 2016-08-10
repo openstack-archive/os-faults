@@ -47,6 +47,14 @@ def main():
     one = nodes.pick()
     one.poweroff()
 
+    nodes = client.get_nodes()
+    print(nodes)
+    nodes.oom()
+
+    nodes = client.get_nodes(fqdns=['node-1.domain.tld'])
+    print(nodes)
+    nodes.reboot()
+
 
 if __name__ == '__main__':
     main()
