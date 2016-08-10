@@ -3,7 +3,7 @@ import json
 import random
 import six
 
-from os_failures.ansible import runner
+from os_failures.ansible import executor
 from os_failures.api import cloud_management
 from os_failures.api import node_collection
 from os_failures.api import service
@@ -86,10 +86,10 @@ class FuelManagement(cloud_management.CloudManagement):
         self.username = params['username']
         self.password = params['password']
 
-        self.master_node_executor = runner.AnsibleRunner(
+        self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username)
 
-        self.cloud_executor = runner.AnsibleRunner(
+        self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username,
             ssh_common_args='-o ProxyCommand="ssh -W %%h:%%p %s@%s"' %
                             (self.username, self.master_node_address))
@@ -105,7 +105,7 @@ class FuelManagement(cloud_management.CloudManagement):
     def get_cloud_hosts(self):
         task = {'command': 'fuel2 node list -f json'}
         r = self.execute_on_master_node(task)
-        return json.loads(r[0]['payload']['stdout'])
+        return json.loads(r[0].payload['stdout'])
 
     def execute_on_master_node(self, task):
         return self.master_node_executor.execute([self.master_node_address], task)

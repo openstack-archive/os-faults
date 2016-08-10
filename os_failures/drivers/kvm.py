@@ -1,4 +1,4 @@
-from os_failures.ansible import runner
+from os_failures.ansible import executor
 from os_failures.api import power_management
 
 
@@ -8,7 +8,7 @@ class KVM(power_management.PowerManagement):
         self.username = params.get('username')
         self.password = params.get('password')
 
-        self.executor = runner.AnsibleRunner(remote_user=self.username)
+        self.executor = executor.AnsibleRunner(remote_user=self.username)
 
     def poweroff(self, hosts):
         print('Power off hosts %s', hosts)
