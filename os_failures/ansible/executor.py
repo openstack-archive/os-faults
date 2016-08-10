@@ -157,9 +157,10 @@ class AnsibleRunner(object):
         return result
 
     def execute(self, hosts, task, raise_on_statuses=DEFAULT_ERROR_STATUSES):
-        """
-        Executes the task on every host from the list. Raises exception if any
-        of the commands fails with one of specified statuses.
+        """Executes the task on every host from the list
+
+        Raises exception if any of the commands fails with one of specified
+        statuses.
         :param hosts: list of host addresses
         :param task: Ansible task
         :param raise_on_statuses: raise exception if any of commands return

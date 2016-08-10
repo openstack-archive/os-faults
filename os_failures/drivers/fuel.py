@@ -1,3 +1,16 @@
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import abc
 import json
 import random
@@ -108,7 +121,8 @@ class FuelManagement(cloud_management.CloudManagement):
         return json.loads(r[0].payload['stdout'])
 
     def execute_on_master_node(self, task):
-        return self.master_node_executor.execute([self.master_node_address], task)
+        return self.master_node_executor.execute(
+            [self.master_node_address], task)
 
     def execute_on_cloud(self, hosts, task):
         return self.cloud_executor.execute(hosts, task)
