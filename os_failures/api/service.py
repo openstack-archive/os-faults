@@ -44,3 +44,15 @@ class Service(object):
 
         """
         raise NotImplementedError
+
+    def unplug(self):
+        """Unplug the service out of network
+
+        """
+        raise NotImplementedError
+
+    def plug(self):
+        """Plug the service into network
+
+        """
+        raise NotImplementedError

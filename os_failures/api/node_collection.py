@@ -50,3 +50,17 @@ class NodeCollection(object):
 
         """
         raise NotImplementedError
+
+    def disable_network(self, network_name):
+        """Disable network with name network_name on each of the nodes
+
+        :param network_name: name of network
+        """
+        raise NotImplementedError
+
+    def enable_network(self, network_name):
+        """Enable network with name network_name on each of the nodes
+
+        :param network_name: name of network
+        """
+        raise NotImplementedError
