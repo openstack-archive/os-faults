@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from collections import namedtuple
+import os
 
 from ansible.executor import task_queue_manager
 from ansible import inventory

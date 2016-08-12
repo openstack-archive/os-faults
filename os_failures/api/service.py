@@ -27,32 +27,44 @@ class Service(object):
         """
         pass
 
-    def restart(self):
-        """Restart the Service
+    def restart(self, nodes=None):
+        """Restart Service on all nodes or on particular subset
 
+        :param nodes: NodesCollection
         """
         raise NotImplementedError
 
-    def terminate(self):
-        """Terminate the Service gracefully
+    def terminate(self, nodes=None):
+        """Terminate Service gracefully on all nodes or on particular subset
 
+        :param nodes: NodesCollection
         """
         raise NotImplementedError
 
-    def kill(self):
-        """Terminate the Service abruptly
+    def start(self, nodes=None):
+        """Start Service gracefully on all nodes or on particular subset
 
+        :param nodes: NodesCollection
         """
         raise NotImplementedError
 
-    def unplug(self):
-        """Unplug the service out of network
+    def kill(self, nodes=None):
+        """Terminate Service abruptly on all nodes or on particular subset
 
+        :param nodes: NodesCollection
         """
         raise NotImplementedError
 
-    def plug(self):
-        """Plug the service into network
+    def unplug(self, nodes=None):
+        """Unplug Service out of network on all nodes or on particular subset
 
+        :param nodes: NodesCollection
+        """
+        raise NotImplementedError
+
+    def plug(self, nodes=None):
+        """Plug Service into network on all nodes or on particular subset
+
+        :param nodes: NodesCollection
         """
         raise NotImplementedError

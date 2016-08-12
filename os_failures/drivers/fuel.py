@@ -31,8 +31,21 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.hosts = hosts
 
     def __repr__(self):
-        return '%s(%s)' % (type(self),
-                           [(h['ip'], h['mac']) for h in self.hosts])
+        return ('FuelNodeCollection(%s)' %
+                [dict(ip=h['ip'], mac=h['mac']) for h in self.hosts])
+
+    def iterate_hosts(self):
+        for host in self.hosts:
+            try:
+                yield host
+            except GeneratorExit:
+                break
+
+    def filter(self, role):
+        hosts = [h for h in self.hosts if role in h['roles']]
+        return FuelNodeCollection(cloud_management=self.cloud_management,
+                                  power_management=self.power_management,
+                                  hosts=hosts)
 
     def pick(self):
         return FuelNodeCollection(cloud_management=self.cloud_management,
@@ -69,29 +82,29 @@ class FuelService(service.Service):
         self.cloud_management = cloud_management
         self.power_management = power_management
 
-    def _get_cloud_nodes(self, role):
-        cloud_hosts = self.cloud_management.get_cloud_hosts()
-        return [n for n in cloud_hosts if role in n['roles']]
+    def __repr__(self):
+        return str(type(self))
 
-    def get_cloud_nodes_ips(self, role):
-        return [n['ip'] for n in self._get_cloud_nodes(role=role)]
+    def _get_nodes(self, role):
+        nodes = self.cloud_management.get_nodes()
+        return nodes.filter(role=role)
 
-    def get_fuel_nodes(self, role):
-        hosts = self._get_cloud_nodes(role=role)
-        return FuelNodeCollection(cloud_management=self.cloud_management,
-                                  power_management=self.power_management,
-                                  hosts=hosts)
+    @staticmethod
+    def get_nodes_ips(nodes):
+        return [host['ip'] for host in nodes.iterate_hosts()]
 
 
 class KeystoneService(FuelService):
     def get_nodes(self):
-        return self.get_fuel_nodes(role='controller')
+        return self._get_nodes(role='controller')
 
-    def restart(self):
+    def restart(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        ips = self.get_nodes_ips(nodes)
+
         task = {
             'command': 'service apache2 restart'
         }
-        ips = self.get_cloud_nodes_ips(role='controller')
         exec_res = self.cloud_management.execute_on_cloud(ips, task)
         logging.info('Restart the service, result: %s', exec_res)
 
@@ -102,11 +115,11 @@ SERVICE_NAME_TO_CLASS = {
 
 
 class FuelManagement(cloud_management.CloudManagement):
-    def __init__(self, params):
+    def __init__(self, cloud_management_params):
         super(FuelManagement, self).__init__()
 
-        self.master_node_address = params['address']
-        self.username = params['username']
+        self.master_node_address = cloud_management_params['address']
+        self.username = cloud_management_params['username']
 
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username)
@@ -120,16 +133,18 @@ class FuelManagement(cloud_management.CloudManagement):
         self.fqdn_to_hosts = dict()
 
     def verify(self):
-        hosts = self.get_cloud_hosts()
+        """Verify connection to the cloud."""
+        hosts = self._get_cloud_hosts()
         logging.debug('Cloud hosts: %s', hosts)
 
         task = {'command': 'hostname'}
         host_addrs = [n['ip'] for n in hosts]
-        logging.debug('Cloud nodes hostnames: %s', self.execute_on_cloud(host_addrs, task))
+        logging.debug('Cloud nodes hostnames: %s',
+                      self.execute_on_cloud(host_addrs, task))
 
         logging.info('Connected to cloud successfully')
 
-    def get_cloud_hosts(self):
+    def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
             task = {'command': 'fuel2 node list -f json'}
             r = self.execute_on_master_node(task)
@@ -137,23 +152,41 @@ class FuelManagement(cloud_management.CloudManagement):
         return self.cached_cloud_hosts
 
     def execute_on_master_node(self, task):
+        """Execute task on Fuel master node.
+
+        :param task: Ansible task
+        :return: Ansible execution result (list of records)
+        """
         return self.master_node_executor.execute(
             [self.master_node_address], task)
 
     def execute_on_cloud(self, hosts, task):
+        """Execute task on specified hosts within the cloud.
+
+        :param hosts: List of host FQDNs
+        :param task: Ansible task
+        :return: Ansible execution result (list of records)
+        """
         return self.cloud_executor.execute(hosts, task)
 
     def _retrieve_hosts_fqdn(self):
-        for host in self.get_cloud_hosts():
+        for host in self._get_cloud_hosts():
             task = {'command': 'fuel2 node show %s -f json' % host['id']}
             r = self.execute_on_master_node(task)
             host_ext = json.loads(r[0].payload['stdout'])
             self.fqdn_to_hosts[host_ext['fqdn']] = host_ext
 
     def get_nodes(self, fqdns=None):
+        """Get nodes in the cloud
+
+        This function returns NodesCollection representing all nodes in the
+        cloud or only those that has specified FQDNs.
+        :param fqdns: list of FQDNs or None to retrieve all nodes
+        :return: NodesCollection
+        """
         if not fqdns:
             # return all hosts
-            hosts = self.get_cloud_hosts()
+            hosts = self._get_cloud_hosts()
             return FuelNodeCollection(cloud_management=self,
                                       power_management=self.power_management,
                                       hosts=hosts)
@@ -167,6 +200,11 @@ class FuelManagement(cloud_management.CloudManagement):
                                   hosts=hosts)
 
     def get_service(self, name):
+        """Get service with specified name
+
+        :param name: name of the serives
+        :return: Service
+        """
         if name in SERVICE_NAME_TO_CLASS:
             klazz = SERVICE_NAME_TO_CLASS[name]
             return klazz(cloud_management=self,

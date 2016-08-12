@@ -26,15 +26,17 @@ class CloudManagement(object):
 
     @abc.abstractmethod
     def verify(self):
-        """Verifies connection to the cloud
+        """Verify connection to the cloud.
 
         """
         pass
 
     @abc.abstractmethod
     def get_nodes(self, fqdns=None):
-        """Get NodesCollection with nodes that match specified criteria
+        """Get nodes in the cloud
 
+        This function returns NodesCollection representing all nodes in the
+        cloud or only those that has specified FQDNs.
         :param fqdns list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """

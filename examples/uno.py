@@ -36,52 +36,57 @@ def main():
         }
     }
 
-    # connect
+    logging.info('# Create connection')
     distractor = os_failures.connect(cloud_config)
 
-    # verify connection to the cloud
+    logging.info('# Verify connection to the cloud')
     distractor.verify()
 
     # os_failures library operate with 2 types of instances:
     # service - is software that runs in the cloud, e.g. keystone
     # nodes - nodes that host the cloud, e.g. hardware server with hostname
 
-    # get a particular service in the cloud
+    logging.info('# Get a particular service in the cloud')
     service = distractor.get_service(name='keystone-api')
     logging.info('Keystone API Service: %s', service)
 
-    # restart the service
+    logging.info('# Restart the service')
     service.restart()
 
-    # use case #2: get nodes where the service runs
+    logging.info('# Get nodes where the service runs')
     nodes = service.get_nodes()
     logging.info('Nodes: %s', nodes)
 
-    # reboot these nodes
+    logging.info('# Reboot these nodes')
     nodes.reboot()
 
-    # pick one one out of collection of nodes
+    logging.info('# Pick one one out of collection of nodes')
     one = nodes.pick()
 
-    # switch the node off
+    logging.info('# Switch the node off')
     one.poweroff()
 
-    # get all nodes in the cloud
+    logging.info('# Get all nodes in the cloud')
     nodes = distractor.get_nodes()
     logging.info('All cloud nodes: %s', nodes)
 
-    # reset all these nodes
+    logging.info('# Reset all these nodes')
     nodes.reset()
 
-    # get nodes by their FQDNs
+    logging.info('# Get nodes by their FQDNs')
     nodes = distractor.get_nodes(fqdns=['node-1.domain.tld'])
     logging.info('Node with specific FQDN: %s', nodes)
 
-    # disable public network on these nodes
+    logging.info('# Disable public network on these nodes')
     nodes.disable_network(network_name='public')
 
-    # enable public network on these nodes
+    logging.info('# Enable public network on these nodes')
     nodes.enable_network(network_name='public')
+
+    logging.info('# Restart service on a single node')
+    service = distractor.get_service(name='keystone-api')
+    nodes = service.get_nodes().pick()
+    service.restart(nodes)
 
 
 if __name__ == '__main__':
