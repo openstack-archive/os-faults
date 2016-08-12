@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import namedtuple
 
 from ansible.executor import task_queue_manager
@@ -20,8 +21,6 @@ from ansible.playbook import play
 from ansible.plugins import callback as callback_pkg
 from ansible.vars import VariableManager
 from oslo_log import log as logging
-
-from os_failures import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -80,6 +79,13 @@ class MyCallback(callback_pkg.CallbackBase):
         self._store(result, STATUS_UNREACHABLE)
 
 
+def resolve_relative_path(file_name):
+    path = os.path.normpath(os.path.join(
+        os.path.dirname(__import__('os_failures').__file__), '../', file_name))
+    if os.path.exists(path):
+        return path
+
+
 Options = namedtuple('Options',
                      ['connection', 'password', 'module_path', 'forks',
                       'remote_user', 'private_key_file',
@@ -93,8 +99,7 @@ class AnsibleRunner(object):
                  ssh_common_args=''):
         super(AnsibleRunner, self).__init__()
 
-        module_path = utils.resolve_relative_path(
-            'os_failures/ansible/modules')
+        module_path = resolve_relative_path('os_failures/ansible/modules')
         ssh_common_args = ' '.join([ssh_common_args, SSH_COMMON_ARGS])
 
         self.options = Options(
