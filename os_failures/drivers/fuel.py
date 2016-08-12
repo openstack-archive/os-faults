@@ -13,6 +13,7 @@
 
 import abc
 import json
+import logging
 import random
 import six
 
@@ -46,10 +47,19 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(ips, task)
 
     def oom(self):
-        print('OOM!')
+        logging.info('Enforce nodes to run out of memory: %s', self)
 
     def poweroff(self):
         self.power_management.poweroff([n['mac'] for n in self.hosts])
+
+    def reset(self):
+        logging.info('Reset nodes: %s', self)
+
+    def enable_network(self, network_name):
+        logging.info('Enable network: %s on nodes: %s', network_name, self)
+
+    def disable_network(self, network_name):
+        logging.info('Disable network: %s on nodes: %s', network_name, self)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -82,7 +92,8 @@ class KeystoneService(FuelService):
             'command': 'service apache2 restart'
         }
         ips = self.get_cloud_nodes_ips(role='controller')
-        print(self.cloud_management.execute_on_cloud(ips, task))
+        exec_res = self.cloud_management.execute_on_cloud(ips, task)
+        logging.info('Restart the service, result: %s', exec_res)
 
 
 SERVICE_NAME_TO_CLASS = {
@@ -96,7 +107,6 @@ class FuelManagement(cloud_management.CloudManagement):
 
         self.master_node_address = params['address']
         self.username = params['username']
-        self.password = params['password']
 
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username)
@@ -111,11 +121,13 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def verify(self):
         hosts = self.get_cloud_hosts()
-        print(hosts)
+        logging.debug('Cloud hosts: %s', hosts)
 
         task = {'command': 'hostname'}
         host_addrs = [n['ip'] for n in hosts]
-        print(self.execute_on_cloud(host_addrs, task))
+        logging.debug('Cloud nodes hostnames: %s', self.execute_on_cloud(host_addrs, task))
+
+        logging.info('Connected to cloud successfully')
 
     def get_cloud_hosts(self):
         if not self.cached_cloud_hosts:

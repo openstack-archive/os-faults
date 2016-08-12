@@ -19,7 +19,7 @@ __version__ = pbr.version.VersionInfo(
     'os_failures').version_string()
 
 
-def build_client(cloud_config):
+def connect(cloud_config):
     cloud_management = None
     cloud_management_params = cloud_config.get('cloud_management') or {}
 

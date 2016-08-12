@@ -11,6 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from os_failures.ansible import executor
 from os_failures.api import power_management
 
@@ -24,4 +26,4 @@ class KVM(power_management.PowerManagement):
         self.executor = executor.AnsibleRunner(remote_user=self.username)
 
     def poweroff(self, hosts):
-        print('Power off hosts %s' % hosts)
+        logging.info('Power off hosts: %s', hosts)
