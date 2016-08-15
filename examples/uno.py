@@ -74,7 +74,7 @@ def main():
     nodes.reset()
 
     logging.info('# Get nodes by their FQDNs')
-    nodes = distractor.get_nodes(fqdns=['node-1.domain.tld'])
+    nodes = distractor.get_nodes(fqdns=['node-2.domain.tld'])
     logging.info('Node with specific FQDN: %s', nodes)
 
     logging.info('# Disable public network on these nodes')

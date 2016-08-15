@@ -70,9 +70,21 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
     def enable_network(self, network_name):
         logging.info('Enable network: %s on nodes: %s', network_name, self)
+        task = {'fuel_network_mgmt': {
+            'network_name': network_name,
+            'operation': 'up',
+        }}
+        ips = [n['ip'] for n in self.hosts]
+        self.cloud_management.execute_on_cloud(ips, task)
 
     def disable_network(self, network_name):
         logging.info('Disable network: %s on nodes: %s', network_name, self)
+        task = {'fuel_network_mgmt': {
+            'network_name': network_name,
+            'operation': 'down',
+        }}
+        ips = [n['ip'] for n in self.hosts]
+        self.cloud_management.execute_on_cloud(ips, task)
 
 
 @six.add_metaclass(abc.ABCMeta)
