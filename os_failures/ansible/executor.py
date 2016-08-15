@@ -96,7 +96,7 @@ Options = namedtuple('Options',
 
 class AnsibleRunner(object):
     def __init__(self, remote_user='root', password=None, forks=100,
-                 ssh_common_args=''):
+                 ssh_common_args='', become=None):
         super(AnsibleRunner, self).__init__()
 
         module_path = resolve_relative_path('os_failures/ansible/modules')
@@ -107,7 +107,7 @@ class AnsibleRunner(object):
             forks=forks, remote_user=remote_user, private_key_file=None,
             ssh_common_args=ssh_common_args, ssh_extra_args=None,
             sftp_extra_args=None, scp_extra_args=None,
-            become=None, become_method='sudo', become_user='root',
+            become=become, become_method='sudo', become_user='root',
             verbosity=100, check=False)
 
     def _run_play(self, play_source):

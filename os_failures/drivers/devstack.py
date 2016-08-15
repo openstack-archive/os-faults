@@ -100,7 +100,8 @@ class DevStackManagement(cloud_management.CloudManagement):
         self.address = cloud_management_params['address']
         self.username = cloud_management_params['username']
 
-        self.executor = executor.AnsibleRunner(remote_user=self.username)
+        self.executor = executor.AnsibleRunner(remote_user=self.username,
+                                               become=True)
         self.host = None
 
     def verify(self):
