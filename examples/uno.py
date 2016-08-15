@@ -26,12 +26,12 @@ def main():
         'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'fuel',
-            'address': '172.18.171.149',
+            'address': 'fuel.local',
             'username': 'root',
         },
         'power_management': {
             'driver': 'kvm',
-            'address': '172.18.171.5',
+            'address': 'kvm.local',
             'username': 'root',
         }
     }

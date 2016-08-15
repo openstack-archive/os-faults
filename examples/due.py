@@ -26,7 +26,7 @@ def main():
         'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'devstack',
-            'address': '172.18.76.77',
+            'address': 'devstack.local',
             'username': 'developer',
         }
     }

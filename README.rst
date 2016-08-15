@@ -29,13 +29,13 @@ Cloud deployment configuration schema is an extension to cloud config used by
         },
         'region_name': 'RegionOne',
         'cloud_management': {
-            'driver': 'fuel',
-            'address': 'fuel_master_node.int',
+            'driver': 'devstack',
+            'address': 'devstack.local',
             'username': 'root',
         },
         'power_management': {
             'driver': 'kvm',
-            'address': 'kvm_host.int',
+            'address': 'kvm.local',
             'username': 'root',
         }
     }
