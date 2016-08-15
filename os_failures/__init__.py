@@ -12,6 +12,7 @@
 
 import pbr.version
 
+from os_failures.drivers import devstack
 from os_failures.drivers import fuel
 from os_failures.drivers import kvm
 
@@ -25,6 +26,8 @@ def connect(cloud_config):
 
     if cloud_management_params.get('driver') == 'fuel':
         cloud_management = fuel.FuelManagement(cloud_management_params)
+    elif cloud_management_params.get('driver') == 'devstack':
+        cloud_management = devstack.DevStackManagement(cloud_management_params)
 
     power_management = None
     power_management_params = cloud_config.get('power_management') or {}
