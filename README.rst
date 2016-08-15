@@ -1,5 +1,5 @@
 ===========
-os_failures
+os-failures
 ===========
 
 **An OpenStack failures library**
@@ -93,7 +93,7 @@ Get all nodes in the cloud and reboot them:
 
 Available actions:
  * `reboot` - reboot all nodes gracefully
-  * `poweroff` - power off all nodes abruptly
+ * `poweroff` - power off all nodes abruptly
  * `reset` - reset (cold restart) all nodes
  * `oom` - fill all node's RAM
  * `disable_network` - disable network with specified name on each of the nodes
