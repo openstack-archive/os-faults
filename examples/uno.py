@@ -42,7 +42,7 @@ def main():
     logging.info('# Verify connection to the cloud')
     distractor.verify()
 
-    # os_failures library operate with 2 types of instances:
+    # os_failures library operate with 2 types of objects:
     # service - is software that runs in the cloud, e.g. keystone
     # nodes - nodes that host the cloud, e.g. hardware server with hostname
 

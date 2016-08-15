@@ -42,7 +42,7 @@ class Service(object):
         raise NotImplementedError
 
     def start(self, nodes=None):
-        """Start Service gracefully on all nodes or on particular subset
+        """Start Service on all nodes or on particular subset
 
         :param nodes: NodesCollection
         """
