@@ -23,5 +23,10 @@ class PowerManagement(object):
     def poweroff(self, hosts):
         pass
 
+    @abc.abstractmethod
+    def poweron(self, hosts):
+        pass
+
+    @abc.abstractmethod
     def reset(self, hosts):
         pass
