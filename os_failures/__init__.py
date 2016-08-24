@@ -14,7 +14,7 @@ import pbr.version
 
 from os_failures.drivers import devstack
 from os_failures.drivers import fuel
-from os_failures.drivers import kvm
+from os_failures.drivers import libvirt_driver
 
 __version__ = pbr.version.VersionInfo(
     'os_failures').version_string()
@@ -32,8 +32,9 @@ def connect(cloud_config):
     power_management = None
     power_management_params = cloud_config.get('power_management') or {}
 
-    if power_management_params.get('driver') == 'kvm':
-        power_management = kvm.KVM(power_management_params)
+    if power_management_params.get('driver') == 'libvirt':
+        power_management = libvirt_driver.LibvirtDriver(
+            power_management_params)
 
     cloud_management.set_power_management(power_management)
 
