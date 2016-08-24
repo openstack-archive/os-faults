@@ -11,19 +11,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import contextlib
 import logging
+from xml.dom import minidom
 
-from os_failures.ansible import executor
+import libvirt
+
 from os_failures.api import power_management
 
 
 class KVM(power_management.PowerManagement):
     def __init__(self, params):
-        self.host = params['address']
-        self.username = params.get('username')
-        self.password = params.get('password')
+        self.connection_uri = params['connection_uri']
 
-        self.executor = executor.AnsibleRunner(remote_user=self.username)
+    @contextlib.contextmanager
+    def _connect_to_host(self):
+        conn = libvirt.open(self.connection_uri)
+        logging.info('Connection to the host is established')
+        yield conn
+        conn.close()
+        logging.info('Connection to the host is closed')
 
-    def poweroff(self, hosts):
-        logging.info('Power off hosts: %s', hosts)
+    @staticmethod
+    def _find_domain_by_mac_address(conn, mac_address):
+        for domain in conn.listAllDomains():
+            xml = minidom.parseString(domain.XMLDesc())
+            mac_list = xml.getElementsByTagName('mac')
+            for mac in mac_list:
+                if mac_address == mac.getAttribute('address'):
+                    return domain
+
+        # TODO(ylobankov): Use more specific exception here in the future
+        raise Exception('Node with MAC address %s not found!' % mac_address)
+
+    def poweroff(self, mac_addresses_list):
+        with self._connect_to_host() as conn:
+            for mac_address in mac_addresses_list:
+                logging.info('Power off node '
+                             'with MAC address: %s', mac_address)
+                domain = self._find_domain_by_mac_address(conn, mac_address)
+                domain.destroy()
+                logging.info('Node (%s) was powered off' % mac_address)
+
+    def reset(self, mac_addresses_list):
+        with self._connect_to_host() as conn:
+            for mac_address in mac_addresses_list:
+                logging.info('Reset node with MAC address: %s', mac_address)
+                domain = self._find_domain_by_mac_address(conn, mac_address)
+                domain.reset()
+                logging.info('Node (%s) was reset' % mac_address)
