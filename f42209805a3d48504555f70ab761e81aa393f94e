@@ -1,0 +1,9 @@
+Code-Review+2: Yaroslav Lobankov <ylobankov@mirantis.com>
+Code-Review+1: venkatamahesh <Venkata.Kotha@infinite.com>
+Workflow+1: Ilya Shakhat <ishakhat@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 24 Aug 2016 14:34:27 +0000
+Reviewed-on: https://review.openstack.org/359875
+Project: openstack/os-failures
+Branch: refs/heads/master
