@@ -52,8 +52,12 @@ class DevStackNode(node_collection.NodeCollection):
     def poweroff(self):
         self.power_management.poweroff(self.host.mac)
 
+    def poweron(self):
+        self.power_management.poweron(self.host.mac)
+
     def reset(self):
         logging.info('Reset nodes: %s', self)
+        self.power_management.reset(self.host.mac)
 
     def enable_network(self, network_name):
         logging.info('Enable network: %s on nodes: %s', network_name, self)

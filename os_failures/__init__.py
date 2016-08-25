@@ -14,6 +14,7 @@ import pbr.version
 
 from os_failures.drivers import devstack
 from os_failures.drivers import fuel
+from os_failures.drivers import ipmi
 from os_failures.drivers import libvirt_driver
 
 __version__ = pbr.version.VersionInfo(
@@ -34,6 +35,9 @@ def connect(cloud_config):
 
     if power_management_params.get('driver') == 'libvirt':
         power_management = libvirt_driver.LibvirtDriver(
+            power_management_params)
+    elif power_management_params.get('driver') == 'ipmi':
+        power_management = ipmi.IPMIDriver(
             power_management_params)
 
     cloud_management.set_power_management(power_management)

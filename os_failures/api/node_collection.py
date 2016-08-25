@@ -25,7 +25,6 @@ class NodeCollection(object):
 
         :return: NodeCollection consisting just one node
         """
-        pass
 
     def reboot(self):
         """Reboot all nodes gracefully
@@ -41,6 +40,12 @@ class NodeCollection(object):
 
     def poweroff(self):
         """Power off all nodes abruptly
+
+        """
+        raise NotImplementedError
+
+    def poweron(self):
+        """Power on all nodes abruptly
 
         """
         raise NotImplementedError

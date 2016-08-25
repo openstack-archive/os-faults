@@ -53,6 +53,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
                                   hosts=[random.choice(self.hosts)])
 
     def reboot(self):
+        raise NotImplementedError
         task = {
             'command': 'ps aux'
         }
@@ -60,13 +61,18 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(ips, task)
 
     def oom(self):
+        raise NotImplementedError
         logging.info('Enforce nodes to run out of memory: %s', self)
 
     def poweroff(self):
         self.power_management.poweroff([n['mac'] for n in self.hosts])
 
+    def poweron(self):
+        self.power_management.poweron([n['mac'] for n in self.hosts])
+
     def reset(self):
         logging.info('Reset nodes: %s', self)
+        self.power_management.reset([n['mac'] for n in self.hosts])
 
     def enable_network(self, network_name):
         logging.info('Enable network: %s on nodes: %s', network_name, self)

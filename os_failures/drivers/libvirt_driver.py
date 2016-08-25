@@ -16,6 +16,7 @@ from xml.dom import minidom
 
 import libvirt
 
+from os_failures.api import error
 from os_failures.api import power_management
 
 
@@ -42,8 +43,8 @@ class LibvirtDriver(power_management.PowerManagement):
                 if mac_address == mac.getAttribute('address'):
                     return domain
 
-        # TODO(ylobankov): Use more specific exception here in the future
-        raise Exception('Node with MAC address %s not found!' % mac_address)
+        raise error.PowerManagmentError(
+            'Node with MAC address %s not found!' % mac_address)
 
     def poweroff(self, mac_addresses_list):
         for mac_address in mac_addresses_list:
