@@ -12,7 +12,7 @@
 # limitations under the License.
 
 import logging
-from xml.dom import minidom
+import threading
 
 import libvirt
 
@@ -37,32 +37,47 @@ class LibvirtDriver(power_management.PowerManagement):
 
     def _find_domain_by_mac_address(self, mac_address):
         for domain in self.conn.listAllDomains():
-            xml = minidom.parseString(domain.XMLDesc())
-            mac_list = xml.getElementsByTagName('mac')
-            for mac in mac_list:
-                if mac_address == mac.getAttribute('address'):
-                    return domain
+            if mac_address in domain.XMLDesc():
+                return domain
 
         raise error.PowerManagmentError(
             'Node with MAC address %s not found!' % mac_address)
 
-    def poweroff(self, mac_addresses_list):
+    def _poweroff(self, mac_address):
+        logging.info('Power off domain with MAC address: %s', mac_address)
+        domain = self._find_domain_by_mac_address(mac_address)
+        domain.destroy()
+        logging.info('Domain (%s) was powered off' % mac_address)
+
+    def _poweron(self, mac_address):
+        logging.info('Power on domain with MAC address: %s', mac_address)
+        domain = self._find_domain_by_mac_address(mac_address)
+        domain.create()
+        logging.info('Domain (%s) was powered on' % mac_address)
+
+    def _reset(self, mac_address):
+        logging.info('Reset domain with MAC address: %s', mac_address)
+        domain = self._find_domain_by_mac_address(mac_address)
+        domain.reset()
+        logging.info('Domain (%s) was reset' % mac_address)
+
+    @staticmethod
+    def _run(target_method, mac_addresses_list):
+        threads = []
         for mac_address in mac_addresses_list:
-            logging.info('Power off domain with MAC address: %s', mac_address)
-            domain = self._find_domain_by_mac_address(mac_address)
-            domain.destroy()
-            logging.info('Domain (%s) was powered off' % mac_address)
+            thread = threading.Thread(target=target_method,
+                                      kwargs={'mac_address': mac_address})
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+    def poweroff(self, mac_addresses_list):
+        self._run(self._poweroff, mac_addresses_list)
 
     def poweron(self, mac_addresses_list):
-        for mac_address in mac_addresses_list:
-            logging.info('Power on domain with MAC address: %s', mac_address)
-            domain = self._find_domain_by_mac_address(mac_address)
-            domain.create()
-            logging.info('Domain (%s) was powered on' % mac_address)
+        self._run(self._poweron, mac_addresses_list)
 
     def reset(self, mac_addresses_list):
-        for mac_address in mac_addresses_list:
-            logging.info('Reset domain with MAC address: %s', mac_address)
-            domain = self._find_domain_by_mac_address(mac_address)
-            domain.reset()
-            logging.info('Domain (%s) was reset' % mac_address)
+        self._run(self._reset, mac_addresses_list)
