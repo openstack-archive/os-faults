@@ -21,4 +21,4 @@ class OSFError(OSFException):
 
 
 class PowerManagmentError(OSFError):
-    """Base Error for Power Managment API"""
+    """Base Error class for Power Management API"""
