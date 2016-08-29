@@ -48,6 +48,7 @@ def main():
     logging.info('Pick and power off one of cluster nodes')
     one = nodes.pick()
     one.poweroff()
+    one.poweron()
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
