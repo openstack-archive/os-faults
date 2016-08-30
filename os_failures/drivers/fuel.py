@@ -23,6 +23,14 @@ from os_failures.api import node_collection
 from os_failures.api import service
 
 
+SERVICE_CMD = {
+    'mysql': 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"',
+    'rabbitmq': 'bash -c "rabbitmqctl status | grep \'pid,\'"',
+    'nova-api': 'bash -c "ps ax | grep \'nova-api\'"',
+    'glance-api': 'bash -c "ps ax | grep \'glance-api\'"',
+    'keystone': 'bash -c "ps ax | grep \'keystone-main\'"'
+}
+
 class FuelNodeCollection(node_collection.NodeCollection):
     def __init__(self, cloud_management=None, power_management=None,
                  hosts=None):
@@ -43,6 +51,16 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
     def filter(self, role):
         hosts = [h for h in self.hosts if role in h['roles']]
+        return FuelNodeCollection(cloud_management=self.cloud_management,
+                                  power_management=self.power_management,
+                                  hosts=hosts)
+
+    def filter_by_service(self, service_name):
+        cmd = SERVICE_CMD[service_name]
+        ips = [n['ip'] for n in self.hosts]
+        results = self.cloud_management.execute_on_cloud(ips, {'command': cmd}, False)
+        success_ips = [r.host for r in results if r.status == executor.STATUS_OK]
+        hosts = [h for h in self.hosts if h['ip'] in success_ips]
         return FuelNodeCollection(cloud_management=self.cloud_management,
                                   power_management=self.power_management,
                                   hosts=hosts)
@@ -178,14 +196,17 @@ class FuelManagement(cloud_management.CloudManagement):
         return self.master_node_executor.execute(
             [self.master_node_address], task)
 
-    def execute_on_cloud(self, hosts, task):
+    def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.
 
         :param hosts: List of host FQDNs
         :param task: Ansible task
         :return: Ansible execution result (list of records)
         """
-        return self.cloud_executor.execute(hosts, task)
+        if raise_on_error:
+            return self.cloud_executor.execute(hosts, task)
+        else:
+            return self.cloud_executor.execute(hosts, task, [])
 
     def _retrieve_hosts_fqdn(self):
         for host in self._get_cloud_hosts():
