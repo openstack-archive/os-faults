@@ -18,6 +18,7 @@ from pyghmi.ipmi import command as ipmi_command
 
 from os_failures.api import error
 from os_failures.api import power_management
+from os_failures import utils
 
 
 class IPMIDriver(power_management.PowerManagement):
@@ -38,12 +39,11 @@ class IPMIDriver(power_management.PowerManagement):
                                            userid=bmc['username'],
                                            password=bmc['password'])
             ret = ipmicmd.set_power(cmd, wait=True)
-        except pyghmi_exception.IpmiException as e:
+        except pyghmi_exception.IpmiException:
             msg = 'IPMI cmd {!r} failed on bmc {!r}, Node({})'.format(
                 cmd, bmc['address'], mac_address)
             logging.error(msg)
-            logging.exception(e)
-            raise error.PowerManagmentError(msg)
+            raise
 
         logging.debug('IPMI response: {}'.format(ret))
         if ret.get('powerstate') != expected_state or 'error' in ret:
@@ -53,24 +53,30 @@ class IPMIDriver(power_management.PowerManagement):
                                      mac_address))
             raise error.PowerManagmentError(msg)
 
+    def _poweroff(self, mac_address):
+        logging.info('Power off Node with MAC address: %s', mac_address)
+        self._run_set_power_cmd(
+            mac_address, cmd='off', expected_state='off')
+        logging.info('Node(%s) was powered off' % mac_address)
+
+    def _poweron(self, mac_address):
+        logging.info('Power on Node with MAC address: %s', mac_address)
+        self._run_set_power_cmd(
+            mac_address, cmd='on', expected_state='on')
+        logging.info('Node(%s) was powered on' % mac_address)
+
+    def _reset(self, mac_address):
+        logging.info('Reset Node with MAC address: %s', mac_address)
+        # boot -- If system is off, then 'on', else 'reset'
+        self._run_set_power_cmd(mac_address, cmd='boot')
+        # NOTE(astudenov): This command does not wait for node to boot
+        logging.info('Node(%s) was reset' % mac_address)
+
     def poweroff(self, mac_addresses_list):
-        for mac_address in mac_addresses_list:
-            logging.info('Power off Node with MAC address: %s', mac_address)
-            self._run_set_power_cmd(
-                mac_address, cmd='off', expected_state='off')
-            logging.info('Node(%s) was powered off' % mac_address)
+        utils.run(self._poweroff, mac_addresses_list)
 
     def poweron(self, mac_addresses_list):
-        for mac_address in mac_addresses_list:
-            logging.info('Power on Node with MAC address: %s', mac_address)
-            self._run_set_power_cmd(
-                mac_address, cmd='on', expected_state='on')
-            logging.info('Node(%s) was powered on' % mac_address)
+        utils.run(self._poweron, mac_addresses_list)
 
     def reset(self, mac_addresses_list):
-        for mac_address in mac_addresses_list:
-            logging.info('Reset Node with MAC address: %s', mac_address)
-            # boot -- If system is off, then 'on', else 'reset'
-            self._run_set_power_cmd(mac_address, cmd='boot')
-            # NOTE(astudenov): this command does not wait for node to boot
-            logging.info('Node(%s) was reset' % mac_address)
+        utils.run(self._reset, mac_addresses_list)
