@@ -103,9 +103,17 @@ class FuelService(service.Service):
     def __repr__(self):
         return str(type(self))
 
-    def _get_nodes(self, role):
+    def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
-        return nodes.filter(role=role)
+        ips = [n['ip'] for n in nodes.hosts]
+        results = self.cloud_management.execute_on_cloud(
+            ips, {'command': self.GET_NODES_CMD}, False)
+        success_ips = [r.host for r in results
+                       if r.status == executor.STATUS_OK]
+        hosts = [h for h in nodes.hosts if h['ip'] in success_ips]
+        return FuelNodeCollection(cloud_management=self.cloud_management,
+                                  power_management=self.power_management,
+                                  hosts=hosts)
 
     @staticmethod
     def get_nodes_ips(nodes):
@@ -113,8 +121,7 @@ class FuelService(service.Service):
 
 
 class KeystoneService(FuelService):
-    def get_nodes(self):
-        return self._get_nodes(role='controller')
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'keystone-main\'"'
 
     def restart(self, nodes=None):
         nodes = nodes or self._get_nodes(role='controller')
@@ -127,8 +134,28 @@ class KeystoneService(FuelService):
         logging.info('Restart the service, result: %s', exec_res)
 
 
+class MySQLService(FuelService):
+    GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
+
+
+class RabbitMQService(FuelService):
+    GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
+
+
+class NovaAPIService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'nova-api\'"'
+
+
+class GlanceAPIService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'glance-api\'"'
+
+
 SERVICE_NAME_TO_CLASS = {
-    'keystone-api': KeystoneService,
+    'keystone': KeystoneService,
+    'mysql': MySQLService,
+    'rabbitmq': RabbitMQService,
+    'nova-api': NovaAPIService,
+    'glance-api': GlanceAPIService,
 }
 
 
@@ -178,14 +205,17 @@ class FuelManagement(cloud_management.CloudManagement):
         return self.master_node_executor.execute(
             [self.master_node_address], task)
 
-    def execute_on_cloud(self, hosts, task):
+    def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.
 
         :param hosts: List of host FQDNs
         :param task: Ansible task
         :return: Ansible execution result (list of records)
         """
-        return self.cloud_executor.execute(hosts, task)
+        if raise_on_error:
+            return self.cloud_executor.execute(hosts, task)
+        else:
+            return self.cloud_executor.execute(hosts, task, [])
 
     def _retrieve_hosts_fqdn(self):
         for host in self._get_cloud_hosts():

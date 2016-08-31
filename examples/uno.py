@@ -43,13 +43,14 @@ def main():
     distractor.verify()
 
     # os_failures library operate with 2 types of objects:
-    # service - is software that runs in the cloud, e.g. keystone
+    # service - is software that runs in the cloud, e.g. keystone, mysql, rabbitmq, nova-api, glance-api
     # nodes - nodes that host the cloud, e.g. hardware server with hostname
 
     logging.info('# Get a particular service in the cloud')
-    service = distractor.get_service(name='keystone-api')
+    service = distractor.get_service(name='keystone')
     logging.info('Keystone API Service: %s', service)
 
+    # Note: Only for Keystone!
     logging.info('# Restart the service')
     service.restart()
 
