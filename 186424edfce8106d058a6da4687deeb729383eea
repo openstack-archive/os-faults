@@ -1,0 +1,9 @@
+Code-Review+1: Anton Studenov <astudenov@mirantis.com>
+Code-Review+2: Ilya Shakhat <ishakhat@mirantis.com>
+Workflow+1: Ilya Shakhat <ishakhat@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 31 Aug 2016 12:48:34 +0000
+Reviewed-on: https://review.openstack.org/362140
+Project: openstack/os-failures
+Branch: refs/heads/master
