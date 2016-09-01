@@ -22,3 +22,7 @@ class OSFError(OSFException):
 
 class PowerManagmentError(OSFError):
     """Base Error class for Power Management API"""
+
+
+class FuelServiceError(OSFError):
+    """Base Error class for Fuel Service API"""

@@ -18,6 +18,7 @@ import random
 import six
 
 from os_failures.ansible import executor
+from os_failures.api import error
 from os_failures.api import cloud_management
 from os_failures.api import node_collection
 from os_failures.api import service
@@ -115,6 +116,22 @@ class FuelService(service.Service):
                                   power_management=self.power_management,
                                   hosts=hosts)
 
+    def _run_task(self, task, nodes=None):
+        nodes = nodes or self._get_nodes()
+        ips = self.get_nodes_ips(nodes)
+        if not ips:
+            raise error.FuelServiceError('Node collection is empty')
+
+        results = self.cloud_management.execute_on_cloud(ips, task)
+        err = False
+        for result in results:
+            if result.status != executor.STATUS_OK:
+                logging.error('Task %s failed on node %s', task, result.host)
+                err = True
+        if err:
+            raise error.FuelServiceError('Task failed on some nodes')
+        return results
+
     @staticmethod
     def get_nodes_ips(nodes):
         return [host['ip'] for host in nodes.iterate_hosts()]
@@ -122,32 +139,63 @@ class FuelService(service.Service):
 
 class KeystoneService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'keystone-main\'"'
+    SIGKILL_CMD = ('bash -c ''"ps ax | grep [k]eystone | '
+                   'awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service apache2 restart'
 
     def restart(self, nodes=None):
-        nodes = nodes or self._get_nodes(role='controller')
-        ips = self.get_nodes_ips(nodes)
+        nodes = nodes or self._get_nodes()
+        task_result = self._run_task({'command': self.RESTART_CMD}, nodes)
+        logging.info('Restart KeystoneService, result: %s', task_result)
 
-        task = {
-            'command': 'service apache2 restart'
-        }
-        exec_res = self.cloud_management.execute_on_cloud(ips, task)
-        logging.info('Restart the service, result: %s', exec_res)
+    def sigkill(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        task_result = self._run_task({'command': self.SIGKILL_CMD}, nodes)
+        logging.info('SIGKILL KeystoneService, result: %s', task_result)
 
 
 class MySQLService(FuelService):
     GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
+    SIGKILL_CMD = ('bash -c ''"ps ax | grep [m]ysqld | '
+                   'awk {\'print $1\'} | xargs kill -9"')
+
+    def sigkill(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        task_result = self._run_task({'command': self.SIGKILL_CMD}, nodes)
+        logging.info('SIGKILL MySQLService, result: %s', task_result)
 
 
 class RabbitMQService(FuelService):
     GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
+    SIGKILL_CMD = ('bash -c ''"ps ax | grep [r]abbitmq-server | '
+                   'awk {\'print $1\'} | xargs kill -9"')
+
+    def sigkill(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        task_result = self._run_task({'command': self.SIGKILL_CMD}, nodes)
+        logging.info('SIGKILL RabbitMQService, result: %s', task_result)
 
 
 class NovaAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'nova-api\'"'
+    SIGKILL_CMD = ('bash -c ''"ps ax | grep [n]ova-api | '
+                   'awk {\'print $1\'} | xargs kill -9"')
+
+    def sigkill(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        task_result = self._run_task({'command': self.SIGKILL_CMD}, nodes)
+        logging.info('SIGKILL NovaAPIService, result: %s', task_result)
 
 
 class GlanceAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'glance-api\'"'
+    SIGKILL_CMD = ('bash -c ''"ps ax | grep [g]lance-api | '
+                   'awk {\'print $1\'} | xargs kill -9"')
+
+    def sigkill(self, nodes=None):
+        nodes = nodes or self._get_nodes(role='controller')
+        task_result = self._run_task({'command': self.SIGKILL_CMD}, nodes)
+        logging.info('SIGKILL GlanceAPIService, result: %s', task_result)
 
 
 SERVICE_NAME_TO_CLASS = {
