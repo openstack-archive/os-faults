@@ -15,6 +15,8 @@ import abc
 
 import six
 
+from os_faults.api.util import public
+
 
 @six.add_metaclass(abc.ABCMeta)
 class NodeCollection(object):
@@ -26,36 +28,42 @@ class NodeCollection(object):
         :return: NodeCollection consisting just one node
         """
 
+    @public
     def reboot(self):
         """Reboot all nodes gracefully
 
         """
         raise NotImplementedError
 
+    @public
     def oom(self):
         """Fill all node's RAM
 
         """
         raise NotImplementedError
 
+    @public
     def poweroff(self):
         """Power off all nodes abruptly
 
         """
         raise NotImplementedError
 
+    @public
     def poweron(self):
         """Power on all nodes abruptly
 
         """
         raise NotImplementedError
 
+    @public
     def reset(self):
         """Reset (cold restart) all nodes
 
         """
         raise NotImplementedError
 
+    @public
     def disable_network(self, network_name):
         """Disable network with name network_name on each of the nodes
 
@@ -63,6 +71,7 @@ class NodeCollection(object):
         """
         raise NotImplementedError
 
+    @public
     def enable_network(self, network_name):
         """Enable network with name network_name on each of the nodes
 
