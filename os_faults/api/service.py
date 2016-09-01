@@ -15,6 +15,8 @@ import abc
 
 import six
 
+from os_faults.api.util import public
+
 
 @six.add_metaclass(abc.ABCMeta)
 class Service(object):
@@ -27,6 +29,7 @@ class Service(object):
         """
         pass
 
+    @public
     def restart(self, nodes=None):
         """Restart Service on all nodes or on particular subset
 
@@ -34,6 +37,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def terminate(self, nodes=None):
         """Terminate Service gracefully on all nodes or on particular subset
 
@@ -41,6 +45,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def start(self, nodes=None):
         """Start Service on all nodes or on particular subset
 
@@ -48,6 +53,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def kill(self, nodes=None):
         """Terminate Service abruptly on all nodes or on particular subset
 
@@ -55,6 +61,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def unplug(self, nodes=None):
         """Unplug Service out of network on all nodes or on particular subset
 
@@ -62,6 +69,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def plug(self, nodes=None):
         """Plug Service into network on all nodes or on particular subset
 
@@ -69,6 +77,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def freeze(self, nodes=None, sec=None):
         """SIGSTOP
 
@@ -81,6 +90,7 @@ class Service(object):
         """
         raise NotImplementedError
 
+    @public
     def unfreeze(self, nodes=None):
         """SIGCONT
 

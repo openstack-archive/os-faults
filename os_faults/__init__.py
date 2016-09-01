@@ -17,6 +17,7 @@ import pbr.version
 import yaml
 
 from os_faults.api import error
+from os_faults.api import human
 from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
@@ -39,8 +40,8 @@ CONFIG_FILES = [
 ]
 
 
-def _read_config():
-    os_faults_config = os.environ.get('OS_FAULTS_CONFIG')
+def _read_config(config_filename):
+    os_faults_config = config_filename or os.environ.get('OS_FAULTS_CONFIG')
     if os_faults_config:
         CONFIG_FILES.insert(0, os_faults_config)
 
@@ -53,9 +54,9 @@ def _read_config():
     raise error.OSFError(msg)
 
 
-def connect(cloud_config=None):
+def connect(cloud_config=None, config_filename=None):
     if not cloud_config:
-        cloud_config = _read_config()
+        cloud_config = _read_config(config_filename)
 
     cloud_management = None
     cloud_management_params = cloud_config.get('cloud_management') or {}
@@ -77,3 +78,12 @@ def connect(cloud_config=None):
     cloud_management.set_power_management(power_management)
 
     return cloud_management
+
+
+def human_api(distractor, command):
+    """Execute high-level text command with specified destructor
+
+    :param destructor: library instance as returned by :connect: function
+    :param command: text command
+    """
+    human.execute(distractor, command)

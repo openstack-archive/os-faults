@@ -63,8 +63,35 @@ The library operates with 2 types of objects:
  * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 
-Use cases
----------
+Simplified API
+--------------
+
+Simplified API is used to inject faults in a human-friendly form.
+
+Service-based query performs specified `action` against `service` on
+all or selected nodes::
+
+  <action> <service> service [on (random|one|single|<fqdn> node[s])]
+
+Node-based query performs specified `action` on all or selected service's
+node::
+
+  <action> [random|one|single] <service> node[s]
+
+Network-management query is a subset of node-based query::
+
+  disable|enable network <network name> on <service> node[s]
+
+Examples:
+
+ * `Restart Keystone service` - restarts Keystone service in the whole cloud
+ * `kill nova-api service on one node` - restarts Nova service on one of nodes
+ * `Reboot one MySQL node` - reboots random node with MySQL
+ * `Reboot node-2.domain.tld node` - reboot node with specified name
+
+
+Extended API
+------------
 
 1. Service actions
 ~~~~~~~~~~~~~~~~~~
