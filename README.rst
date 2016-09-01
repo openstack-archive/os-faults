@@ -63,8 +63,34 @@ The library operates with 2 types of objects:
  * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 
-Use cases
----------
+Simplified API
+--------------
+
+Simplified API is used to specify particular failures in a text form.
+The query format is following:
+``<action> [one] <subject> node|service``
+
+Actions:
+ * restart
+ * terminate
+ * kill
+ * start
+ * unplug
+ * plug
+ * reset
+ * power off
+ * power on
+Subject is the name of the service or name of the node.
+
+Examples:
+
+ * `Restart Keystone service` - restarts Keystone service in the whole cloud
+ * `Reboot one MySQL node` - reboots random node with MySQL
+ * `Reboot node-2.domain.tld` - reboot node with specified name
+
+
+Extended API
+------------
 
 1. Service actions
 ~~~~~~~~~~~~~~~~~~
@@ -132,3 +158,4 @@ Restart a service on a single node:
     service = destructor.get_service(name='keystone')
     nodes = service.get_nodes().pick()
     service.restart(nodes)
+
