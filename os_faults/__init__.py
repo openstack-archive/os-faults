@@ -17,6 +17,7 @@ import pbr.version
 import yaml
 
 from os_faults.api import error
+from os_faults.api import human
 from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
@@ -77,3 +78,24 @@ def connect(cloud_config=None):
     cloud_management.set_power_management(power_management)
 
     return cloud_management
+
+
+def human_api(distractor, command):
+    """Execute high-level text command with specified distractor
+
+    Command format: <action> [one] <subject> node|service
+    Actions:
+        * restart
+        * terminate
+        * kill
+        * start
+        * unplug
+        * plug
+        * reset
+        * power off
+        * power on
+    Subject is name of the service or name of the node.
+    :param distractor: library instance as returned by :connect: function
+    :param command: text command
+    """
+    human.execute(distractor, command)
