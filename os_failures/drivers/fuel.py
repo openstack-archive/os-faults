@@ -19,6 +19,7 @@ import six
 
 from os_failures.ansible import executor
 from os_failures.api import cloud_management
+from os_failures.api import error
 from os_failures.api import node_collection
 from os_failures.api import service
 
@@ -33,6 +34,15 @@ class FuelNodeCollection(node_collection.NodeCollection):
     def __repr__(self):
         return ('FuelNodeCollection(%s)' %
                 [dict(ip=h['ip'], mac=h['mac']) for h in self.hosts])
+
+    def __len__(self):
+        return len(self.hosts)
+
+    def get_ips(self):
+        return [n['ip'] for n in self.hosts]
+
+    def get_macs(self):
+        return [n['mac'] for n in self.hosts]
 
     def iterate_hosts(self):
         for host in self.hosts:
@@ -57,22 +67,21 @@ class FuelNodeCollection(node_collection.NodeCollection):
         task = {
             'command': 'ps aux'
         }
-        ips = [n['ip'] for n in self.hosts]
-        self.cloud_management.execute_on_cloud(ips, task)
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def oom(self):
         raise NotImplementedError
         logging.info('Enforce nodes to run out of memory: %s', self)
 
     def poweroff(self):
-        self.power_management.poweroff([n['mac'] for n in self.hosts])
+        self.power_management.poweroff(self.get_macs())
 
     def poweron(self):
-        self.power_management.poweron([n['mac'] for n in self.hosts])
+        self.power_management.poweron(self.get_macs())
 
     def reset(self):
         logging.info('Reset nodes: %s', self)
-        self.power_management.reset([n['mac'] for n in self.hosts])
+        self.power_management.reset(self.get_macs())
 
     def enable_network(self, network_name):
         logging.info('Enable network: %s on nodes: %s', network_name, self)
@@ -80,8 +89,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
             'network_name': network_name,
             'operation': 'up',
         }}
-        ips = [n['ip'] for n in self.hosts]
-        self.cloud_management.execute_on_cloud(ips, task)
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def disable_network(self, network_name):
         logging.info('Disable network: %s on nodes: %s', network_name, self)
@@ -89,8 +97,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
             'network_name': network_name,
             'operation': 'down',
         }}
-        ips = [n['ip'] for n in self.hosts]
-        self.cloud_management.execute_on_cloud(ips, task)
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -103,9 +110,25 @@ class FuelService(service.Service):
     def __repr__(self):
         return str(type(self))
 
+    def _run_task(self, task, nodes=None):
+        nodes = nodes or self.get_nodes()
+        ips = nodes.get_ips()
+        if not ips:
+            raise error.FuelServiceError('Node collection is empty')
+
+        results = self.cloud_management.execute_on_cloud(ips, task)
+        err = False
+        for result in results:
+            if result.status != executor.STATUS_OK:
+                logging.error('Task %s failed on node %s', task, result.host)
+                err = True
+        if err:
+            raise error.FuelServiceError('Task failed on some nodes')
+        return results
+
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
-        ips = [n['ip'] for n in nodes.hosts]
+        ips = nodes.get_ips()
         results = self.cloud_management.execute_on_cloud(
             ips, {'command': self.GET_NODES_CMD}, False)
         success_ips = [r.host for r in results
@@ -115,39 +138,48 @@ class FuelService(service.Service):
                                   power_management=self.power_management,
                                   hosts=hosts)
 
-    @staticmethod
-    def get_nodes_ips(nodes):
-        return [host['ip'] for host in nodes.iterate_hosts()]
+    def restart(self, nodes=None):
+        nodes = nodes or self.get_nodes()
+        task_result = self._run_task({'command': self.RESTART_CMD}, nodes)
+        logging.info('Restart %s, result: %s', str(self.__class__),
+                     task_result)
+
+    def kill(self, nodes=None):
+        nodes = nodes or self.get_nodes()
+        task_result = self._run_task({'command': self.KILL_CMD}, nodes)
+        logging.info('SIGKILL %s, result: %s', str(self.__class__),
+                     task_result)
 
 
 class KeystoneService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'keystone-main\'"'
-
-    def restart(self, nodes=None):
-        nodes = nodes or self._get_nodes(role='controller')
-        ips = self.get_nodes_ips(nodes)
-
-        task = {
-            'command': 'service apache2 restart'
-        }
-        exec_res = self.cloud_management.execute_on_cloud(ips, task)
-        logging.info('Restart the service, result: %s', exec_res)
+    KILL_CMD = ('bash -c "ps ax | grep [k]eystone'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service apache2 restart'
 
 
 class MySQLService(FuelService):
     GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [m]ysqld'
+                ' | awk {\'print $1\'} | xargs kill -9"')
 
 
 class RabbitMQService(FuelService):
     GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
+                ' | awk {\'print $1\'} | xargs kill -9"')
 
 
 class NovaAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'nova-api\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [n]ova-api'
+                ' | awk {\'print $1\'} | xargs kill -9"')
 
 
 class GlanceAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'glance-api\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [g]lance-api'
+                ' | awk {\'print $1\'} | xargs kill -9"')
 
 
 SERVICE_NAME_TO_CLASS = {
