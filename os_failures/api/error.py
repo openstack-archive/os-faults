@@ -20,7 +20,7 @@ class OSFError(OSFException):
     """Base Error class"""
 
 
-class PowerManagmentError(OSFError):
+class PowerManagementError(OSFError):
     """Base Error class for Power Management API"""
 
 

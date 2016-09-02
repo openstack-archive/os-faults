@@ -45,7 +45,7 @@ def main():
     nodes = destructor.get_nodes()
     logging.info('All cluster nodes: %s', nodes)
 
-    logging.info('Pick and power off one of cluster nodes')
+    logging.info('Pick and power off/on one of cluster nodes')
     one = nodes.pick()
     one.poweroff()
     one.poweron()

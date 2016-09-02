@@ -12,36 +12,12 @@
 # limitations under the License.
 
 import logging
-import threading
-import traceback
 
 import libvirt
 
 from os_failures.api import error
 from os_failures.api import power_management
-
-
-class ThreadsWrapper(object):
-    def __init__(self, target):
-        self.target = target
-        self.threads = []
-        self.errors = []
-
-    def _target(self, **kwargs):
-        try:
-            self.target(**kwargs)
-        except Exception as exc:
-            logging.error(traceback.format_exc())
-            self.errors.append(exc)
-
-    def start_thread(self, **kwargs):
-        thread = threading.Thread(target=self._target, kwargs=kwargs)
-        thread.start()
-        self.threads.append(thread)
-
-    def join_threads(self):
-        for thread in self.threads:
-            thread.join()
+from os_failures import utils
 
 
 class LibvirtDriver(power_management.PowerManagement):
@@ -64,44 +40,32 @@ class LibvirtDriver(power_management.PowerManagement):
             if mac_address in domain.XMLDesc():
                 return domain
 
-        raise error.PowerManagmentError(
-            'Node with MAC address %s not found!' % mac_address)
+        raise error.PowerManagementError(
+            'Domain with MAC address %s not found!' % mac_address)
 
     def _poweroff(self, mac_address):
         logging.info('Power off domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.destroy()
-        logging.info('Domain (%s) was powered off' % mac_address)
+        logging.info('Domain(%s) was powered off' % mac_address)
 
     def _poweron(self, mac_address):
         logging.info('Power on domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.create()
-        logging.info('Domain (%s) was powered on' % mac_address)
+        logging.info('Domain(%s) was powered on' % mac_address)
 
     def _reset(self, mac_address):
         logging.info('Reset domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.reset()
-        logging.info('Domain (%s) was reset' % mac_address)
-
-    @staticmethod
-    def _run(target, mac_addresses_list):
-        tw = ThreadsWrapper(target)
-        for mac_address in mac_addresses_list:
-            tw.start_thread(mac_address=mac_address)
-        tw.join_threads()
-
-        if tw.errors:
-            raise error.PowerManagmentError(
-                'There are some errors when working the libvirt driver. '
-                'Please, check logs for more details.')
+        logging.info('Domain(%s) was reset' % mac_address)
 
     def poweroff(self, mac_addresses_list):
-        self._run(self._poweroff, mac_addresses_list)
+        utils.run(self._poweroff, mac_addresses_list)
 
     def poweron(self, mac_addresses_list):
-        self._run(self._poweron, mac_addresses_list)
+        utils.run(self._poweron, mac_addresses_list)
 
     def reset(self, mac_addresses_list):
-        self._run(self._reset, mac_addresses_list)
+        utils.run(self._reset, mac_addresses_list)
