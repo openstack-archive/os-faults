@@ -1,0 +1,10 @@
+Code-Review+1: Andreas Jaeger <jaegerandi@gmail.com>
+Code-Review+1: Anton Studenov <astudenov@mirantis.com>
+Code-Review+2: Ilya Shakhat <ishakhat@mirantis.com>
+Workflow+1: Ilya Shakhat <ishakhat@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Sun, 04 Sep 2016 13:03:13 +0000
+Reviewed-on: https://review.openstack.org/365125
+Project: openstack/os-faults
+Branch: refs/heads/master
