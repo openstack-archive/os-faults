@@ -1,6 +1,6 @@
 #!/bin/bash -x
 
-KEY_FILE_NAME="${HOME}/.ssh/os_failures"
+KEY_FILE_NAME="${HOME}/.ssh/os_faults"
 USERNAME="root"
 HOST="172.18.171.149"
 

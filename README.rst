@@ -1,17 +1,17 @@
-===========
-os-failures
-===========
+=========
+os-faults
+=========
 
-**An OpenStack failures library**
+**OpenStack faults injection library**
 
-The library does destructive actions against OpenStack cloud. It provides
+The library does destructive actions inside OpenStack cloud. It provides
 an abstraction layer over different type of cloud deployment. The actions
 are implemented as drivers (e.g. DevStack driver, Fuel driver, KVM driver etc.).
 
 * Free software: Apache license
-* Documentation: http://os_failures.readthedocs.io
-* Source: https://github.com/shakhat/os-failures
-* Bugs: http://bugs.launchpad.net/os_failures
+* Documentation: http://os-faults.readthedocs.io
+* Source: https://github.com/openstack/os-faults
+* Bugs: http://bugs.launchpad.net/os_faults
 
 Usage
 -----
@@ -44,7 +44,7 @@ Build the connection to the cloud deployment and verify it:
 
 .. code-block:: python
 
-    distractor = os_failures.connect(cloud_config)
+    distractor = os_faults.connect(cloud_config)
     distractor.verify()
 
 Make some distraction:
@@ -69,7 +69,7 @@ Get a service and restart it:
 
 .. code-block:: python
 
-    distractor = os_failures.connect(cloud_config)
+    distractor = os_faults.connect(cloud_config)
     service = distractor.get_service(name='keystone-api')
     service.restart()
 

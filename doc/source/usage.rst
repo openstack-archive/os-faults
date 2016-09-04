@@ -1,7 +1,7 @@
-========
+=====
 Usage
-========
+=====
 
-To use os_failures in a project::
+To use os-faults in a project::
 
-    import os_failures
+    import os_faults

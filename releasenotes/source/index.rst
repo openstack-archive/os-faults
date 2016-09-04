@@ -1,5 +1,5 @@
 ============================================
- os_failures Release Notes
+ os_faults Release Notes
 ============================================
 
 .. toctree::

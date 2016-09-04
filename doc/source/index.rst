@@ -1,10 +1,10 @@
-.. os_failures documentation master file, created by
+.. os-faults documentation master file, created by
    sphinx-quickstart on Tue Jul  9 22:26:36 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to os_failures's documentation!
-========================================================
+Welcome to os-faults's documentation!
+=====================================
 
 Contents:
 

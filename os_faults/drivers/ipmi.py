@@ -16,9 +16,9 @@ import logging
 from pyghmi import exceptions as pyghmi_exception
 from pyghmi.ipmi import command as ipmi_command
 
-from os_failures.api import error
-from os_failures.api import power_management
-from os_failures import utils
+from os_faults.api import error
+from os_faults.api import power_management
+from os_faults import utils
 
 
 class IPMIDriver(power_management.PowerManagement):

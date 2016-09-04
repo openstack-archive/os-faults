@@ -81,7 +81,7 @@ class MyCallback(callback_pkg.CallbackBase):
 
 def resolve_relative_path(file_name):
     path = os.path.normpath(os.path.join(
-        os.path.dirname(__import__('os_failures').__file__), '../', file_name))
+        os.path.dirname(__import__('os_faults').__file__), '../', file_name))
     if os.path.exists(path):
         return path
 
@@ -99,7 +99,7 @@ class AnsibleRunner(object):
                  ssh_common_args='', become=None):
         super(AnsibleRunner, self).__init__()
 
-        module_path = resolve_relative_path('os_failures/ansible/modules')
+        module_path = resolve_relative_path('os_faults/ansible/modules')
         ssh_common_args = ' '.join([ssh_common_args, SSH_COMMON_ARGS])
 
         self.options = Options(
