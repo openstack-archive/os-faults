@@ -12,13 +12,13 @@
 
 import pbr.version
 
-from os_failures.drivers import devstack
-from os_failures.drivers import fuel
-from os_failures.drivers import ipmi
-from os_failures.drivers import libvirt_driver
+from os_faults.drivers import devstack
+from os_faults.drivers import fuel
+from os_faults.drivers import ipmi
+from os_faults.drivers import libvirt_driver
 
 __version__ = pbr.version.VersionInfo(
-    'os_failures').version_string()
+    'os_faults').version_string()
 
 
 def connect(cloud_config):

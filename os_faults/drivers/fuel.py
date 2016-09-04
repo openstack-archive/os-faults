@@ -17,11 +17,11 @@ import logging
 import random
 import six
 
-from os_failures.ansible import executor
-from os_failures.api import cloud_management
-from os_failures.api import error
-from os_failures.api import node_collection
-from os_failures.api import service
+from os_faults.ansible import executor
+from os_faults.api import cloud_management
+from os_faults.api import error
+from os_faults.api import node_collection
+from os_faults.api import service
 
 
 class FuelNodeCollection(node_collection.NodeCollection):

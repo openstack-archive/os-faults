@@ -12,7 +12,7 @@
 
 import logging
 
-import os_failures
+import os_faults
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     }
 
     logging.info('Create connection to the cluster')
-    destructor = os_failures.connect(cloud_config)
+    destructor = os_faults.connect(cloud_config)
 
     logging.info('Verify connection to the cluster')
     destructor.verify()

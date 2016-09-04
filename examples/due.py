@@ -12,7 +12,7 @@
 
 import logging
 
-import os_failures
+import os_faults
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
     }
 
     logging.info('# Create connection')
-    distractor = os_failures.connect(cloud_config)
+    distractor = os_faults.connect(cloud_config)
 
     logging.info('# Verify connection to the cloud')
     distractor.verify()

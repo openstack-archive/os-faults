@@ -11,16 +11,16 @@
 # under the License.
 
 """
-test_os_failures
+test_os_faults
 ----------------------------------
 
-Tests for `os_failures` module.
+Tests for `os_faults` module.
 """
 
-from os_failures.tests import base
+from os_faults.tests import base
 
 
-class TestOs_failures(base.TestCase):
+class Testos_faults(base.TestCase):
 
     def test_something(self):
         pass

@@ -15,7 +15,7 @@ import logging
 import threading
 import traceback
 
-from os_failures.api import error
+from os_faults.api import error
 
 
 def run(target, mac_addresses_list):
