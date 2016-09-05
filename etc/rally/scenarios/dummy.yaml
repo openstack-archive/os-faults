@@ -1,0 +1,63 @@
+---
+  Dummy.dummy_random_action:
+    -
+      args:
+        actions_num: 5
+        sleep_min: 0
+        sleep_max: 2
+      runner:
+        type: constant
+        times: 50
+        concurrency: 2
+      hooks:
+      - name: node_factor
+        args:
+            method: poweroff
+            filter:
+                service: nova-api
+            count: 1
+            cloud_config:
+                cloud_management:
+                    driver: fuel
+                    address: 172.16.49.229
+                    username: root
+                power_management:
+                    driver: libvirt
+                    connection_uri: foobar
+        trigger:
+            name: event
+            args:
+                unit: iteration
+                at: [3]
+      - name: node_factor
+        args:
+            method: poweron
+            filter:
+                service: nova-api
+            cloud_config:
+                cloud_management:
+                    driver: fuel
+                    address: 172.16.49.229
+                    username: root
+                power_management:
+                    driver: libvirt
+                    connection_uri: foobar
+        trigger:
+            name: event
+            args:
+                unit: iteration
+                at: [20]
+      - name: service_factor
+        args:
+            method: kill
+            service: glance-api
+            cloud_config:
+                cloud_management:
+                    driver: fuel
+                    address: 172.16.49.229
+                    username: root
+        trigger:
+            name: event
+            args:
+                unit: iteration
+                at: [4]
