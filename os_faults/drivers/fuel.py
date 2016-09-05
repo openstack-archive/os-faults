@@ -46,10 +46,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
     def iterate_hosts(self):
         for host in self.hosts:
-            try:
-                yield host
-            except GeneratorExit:
-                break
+            yield host
 
     def filter(self, role):
         hosts = [h for h in self.hosts if role in h['roles']]
@@ -57,21 +54,20 @@ class FuelNodeCollection(node_collection.NodeCollection):
                                   power_management=self.power_management,
                                   hosts=hosts)
 
-    def pick(self):
+    def pick(self, count=1):
+        if count > len(self.hosts):
+            msg = 'Cannot pick {} from {} node(s)'.format(
+                count, len(self.hosts))
+            raise error.NodeCollectionError(msg)
         return FuelNodeCollection(cloud_management=self.cloud_management,
                                   power_management=self.power_management,
-                                  hosts=[random.choice(self.hosts)])
+                                  hosts=random.sample(self.hosts, count))
 
     def reboot(self):
         raise NotImplementedError
-        task = {
-            'command': 'ps aux'
-        }
-        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def oom(self):
         raise NotImplementedError
-        logging.info('Enforce nodes to run out of memory: %s', self)
 
     def poweroff(self):
         self.power_management.poweroff(self.get_macs())
@@ -114,16 +110,17 @@ class FuelService(service.Service):
         nodes = nodes or self.get_nodes()
         ips = nodes.get_ips()
         if not ips:
-            raise error.FuelServiceError('Node collection is empty')
+            raise error.ServiceError('Node collection is empty')
 
         results = self.cloud_management.execute_on_cloud(ips, task)
         err = False
         for result in results:
             if result.status != executor.STATUS_OK:
-                logging.error('Task %s failed on node %s', task, result.host)
+                logging.error(
+                    'Task {} failed on node {}'.format(task, result.host))
                 err = True
         if err:
-            raise error.FuelServiceError('Task failed on some nodes')
+            raise error.ServiceError('Task failed on some nodes')
         return results
 
     def get_nodes(self):
