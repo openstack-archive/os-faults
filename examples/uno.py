@@ -18,77 +18,61 @@ import os_faults
 def main():
     # cloud config schema is an extension to os-client-config
     cloud_config = {
-        'auth': {
-            'username': 'admin',
-            'password': 'admin',
-            'project_name': 'admin',
-        },
-        'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'fuel',
             'address': 'fuel.local',
             'username': 'root',
         },
         'power_management': {
-            'driver': 'kvm',
-            'address': 'kvm.local',
-            'username': 'root',
+            'driver': 'libvirt',
+            'connection_uri': 'qemu+ssh://ubuntu@host.local/system'
         }
     }
 
-    logging.info('# Create connection')
-    distractor = os_faults.connect(cloud_config)
+    logging.info('# Create connection to the cloud')
+    destructor = os_faults.connect(cloud_config)
 
     logging.info('# Verify connection to the cloud')
-    distractor.verify()
+    destructor.verify()
 
     # os_faults library operate with 2 types of objects:
     # service - is software that runs in the cloud, e.g. keystone, mysql,
     #           rabbitmq, nova-api, glance-api
     # nodes   - nodes that host the cloud, e.g. hardware server with hostname
 
-    logging.info('# Get a particular service in the cloud')
-    service = distractor.get_service(name='keystone')
-    logging.info('Keystone API Service: %s', service)
-
-    # Note: Only for Keystone!
-    logging.info('# Restart the service')
-    service.restart()
-
-    logging.info('# Get nodes where the service runs')
+    logging.info('# Get nodes where Nova API service runs')
+    service = destructor.get_service(name='nova-api')
     nodes = service.get_nodes()
     logging.info('Nodes: %s', nodes)
 
-    logging.info('# Reboot these nodes')
-    nodes.reboot()
+    logging.info('# Restart Nova API service on all nodes')
+    service.restart()
 
-    logging.info('# Pick one one out of collection of nodes')
+    logging.info('# Pick and reset one of Nova API service nodes')
     one = nodes.pick()
-
-    logging.info('# Switch the node off')
-    one.poweroff()
+    one.reset()
 
     logging.info('# Get all nodes in the cloud')
-    nodes = distractor.get_nodes()
+    nodes = destructor.get_nodes()
     logging.info('All cloud nodes: %s', nodes)
 
     logging.info('# Reset all these nodes')
     nodes.reset()
 
-    logging.info('# Get nodes by their FQDNs')
-    nodes = distractor.get_nodes(fqdns=['node-2.domain.tld'])
-    logging.info('Node with specific FQDN: %s', nodes)
+    logging.info('# Get node by FQDN: node-2.domain.tld')
+    nodes = destructor.get_nodes(fqdns=['node-2.domain.tld'])
+    logging.info('Node node-2.domain.tld: %s', nodes)
 
-    logging.info('# Disable public network on these nodes')
+    logging.info('# Disable public network on node-2.domain.tld')
     nodes.disable_network(network_name='public')
 
-    logging.info('# Enable public network on these nodes')
+    logging.info('# Enable public network on node-2.domain.tld')
     nodes.enable_network(network_name='public')
 
-    logging.info('# Restart service on a single node')
-    service = distractor.get_service(name='keystone-api')
+    logging.info('# Kill Glance API service on a single node')
+    service = destructor.get_service(name='glance-api')
     nodes = service.get_nodes().pick()
-    service.restart(nodes)
+    service.kill(nodes)
 
 
 if __name__ == '__main__':

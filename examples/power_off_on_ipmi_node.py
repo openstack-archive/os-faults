@@ -18,12 +18,6 @@ import os_faults
 def main():
     # cloud config schema is an extension to os-client-config
     cloud_config = {
-        'auth': {
-            'username': 'admin',
-            'password': 'admin',
-            'project_name': 'admin',
-        },
-        'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'fuel',
             'address': 'fuel.local',

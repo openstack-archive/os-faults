@@ -17,8 +17,7 @@ from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
 from os_faults.drivers import libvirt_driver
 
-__version__ = pbr.version.VersionInfo(
-    'os_faults').version_string()
+__version__ = pbr.version.VersionInfo('os_faults').version_string()
 
 
 def connect(cloud_config):
@@ -37,8 +36,7 @@ def connect(cloud_config):
         power_management = libvirt_driver.LibvirtDriver(
             power_management_params)
     elif power_management_params.get('driver') == 'ipmi':
-        power_management = ipmi.IPMIDriver(
-            power_management_params)
+        power_management = ipmi.IPMIDriver(power_management_params)
 
     cloud_management.set_power_management(power_management)
 

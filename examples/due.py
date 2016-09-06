@@ -18,12 +18,6 @@ import os_faults
 def main():
     # cloud config schema is an extension to os-client-config
     cloud_config = {
-        'auth': {
-            'username': 'admin',
-            'password': 'admin',
-            'project_name': 'admin',
-        },
-        'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'devstack',
             'address': 'devstack.local',
@@ -31,17 +25,14 @@ def main():
         }
     }
 
-    logging.info('# Create connection')
-    distractor = os_faults.connect(cloud_config)
+    logging.info('# Create connection to the cloud')
+    destructor = os_faults.connect(cloud_config)
 
     logging.info('# Verify connection to the cloud')
-    distractor.verify()
+    destructor.verify()
 
-    logging.info('# Get a particular service in the cloud')
-    service = distractor.get_service(name='keystone-api')
-    logging.info('Keystone API Service: %s', service)
-
-    logging.info('# Restart the service')
+    logging.info('# Restart Keystone service on all nodes')
+    service = destructor.get_service(name='keystone')
     service.restart()
 
 

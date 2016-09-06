@@ -18,12 +18,6 @@ import os_faults
 def main():
     # cloud config schema is an extension to os-client-config
     cloud_config = {
-        'auth': {
-            'username': 'admin',
-            'password': 'admin',
-            'project_name': 'admin',
-        },
-        'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'fuel',
             'address': 'fuel.local',
@@ -52,5 +46,5 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',
-                        level=logging.INFO)
+                        level=logging.DEBUG)
     main()
