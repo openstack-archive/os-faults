@@ -1,12 +1,13 @@
 =========
-os-faults
+OS-Faults
 =========
 
 **OpenStack faults injection library**
 
-The library does destructive actions inside OpenStack cloud. It provides
-an abstraction layer over different type of cloud deployment. The actions
-are implemented as drivers (e.g. DevStack driver, Fuel driver, KVM driver etc.).
+The library does destructive actions inside an OpenStack cloud. It provides
+an abstraction layer over different types of cloud deployments. The actions
+are implemented as drivers (e.g. DevStack driver, Fuel driver, Libvirt driver,
+IPMI driver).
 
 * Free software: Apache license
 * Documentation: http://os-faults.readthedocs.io
@@ -16,47 +17,42 @@ are implemented as drivers (e.g. DevStack driver, Fuel driver, KVM driver etc.).
 Usage
 -----
 
-Cloud deployment configuration schema is an extension to cloud config used by
-`os-client-config <https://github.com/openstack/os-client-config>`_ library:
+The cloud deployment configuration schema is an extension to the cloud config
+used by the `os-client-config <https://github.com/openstack/os-client-config>`_
+library:
 
 .. code-block:: python
 
     cloud_config = {
-        'auth': {
-            'username': 'admin',
-            'password': 'admin',
-            'project_name': 'admin',
-        },
-        'region_name': 'RegionOne',
         'cloud_management': {
             'driver': 'devstack',
             'address': 'devstack.local',
             'username': 'root',
         },
         'power_management': {
-            'driver': 'kvm',
-            'address': 'kvm.local',
+            'driver': 'libvirt',
+            'address': 'host.local',
             'username': 'root',
         }
     }
 
-Build the connection to the cloud deployment and verify it:
+Establish a connection to the cloud and verify it:
 
 .. code-block:: python
 
-    distractor = os_faults.connect(cloud_config)
-    distractor.verify()
+    destructor = os_faults.connect(cloud_config)
+    destructor.verify()
 
-Make some distraction:
+Make some destructive actions:
 
 .. code-block:: python
 
-    distractor.get_service(name='keystone-api').restart()
+    destructor.get_service(name='keystone').restart()
 
 
 The library operates with 2 types of objects:
- * `service` - is software that runs in the cloud, e.g. `keystone-api`
- * `nodes` - nodes that host the cloud, e.g. hardware server with hostname
+ * `service` - is a software that runs in the cloud, e.g. `nova-api`
+ * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 
 Use cases
@@ -69,8 +65,8 @@ Get a service and restart it:
 
 .. code-block:: python
 
-    distractor = os_faults.connect(cloud_config)
-    service = distractor.get_service(name='keystone-api')
+    destructor = os_faults.connect(cloud_config)
+    service = destructor.get_service(name='glance-api')
     service.restart()
 
 Available actions:
@@ -81,14 +77,14 @@ Available actions:
  * `unplug` - unplug Service out of network
  * `plug` - plug Service into network
 
-2. Nodes operations
-~~~~~~~~~~~~~~~~~~~
+2. Node actions
+~~~~~~~~~~~~~~~
 
 Get all nodes in the cloud and reboot them:
 
 .. code-block:: python
 
-    nodes = distractor.get_nodes()
+    nodes = destructor.get_nodes()
     nodes.reboot()
 
 Available actions:
@@ -96,11 +92,11 @@ Available actions:
  * `poweroff` - power off all nodes abruptly
  * `reset` - reset (cold restart) all nodes
  * `oom` - fill all node's RAM
- * `disable_network` - disable network with specified name on each of the nodes
- * `enable_network` - enable network with specified name on each of the nodes
+ * `disable_network` - disable network with the specified name on all nodes
+ * `enable_network` - enable network with the specified name on all nodes
 
-3. Operate with service's nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3. Operate with nodes by their services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Get all nodes where the service runs, pick one of them and reset:
 
@@ -113,21 +109,21 @@ Get all nodes where the service runs, pick one of them and reset:
 4. Operate with nodes by their FQDNs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Get nodes where l3-agent runs and disable management network on that nodes:
+Get nodes where l3-agent runs and disable the management network on them:
 
 .. code-block:: python
 
-    fqdns = neutron.l3_agent_list_hosting_router(router_id)
-    nodes = distractor.get_nodes(fqdns=fqdns)
+    fqdns = ['node-2.domain.tld', 'node-3.domain.tld']
+    nodes = destructor.get_nodes(fqdns=fqdns)
     nodes.disable_network(network_name='management')
 
-5. Operate with service on particular node
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+5. Operate with services on a particular node
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Restart service on a single node:
+Restart a service on a single node:
 
 .. code-block:: python
 
-    service = distractor.get_service(name='keystone-api')
+    service = destructor.get_service(name='keystone')
     nodes = service.get_nodes().pick()
     service.restart(nodes)
