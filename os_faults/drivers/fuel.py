@@ -139,6 +139,8 @@ class FuelService(service.Service):
                                   hosts=hosts)
 
     def restart(self, nodes=None):
+        if not getattr(self, 'RESTART_CMD'):
+            raise NotImplementedError('RESTART_CMD is undefined')
         nodes = nodes or self.get_nodes()
         task_result = self._run_task({'command': self.RESTART_CMD}, nodes)
         logging.info('Restart %s, result: %s', str(self.__class__),
@@ -150,36 +152,100 @@ class FuelService(service.Service):
         logging.info('SIGKILL %s, result: %s', str(self.__class__),
                      task_result)
 
+    def stop(self, nodes=None):
+        nodes = nodes or self.get_nodes()
+        task_result = self._run_task({'command': self.STOP_CMD}, nodes)
+        logging.info('SIGSTOP %s, result: %s', str(self.__class__),
+                     task_result)
+
+    def stop_cont(self, nodes=None, sec=None):
+        nodes = nodes or self.get_nodes()
+        sec = str(sec) or '10'
+        cmd = self.STOP_CONT_CMD.replace('$sec', sec)
+        task_result = self._run_task({'command': cmd}, nodes)
+        logging.info('SIGSTOP+SIGCONT %s, result: %s', str(self.__class__),
+                     task_result)
+
 
 class KeystoneService(FuelService):
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'keystone-main\'"'
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[k]eystone-main\'"'
     KILL_CMD = ('bash -c "ps ax | grep [k]eystone'
                 ' | awk {\'print $1\'} | xargs kill -9"')
     RESTART_CMD = 'service apache2 restart'
+    STOP_CMD = ('bash -c "ps ax | grep [k]eystone'
+                ' | awk {\'print $1\'} | xargs kill -19"')
+    STOP_CONT_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                     'echo -n \'#!\' > $tf; '
+                     'echo -en \'/bin/bash\\npids=`ps ax | '
+                     'grep [k]eystone | awk {\\047print $1\\047}`; '
+                     'echo $pids | xargs kill -19; sleep $sec; '
+                     'echo $pids | xargs kill -18; rm \' >> $tf; '
+                     'echo -n $tf >> $tf; '
+                     'chmod 770 $tf; nohup $tf &"')
 
 
 class MySQLService(FuelService):
     GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
     KILL_CMD = ('bash -c "ps ax | grep [m]ysqld'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    STOP_CMD = ('bash -c "ps ax | grep [m]ysqld'
+                ' | awk {\'print $1\'} | xargs kill -19"')
+    STOP_CONT_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                     'echo -n \'#!\' > $tf; '
+                     'echo -en \'/bin/bash\\npids=`ps ax | '
+                     'grep [m]ysqld | awk {\\047print $1\\047}`; '
+                     'echo $pids | xargs kill -19; sleep $sec; '
+                     'echo $pids | xargs kill -18; rm \' >> $tf; '
+                     'echo -n $tf >> $tf; '
+                     'chmod 770 $tf; nohup $tf &"')
 
 
 class RabbitMQService(FuelService):
     GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
     KILL_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    STOP_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
+                ' | awk {\'print $1\'} | xargs kill -19"')
+    STOP_CONT_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                     'echo -n \'#!\' > $tf; '
+                     'echo -en \'/bin/bash\\npids=`ps ax | '
+                     'grep [r]abbitmq-server | awk {\\047print $1\\047}`; '
+                     'echo $pids | xargs kill -19; sleep $sec; '
+                     'echo $pids | xargs kill -18; rm \' >> $tf; '
+                     'echo -n $tf >> $tf; '
+                     'chmod 770 $tf; nohup $tf &"')
 
 
 class NovaAPIService(FuelService):
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'nova-api\'"'
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]ova-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    STOP_CMD = ('bash -c "ps ax | grep [n]ova-api'
+                ' | awk {\'print $1\'} | xargs kill -19"')
+    STOP_CONT_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                     'echo -n \'#!\' > $tf; '
+                     'echo -en \'/bin/bash\\npids=`ps ax | '
+                     'grep [n]ova-api | awk {\\047print $1\\047}`; '
+                     'echo $pids | xargs kill -19; sleep $sec; '
+                     'echo $pids | xargs kill -18; rm \' >> $tf; '
+                     'echo -n $tf >> $tf; '
+                     'chmod 770 $tf; nohup $tf &"')
 
 
 class GlanceAPIService(FuelService):
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'glance-api\'"'
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[g]lance-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [g]lance-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    STOP_CMD = ('bash -c "ps ax | grep [g]lance-api'
+                ' | awk {\'print $1\'} | xargs kill -19"')
+    STOP_CONT_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                     'echo -n \'#!\' > $tf; '
+                     'echo -en \'/bin/bash\\npids=`ps ax | '
+                     'grep [g]lance-api | awk {\\047print $1\\047}`; '
+                     'echo $pids | xargs kill -19; sleep $sec; '
+                     'echo $pids | xargs kill -18; rm \' >> $tf; '
+                     'echo -n $tf >> $tf; '
+                     'chmod 770 $tf; nohup $tf &"')
 
 
 SERVICE_NAME_TO_CLASS = {
