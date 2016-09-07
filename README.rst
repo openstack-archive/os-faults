@@ -47,6 +47,13 @@ Build the connection to the cloud deployment and verify it:
     distractor = os_faults.connect(cloud_config)
     distractor.verify()
 
+The library can also read configuration from the file specified in
+`OS_FAULTS_CONFIG` environment variable or read it from one of default
+locations:
+ * current directory
+ * ~/.config/os-faults
+ * /etc/openstack
+
 Make some distraction:
 
 .. code-block:: python

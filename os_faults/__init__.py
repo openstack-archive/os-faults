@@ -10,8 +10,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import pbr.version
+import os
 
+import appdirs
+import pbr.version
+import yaml
+
+from os_faults.api import error
 from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
@@ -20,7 +25,38 @@ from os_faults.drivers import libvirt_driver
 __version__ = pbr.version.VersionInfo('os_faults').version_string()
 
 
-def connect(cloud_config):
+APPDIRS = appdirs.AppDirs(appname='openstack', appauthor='OpenStack')
+UNIX_SITE_CONFIG_HOME = '/etc/openstack'
+CONFIG_SEARCH_PATH = [
+    os.getcwd(),
+    APPDIRS.user_config_dir,
+    UNIX_SITE_CONFIG_HOME,
+]
+CONFIG_FILES = [
+    os.path.join(d, 'os-faults' + s)
+    for d in CONFIG_SEARCH_PATH
+    for s in ['.json', '.yaml', '.yml']
+]
+
+
+def _read_config():
+    os_faults_config = os.environ.get('OS_FAULTS_CONFIG')
+    if os_faults_config:
+        CONFIG_FILES.insert(0, os_faults_config)
+
+    for config_file in CONFIG_FILES:
+        if os.path.exists(config_file):
+            with open(config_file) as fd:
+                return yaml.safe_load(fd.read())
+
+    msg = 'Config file is not found on any of paths: {}'.format(CONFIG_FILES)
+    raise error.OSFError(msg)
+
+
+def connect(cloud_config=None):
+    if not cloud_config:
+        cloud_config = _read_config()
+
     cloud_management = None
     cloud_management_params = cloud_config.get('cloud_management') or {}
 
