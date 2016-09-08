@@ -40,15 +40,15 @@ def main():
     #           rabbitmq, nova-api, glance-api
     # nodes   - nodes that host the cloud, e.g. hardware server with hostname
 
-    logging.info('# Get nodes where Nova API service runs')
-    service = destructor.get_service(name='nova-api')
+    logging.info('# Get nodes where Keystone service runs')
+    service = destructor.get_service(name='keystone')
     nodes = service.get_nodes()
     logging.info('Nodes: %s', nodes)
 
-    logging.info('# Restart Nova API service on all nodes')
+    logging.info('# Restart Keystone service on all nodes')
     service.restart()
 
-    logging.info('# Pick and reset one of Nova API service nodes')
+    logging.info('# Pick and reset one of Keystone service nodes')
     one = nodes.pick()
     one.reset()
 

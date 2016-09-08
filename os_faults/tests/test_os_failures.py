@@ -17,10 +17,10 @@ test_os_faults
 Tests for `os_faults` module.
 """
 
-from os_faults.tests import base
+from os_faults.tests import test
 
 
-class Testos_faults(base.TestCase):
+class Testos_faults(test.TestCase):
 
     def test_something(self):
         pass

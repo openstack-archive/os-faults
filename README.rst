@@ -44,9 +44,9 @@ Establish a connection to the cloud and verify it:
     destructor.verify()
 
 The library can also read configuration from a file and the file can be in the
-following three formats: json, yaml, yml. The file can be specified in the
-`OS_FAULTS_CONFIG` environment variable or can be read from one of the default
-locations:
+following three formats: os-faults.{json,yaml,yml}. The configuration file can
+be specified in the `OS_FAULTS_CONFIG` environment variable or can be read from
+one of the default locations:
  * current directory
  * ~/.config/os-faults
  * /etc/openstack
