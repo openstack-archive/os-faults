@@ -1,8 +1,10 @@
 #!/bin/bash -x
 
 KEY_FILE_NAME="${HOME}/.ssh/os_faults"
-USERNAME="root"
-HOST="172.18.171.149"
+HOST=${1:-fuel.local}
+USERNAME=${2:-root}
+
+echo "distributing keys to Fuel: ${USERNAME}@${HOST}"
 
 echo "removing old key if exist"
 rm ${KEY_FILE_NAME} | true
@@ -17,7 +19,7 @@ echo "get list of nodes in the cluster"
 
 for NODE in `ssh -i ${KEY_FILE_NAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ${USERNAME}@${HOST} fuel2 node list -c ip -f value`; do
   echo "copying the key to node ${NODE}"
-  ssh-copy-id -i ${KEY_FILE_NAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p ${USERNAME}@${HOST}" root@${NODE}
-  ssh -i ${KEY_FILE_NAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p ${USERNAME}@${HOST}" root@${NODE} hostname
+  # ssh-copy-id does not copy the key over the hop when the destination is already reachable via its own key
+  cat ${KEY_FILE_NAME}.pub | ssh -i ${KEY_FILE_NAME} ${USERNAME}@${HOST} ssh ${NODE} 'tee -a .ssh/authorized_keys'
+  ssh -i ${KEY_FILE_NAME} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand="ssh -i ${KEY_FILE_NAME} -W %h:%p ${USERNAME}@${HOST}" root@${NODE} hostname
 done
-
