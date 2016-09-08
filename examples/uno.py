@@ -22,6 +22,7 @@ def main():
             'driver': 'fuel',
             'address': 'fuel.local',
             'username': 'root',
+            'private_key_file': '~/.ssh/os_faults',
         },
         'power_management': {
             'driver': 'libvirt',

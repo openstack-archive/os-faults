@@ -96,15 +96,22 @@ Options = namedtuple('Options',
 
 class AnsibleRunner(object):
     def __init__(self, remote_user='root', password=None, forks=100,
-                 ssh_common_args='', become=None):
+                 jump_host=None, private_key_file=None, become=None):
         super(AnsibleRunner, self).__init__()
 
         module_path = resolve_relative_path('os_faults/ansible/modules')
-        ssh_common_args = ' '.join([ssh_common_args, SSH_COMMON_ARGS])
+
+        ssh_common_args = SSH_COMMON_ARGS
+        if jump_host:
+            ssh_common_args += (
+                ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p '
+                '%(user)s@%(host)s"'
+                % dict(key=private_key_file, user=remote_user, host=jump_host))
 
         self.options = Options(
             connection='smart', password=password, module_path=module_path,
-            forks=forks, remote_user=remote_user, private_key_file=None,
+            forks=forks, remote_user=remote_user,
+            private_key_file=private_key_file,
             ssh_common_args=ssh_common_args, ssh_extra_args=None,
             sftp_extra_args=None, scp_extra_args=None,
             become=become, become_method='sudo', become_user='root',

@@ -103,9 +103,11 @@ class DevStackManagement(cloud_management.CloudManagement):
 
         self.address = cloud_management_params['address']
         self.username = cloud_management_params['username']
+        self.private_key_file = cloud_management_params.get('private_key')
 
-        self.executor = executor.AnsibleRunner(remote_user=self.username,
-                                               become=True)
+        self.executor = executor.AnsibleRunner(
+            remote_user=self.username, private_key_file=self.private_key_file,
+            become=True)
         self.host = None
 
     def verify(self):
