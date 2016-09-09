@@ -269,14 +269,14 @@ class FuelManagement(cloud_management.CloudManagement):
 
         self.master_node_address = cloud_management_params['address']
         self.username = cloud_management_params['username']
+        self.private_key_file = cloud_management_params.get('private_key_file')
 
         self.master_node_executor = executor.AnsibleRunner(
-            remote_user=self.username)
+            remote_user=self.username, private_key_file=self.private_key_file)
 
         self.cloud_executor = executor.AnsibleRunner(
-            remote_user=self.username,
-            ssh_common_args='-o ProxyCommand="ssh -W %%h:%%p %s@%s"' %
-                            (self.username, self.master_node_address))
+            remote_user=self.username, private_key_file=self.private_key_file,
+            jump_host=self.master_node_address)
 
         self.cached_cloud_hosts = None
         self.fqdn_to_hosts = dict()
