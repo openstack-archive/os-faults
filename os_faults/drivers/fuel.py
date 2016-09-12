@@ -162,6 +162,20 @@ class FuelService(service.Service):
         logging.info('UNFREEZE %s, result: %s', str(self.__class__),
                      task_result)
 
+    def plug(self, nodes=None):
+        nodes = nodes or self.get_nodes()
+        task_result = self._run_task(
+            {'command': self.PLUG_CMD.format(self.PORT)}, nodes)
+        logging.info('Open port %s, result: %s', str(self.__class__),
+                     task_result)
+
+    def unplug(self, nodes=None):
+        nodes = nodes or self.get_nodes()
+        task_result = self._run_task(
+            {'command': self.UNPLUG_CMD.format(self.PORT)}, nodes)
+        logging.info('Close port %s, result: %s', str(self.__class__),
+                     task_result)
+
 
 class KeystoneService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[k]eystone-main\'"'
@@ -198,6 +212,13 @@ class MySQLService(FuelService):
                       'chmod 770 $tf; nohup $tf &"')
     UNFREEZE_CMD = ('bash -c "ps ax | grep [m]ysqld'
                     ' | awk {\'print $1\'} | xargs kill -18"')
+    PORT = 3307
+    PLUG_CMD = ('bash -c "rule=`iptables -L INPUT -n --line-numbers | '
+                'grep \"MySQL_temporary_DROP\" | cut -d \' \' -f1`; '
+                'for arg in $rule; do iptables -D INPUT -p tcp --dport {0} '
+                '-j DROP -m comment --comment "MySQL_temporary_DROP"; done"')
+    UNPLUG_CMD = ('bash -c "iptables -I INPUT 1 -p tcp --dport {0} -j DROP '
+                  '-m comment --comment \"MySQL_temporary_DROP\""')
 
 
 class RabbitMQService(FuelService):

@@ -68,3 +68,25 @@ class Service(object):
         :param nodes: NodesCollection
         """
         raise NotImplementedError
+
+    def freeze(self, nodes=None, sec=None):
+        """SIGSTOP
+
+        Send SIGSTOP to Service into network on all nodes or on particular
+        subset. If sec is defined - it mean Service will be stopped for
+        a wile.
+
+        :param nodes: NodesCollection
+        :param sec: int
+        """
+        raise NotImplementedError
+
+    def unfreeze(self, nodes=None):
+        """SIGCONT
+
+        Send SIGCONT to Service into network on all nodes or on particular
+        subset.
+
+        :param nodes: NodesCollection
+        """
+        raise NotImplementedError
