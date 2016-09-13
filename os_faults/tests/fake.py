@@ -13,7 +13,7 @@
 from os_faults.ansible import executor
 
 
-class FakeAsnibleResult(object):
+class FakeAnsibleResult(object):
 
     def __init__(self, payload, host=None, status=executor.STATUS_OK):
         self.host = host

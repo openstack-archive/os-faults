@@ -23,15 +23,22 @@ from os_faults.tests import test
 @ddt.ddt
 class FuelManagementTestCase(test.TestCase):
 
+    def setUp(self):
+        super(FuelManagementTestCase, self).setUp()
+
+        self.fake_ansible_result = fake.FakeAnsibleResult(
+            payload={'stdout': '[{"ip": "10.0.0.2", "mac": "02", '
+                               '"fqdn": "node2.com", "roles": "controller"}, '
+                               '{"ip": "10.0.0.3", "mac": "03", '
+                               '"fqdn": "node3.com", "roles": "compute"}]'})
+
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_verify(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '[{"ip": "10.0.0.2"}, {"ip": "10.0.0.3"}]',
-            })],
-            [fake.FakeAsnibleResult(payload={'stdout': ''}),
-             fake.FakeAsnibleResult(payload={'stdout': ''})],
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''}),
+             fake.FakeAnsibleResult(payload={'stdout': ''})],
         ]
         fuel_managment = fuel.FuelManagement({
             'address': 'fuel.local',
@@ -40,18 +47,14 @@ class FuelManagementTestCase(test.TestCase):
         fuel_managment.verify()
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'hostname'}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '[{"ip": "10.0.0.2"}, {"ip": "10.0.0.3"}]',
-            })],
-        ]
+        ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
         fuel_managment = fuel.FuelManagement({
             'address': 'fuel.local',
             'username': 'root',
@@ -59,21 +62,21 @@ class FuelManagementTestCase(test.TestCase):
         nodes = fuel_managment.get_nodes()
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
         ])
 
-        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.2'},
-                                       {'ip': '10.0.0.3'}])
+        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.2', 'fqdn': 'node2.com',
+                                        'mac': '02', 'roles': 'controller'},
+                                       {'ip': '10.0.0.3', 'fqdn': 'node3.com',
+                                        'mac': '03', 'roles': 'compute'}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '[{"ip": "10.0.0.2"}, {"ip": "10.0.0.3"}]',
-            })],
-            [fake.FakeAsnibleResult(payload={'stdout': ''}),
-             fake.FakeAsnibleResult(payload={'stdout': ''})]
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''}),
+             fake.FakeAnsibleResult(payload={'stdout': ''})]
         ]
         fuel_managment = fuel.FuelManagement({
             'address': 'fuel.local',
@@ -84,46 +87,26 @@ class FuelManagementTestCase(test.TestCase):
             nodes.get_ips(), {'command': 'mycmd'}, raise_on_error=False)
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'mycmd'}, []),
         ])
 
-        self.assertEqual(
-            result,
-            [fake.FakeAsnibleResult(payload={'stdout': ''}),
-             fake.FakeAsnibleResult(payload={'stdout': ''})])
+        self.assertEqual(result,
+                         [fake.FakeAnsibleResult(payload={'stdout': ''}),
+                          fake.FakeAnsibleResult(payload={'stdout': ''})])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes_fqdns(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAsnibleResult(payload={
-                'stdout': ('[{"ip": "10.0.0.2", "id": 1}, '
-                           '{"ip": "10.0.0.3", "id": 2}]'),
-            })],
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '{"fqdn": "node1.com", "ip": "10.0.0.2"}',
-            })],
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '{"fqdn": "node2.com", "ip": "10.0.0.3"}',
-            })],
-        ]
+        ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
         fuel_managment = fuel.FuelManagement({
             'address': 'fuel.local',
             'username': 'root',
         })
-        nodes = fuel_managment.get_nodes(fqdns=['node2.com'])
+        nodes = fuel_managment.get_nodes(fqdns=['node3.com'])
 
-        ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'],
-                      {'command': 'fuel2 node list -f json'}),
-            mock.call(['fuel.local'],
-                      {'command': 'fuel2 node show 1 -f json'}),
-            mock.call(['fuel.local'],
-                      {'command': 'fuel2 node show 2 -f json'}),
-        ])
-
-        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3', 'id': 2}])
+        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3', 'fqdn': 'node3.com',
+                                        'mac': '03', 'roles': 'compute'}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(('keystone', fuel.KeystoneService),
@@ -136,13 +119,11 @@ class FuelManagementTestCase(test.TestCase):
                                mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAsnibleResult(payload={
-                'stdout': '[{"ip": "10.0.0.2"}, {"ip": "10.0.0.3"}]',
-            })],
-            [fake.FakeAsnibleResult(payload={'stdout': ''},
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
                                     status=executor.STATUS_FAILED,
                                     host='10.0.0.2'),
-             fake.FakeAsnibleResult(payload={'stdout': ''},
+             fake.FakeAnsibleResult(payload={'stdout': ''},
                                     host='10.0.0.3')]
         ]
 
@@ -156,8 +137,9 @@ class FuelManagementTestCase(test.TestCase):
 
         nodes = service.get_nodes()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
         ])
-        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3'}])
+        self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3', 'fqdn': 'node3.com',
+                                        'mac': '03', 'roles': 'compute'}])
