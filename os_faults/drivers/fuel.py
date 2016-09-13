@@ -326,7 +326,7 @@ class FuelManagement(cloud_management.CloudManagement):
             task = {'command': 'fuel2 node show %s -f json' % host['id']}
             r = self.execute_on_master_node(task)
             host_ext = json.loads(r[0].payload['stdout'])
-            self.fqdn_to_hosts[host_ext['fqdn']] = host_ext
+            self.fqdn_to_hosts[host_ext['fqdn']] = host
 
     def get_nodes(self, fqdns=None):
         """Get nodes in the cloud
@@ -336,17 +336,14 @@ class FuelManagement(cloud_management.CloudManagement):
         :param fqdns: list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """
-        if not fqdns:
-            # return all hosts
+        if fqdns:
+            # return only specified
+            if not self.fqdn_to_hosts:
+                self._retrieve_hosts_fqdn()
+            hosts = [self.fqdn_to_hosts[k] for k in fqdns]
+        else:
+            # return all nodes
             hosts = self._get_cloud_hosts()
-            return FuelNodeCollection(cloud_management=self,
-                                      power_management=self.power_management,
-                                      hosts=hosts)
-        # return only specified
-        if not self.fqdn_to_hosts:
-            self._retrieve_hosts_fqdn()
-
-        hosts = [self.fqdn_to_hosts[k] for k in fqdns]
         return FuelNodeCollection(cloud_management=self,
                                   power_management=self.power_management,
                                   hosts=hosts)
