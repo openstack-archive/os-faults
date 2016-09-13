@@ -305,18 +305,19 @@ class FuelManagement(cloud_management.CloudManagement):
     def verify(self):
         """Verify connection to the cloud."""
         hosts = self._get_cloud_hosts()
-        logging.debug('Cloud hosts: %s', hosts)
+        logging.debug('Cloud nodes: %s', hosts)
 
         task = {'command': 'hostname'}
         host_addrs = [n['ip'] for n in hosts]
-        logging.debug('Cloud nodes hostnames: %s',
-                      self.execute_on_cloud(host_addrs, task))
+        task_result = self.execute_on_cloud(host_addrs, task)
+        logging.debug('Hostnames of cloud nodes: %s',
+                      [r.payload['stdout'] for r in task_result])
 
-        logging.info('Connected to cloud successfully')
+        logging.info('Connected to cloud successfully!')
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            task = {'command': 'fuel2 node list -f json'}
+            task = {'command': 'fuel node --json'}
             r = self.execute_on_master_node(task)
             self.cached_cloud_hosts = json.loads(r[0].payload['stdout'])
         return self.cached_cloud_hosts
@@ -344,10 +345,7 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def _retrieve_hosts_fqdn(self):
         for host in self._get_cloud_hosts():
-            task = {'command': 'fuel2 node show %s -f json' % host['id']}
-            r = self.execute_on_master_node(task)
-            host_ext = json.loads(r[0].payload['stdout'])
-            self.fqdn_to_hosts[host_ext['fqdn']] = host
+            self.fqdn_to_hosts[host['fqdn']] = host
 
     def get_nodes(self, fqdns=None):
         """Get nodes in the cloud
@@ -359,9 +357,11 @@ class FuelManagement(cloud_management.CloudManagement):
         """
         if fqdns:
             # return only specified
+            logging.debug('Trying to find nodes with FQDNs: %s', fqdns)
             if not self.fqdn_to_hosts:
                 self._retrieve_hosts_fqdn()
             hosts = [self.fqdn_to_hosts[k] for k in fqdns]
+            logging.debug('The following nodes were found: %s', hosts)
         else:
             # return all nodes
             hosts = self._get_cloud_hosts()
