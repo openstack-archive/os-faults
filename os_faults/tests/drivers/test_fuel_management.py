@@ -102,17 +102,17 @@ class FuelManagementTestCase(test.TestCase):
                            '{"ip": "10.0.0.3", "id": 2}]'),
             })],
             [fake.FakeAsnibleResult(payload={
-                'stdout': '{"fqdn": "node1.com", "ip": "10.0.0.2"}',
+                'stdout': '[{"Field": "fqdn", "Value": "node-1.domain.tld"}]',
             })],
             [fake.FakeAsnibleResult(payload={
-                'stdout': '{"fqdn": "node2.com", "ip": "10.0.0.3"}',
+                'stdout': '[{"Field": "fqdn", "Value": "node-2.domain.tld"}]',
             })],
         ]
         fuel_managment = fuel.FuelManagement({
             'address': 'fuel.local',
             'username': 'root',
         })
-        nodes = fuel_managment.get_nodes(fqdns=['node2.com'])
+        nodes = fuel_managment.get_nodes(fqdns=['node-2.domain.tld'])
 
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'],

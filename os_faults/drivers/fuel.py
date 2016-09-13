@@ -347,7 +347,9 @@ class FuelManagement(cloud_management.CloudManagement):
             task = {'command': 'fuel2 node show %s -f json' % host['id']}
             r = self.execute_on_master_node(task)
             host_ext = json.loads(r[0].payload['stdout'])
-            self.fqdn_to_hosts[host_ext['fqdn']] = host
+            host_ext_dict = {
+                field['Field']: field['Value'] for field in host_ext}
+            self.fqdn_to_hosts[host_ext_dict['fqdn']] = host
 
     def get_nodes(self, fqdns=None):
         """Get nodes in the cloud
