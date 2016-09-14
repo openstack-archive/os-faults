@@ -130,7 +130,8 @@ class FuelManagementTestCase(test.TestCase):
               ('mysql', fuel.MySQLService),
               ('rabbitmq', fuel.RabbitMQService),
               ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService))
+              ('glance-api', fuel.GlanceAPIService),
+              ('memcached', fuel.MemcachedService))
     @ddt.unpack
     def test_get_service_nodes(self, service_name, service_cls,
                                mock_ansible_runner):
