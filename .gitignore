@@ -22,6 +22,8 @@ lib64
 pip-log.txt
 
 # Unit test / coverage reports
+htmlcov/
+pytest_results.html
 cover/
 .coverage*
 !.coveragerc
