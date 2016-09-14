@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = os_faults
-omit = os_faults/openstack/*
+omit = os_faults/tests/*
 
 [report]
 ignore_errors = True
