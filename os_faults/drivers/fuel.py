@@ -48,12 +48,6 @@ class FuelNodeCollection(node_collection.NodeCollection):
         for host in self.hosts:
             yield host
 
-    def filter(self, role):
-        hosts = [h for h in self.hosts if role in h['roles']]
-        return FuelNodeCollection(cloud_management=self.cloud_management,
-                                  power_management=self.power_management,
-                                  hosts=hosts)
-
     def pick(self, count=1):
         if count > len(self.hosts):
             msg = 'Cannot pick {} from {} node(s)'.format(
@@ -321,8 +315,7 @@ class FuelManagement(cloud_management.CloudManagement):
             result = self.execute_on_master_node(task)
             for r in json.loads(result[0].payload['stdout']):
                 self.cached_cloud_hosts.append(
-                    dict(ip=r['ip'], mac=r['mac'],
-                         fqdn=r['fqdn'], roles=r['roles']))
+                    dict(ip=r['ip'], mac=r['mac'], fqdn=r['fqdn']))
         return self.cached_cloud_hosts
 
     def execute_on_master_node(self, task):

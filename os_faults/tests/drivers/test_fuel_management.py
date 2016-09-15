@@ -28,9 +28,9 @@ class FuelManagementTestCase(test.TestCase):
 
         self.fake_ansible_result = fake.FakeAnsibleResult(
             payload={'stdout': '[{"ip": "10.0.0.2", "mac": "02", '
-                               '"fqdn": "node2.com", "roles": "controller"}, '
+                               '"fqdn": "node2.com"}, '
                                '{"ip": "10.0.0.3", "mac": "03", '
-                               '"fqdn": "node3.com", "roles": "compute"}]'})
+                               '"fqdn": "node3.com"}]'})
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_verify(self, mock_ansible_runner):
@@ -66,9 +66,9 @@ class FuelManagementTestCase(test.TestCase):
         ])
 
         self.assertEqual(nodes.hosts, [{'ip': '10.0.0.2', 'fqdn': 'node2.com',
-                                        'mac': '02', 'roles': 'controller'},
+                                        'mac': '02'},
                                        {'ip': '10.0.0.3', 'fqdn': 'node3.com',
-                                        'mac': '03', 'roles': 'compute'}])
+                                        'mac': '03'}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
@@ -106,7 +106,7 @@ class FuelManagementTestCase(test.TestCase):
         nodes = fuel_managment.get_nodes(fqdns=['node3.com'])
 
         self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3', 'fqdn': 'node3.com',
-                                        'mac': '03', 'roles': 'compute'}])
+                                        'mac': '03'}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(('keystone', fuel.KeystoneService),
@@ -142,4 +142,4 @@ class FuelManagementTestCase(test.TestCase):
                       {'command': service_cls.GET_NODES_CMD}, []),
         ])
         self.assertEqual(nodes.hosts, [{'ip': '10.0.0.3', 'fqdn': 'node3.com',
-                                        'mac': '03', 'roles': 'compute'}])
+                                        'mac': '03'}])
