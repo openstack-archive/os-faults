@@ -100,8 +100,7 @@ class FuelService(service.Service):
     def __repr__(self):
         return str(type(self))
 
-    def _run_task(self, task, nodes=None):
-        nodes = nodes or self.get_nodes()
+    def _run_task(self, task, nodes):
         ips = nodes.get_ips()
         if not ips:
             raise error.ServiceError('Node collection is empty')
@@ -132,39 +131,39 @@ class FuelService(service.Service):
     def restart(self, nodes=None):
         if not getattr(self, 'RESTART_CMD'):
             raise NotImplementedError('RESTART_CMD is undefined')
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         task_result = self._run_task({'command': self.RESTART_CMD}, nodes)
         logging.info('Restart %s, result: %s', str(self.__class__),
                      task_result)
 
     def kill(self, nodes=None):
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         task_result = self._run_task({'command': self.KILL_CMD}, nodes)
         logging.info('SIGKILL %s, result: %s', str(self.__class__),
                      task_result)
 
     def freeze(self, nodes=None, sec=None):
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         cmd = self.FREEZE_SEC_CMD.format(sec) if sec else self.FREEZE_CMD
         task_result = self._run_task({'command': cmd}, nodes)
         logging.info('FREEZE({0}) {1}, result: {2}'.format(sec or '',
                      self.__class__, task_result))
 
     def unfreeze(self, nodes=None):
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         task_result = self._run_task({'command': self.UNFREEZE_CMD}, nodes)
         logging.info('UNFREEZE %s, result: %s', str(self.__class__),
                      task_result)
 
     def plug(self, nodes=None):
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         task_result = self._run_task(
             {'command': self.PLUG_CMD.format(self.PORT)}, nodes)
         logging.info('Open port %s, result: %s', str(self.__class__),
                      task_result)
 
     def unplug(self, nodes=None):
-        nodes = nodes or self.get_nodes()
+        nodes = nodes if nodes is not None else self.get_nodes()
         task_result = self._run_task(
             {'command': self.UNPLUG_CMD.format(self.PORT)}, nodes)
         logging.info('Close port %s, result: %s', str(self.__class__),
