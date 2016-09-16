@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from ansible.module_utils.basic import *  # noqa
 
 NETWORK_NAME_TO_INTERFACE = {
     'management': 'br-mgmt',
@@ -32,19 +33,12 @@ def main():
     operation = module.params['operation']
     network_name = module.params['network_name']
 
-    interface = NETWORK_NAME_TO_INTERFACE.get(network_name)
-    cmd = 'ip link set %s %s ' % (interface, operation)
+    interface = NETWORK_NAME_TO_INTERFACE[network_name]
+    cmd = 'ip link set %s %s' % (interface, operation)
 
-    rc, stdout, stderr = module.run_command(cmd)
+    rc, stdout, stderr = module.run_command(cmd, check_rc=True)
+    module.exit_json(cmd=cmd, rc=rc, stderr=stderr, stdout=stdout)
 
-    try:
-        result = dict(rc=rc, stderr=stderr, stdout=stdout, cmd=cmd)
-        module.exit_json(**result)
-    except Exception as e:
-        module.fail_json(msg=e, rc=rc, stderr=stderr, stdout=stdout, cmd=cmd)
-
-
-from ansible.module_utils.basic import *  # noqa
 
 if __name__ == '__main__':
     main()
