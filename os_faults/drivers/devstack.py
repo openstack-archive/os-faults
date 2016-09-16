@@ -37,33 +37,34 @@ class DevStackNode(node_collection.NodeCollection):
         return ('DevStackNode(%s)' %
                 dict(ip=self.host.ip, mac=self.host.mac))
 
+    def __len__(self):
+        return 1
+
     def pick(self):
         return self
 
     def reboot(self):
-        task = {
-            'command': 'reboot'
-        }
-        self.cloud_management.execute_on_cloud(self.host.ip, task)
+        task = {'command': 'reboot'}
+        self.cloud_management.execute(self.host.ip, task)
 
     def oom(self):
-        logging.info('Enforce nodes to run out of memory: %s', self)
+        raise NotImplementedError
 
     def poweroff(self):
-        self.power_management.poweroff(self.host.mac)
+        self.power_management.poweroff([self.host.mac])
 
     def poweron(self):
-        self.power_management.poweron(self.host.mac)
+        self.power_management.poweron([self.host.mac])
 
     def reset(self):
         logging.info('Reset nodes: %s', self)
-        self.power_management.reset(self.host.mac)
+        self.power_management.reset([self.host.mac])
 
     def enable_network(self, network_name):
-        logging.info('Enable network: %s on nodes: %s', network_name, self)
+        raise NotImplementedError
 
     def disable_network(self, network_name):
-        logging.info('Disable network: %s on nodes: %s', network_name, self)
+        raise NotImplementedError
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -76,24 +77,21 @@ class DevStackService(service.Service):
     def __repr__(self):
         return str(type(self))
 
-    def _get_nodes(self):
+    def get_nodes(self):
         return self.cloud_management.get_nodes()
 
-
-class KeystoneService(DevStackService):
-    def get_nodes(self):
-        return self._get_nodes()
-
     def restart(self, nodes=None):
-        task = {
-            'command': 'service apache2 restart'
-        }
+        task = {'command': self.RESTART_CMD}
         exec_res = self.cloud_management.execute(task)
         logging.info('Restart the service, result: %s', exec_res)
 
 
+class KeystoneService(DevStackService):
+    RESTART_CMD = 'service apache2 restart'
+
+
 SERVICE_NAME_TO_CLASS = {
-    'keystone-api': KeystoneService,
+    'keystone': KeystoneService,
 }
 
 
