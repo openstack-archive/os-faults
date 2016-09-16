@@ -217,19 +217,20 @@ class MySQLService(FuelService):
 
 class RabbitMQService(FuelService):
     GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
+    KILL_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
                 ' | awk {\'print $1\'} | xargs kill -9"')
-    FREEZE_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
+    FREEZE_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
                   ' | awk {\'print $1\'} | xargs kill -19"')
     FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
                       'echo -n \'#!\' > $tf; '
                       'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [r]abbitmq-server | awk {{\\047print $1\\047}}`; '
+                      'grep \\047[r]abbit tcp_listeners\\047 | '
+                      'awk {{\\047print $1\\047}}`; '
                       'echo $pids | xargs kill -19; sleep {0}; '
                       'echo $pids | xargs kill -18; rm \' >> $tf; '
                       'echo -n $tf >> $tf; '
                       'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [r]abbitmq-server'
+    UNFREEZE_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
                     ' | awk {\'print $1\'} | xargs kill -18"')
 
 
