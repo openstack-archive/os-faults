@@ -189,6 +189,25 @@ class KeystoneService(FuelService):
                     ' | awk {\'print $1\'} | xargs kill -18"')
 
 
+class MemcachedService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[m]emcached\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [m]emcached'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service memcached restart'
+    FREEZE_CMD = ('bash -c "ps ax | grep [m]emcached'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [m]emcached | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [m]emcached'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
 class MySQLService(FuelService):
     GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
     KILL_CMD = ('bash -c "ps ax | grep [m]ysqld'
@@ -271,6 +290,7 @@ class GlanceAPIService(FuelService):
 
 SERVICE_NAME_TO_CLASS = {
     'keystone': KeystoneService,
+    'memcached': MemcachedService,
     'mysql': MySQLService,
     'rabbitmq': RabbitMQService,
     'nova-api': NovaAPIService,
