@@ -14,6 +14,8 @@
 import ddt
 import mock
 
+from os_faults.ansible import executor
+from os_faults.api import error
 from os_faults.drivers import fuel
 from os_faults.tests import fake
 from os_faults.tests import test
@@ -24,7 +26,7 @@ class FuelServiceTestCase(test.TestCase):
 
     def setUp(self):
         super(FuelServiceTestCase, self).setUp()
-
+        self.conf = {'address': 'fuel.local', 'username': 'root'}
         self.fake_ansible_result = fake.FakeAnsibleResult(
             payload={'stdout': '[{"ip": "10.0.0.2", "mac": "02", '
                                '"fqdn": "node2.com"}, '
@@ -52,10 +54,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -90,10 +89,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -128,10 +124,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -168,10 +161,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -202,10 +192,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -237,10 +224,7 @@ class FuelServiceTestCase(test.TestCase):
                                     host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
         self.assertIsInstance(service, service_cls)
@@ -253,4 +237,90 @@ class FuelServiceTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command':
                       service_cls.PLUG_CMD.format(service_cls.PORT)}),
+        ])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data(('keystone', fuel.KeystoneService))
+    @ddt.unpack
+    def test_restart(self, service_name, service_cls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.2'),
+             fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.3')],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.2'),
+             fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.3')]
+        ]
+
+        fuel_managment = fuel.FuelManagement(self.conf)
+
+        service = fuel_managment.get_service(service_name)
+        self.assertIsInstance(service, service_cls)
+
+        service.restart()
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': service_cls.GET_NODES_CMD}, []),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': service_cls.RESTART_CMD}),
+        ])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    def test_run_task_error(self, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.2'),
+             fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.3')],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.2',
+                                    status=executor.STATUS_FAILED),
+             fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.3')]
+        ]
+
+        fuel_managment = fuel.FuelManagement(self.conf)
+
+        service = fuel_managment.get_service('keystone')
+        exception = self.assertRaises(error.ServiceError, service.restart)
+        self.assertEqual('Task failed on some nodes', str(exception))
+
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': service.GET_NODES_CMD}, []),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': service.RESTART_CMD}),
+        ])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    def test_run_node_collection_empty(self, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.2',
+                                    status=executor.STATUS_FAILED),
+             fake.FakeAnsibleResult(payload={'stdout': ''},
+                                    host='10.0.0.3',
+                                    status=executor.STATUS_FAILED)],
+        ]
+
+        fuel_managment = fuel.FuelManagement(self.conf)
+
+        service = fuel_managment.get_service('keystone')
+        exception = self.assertRaises(error.ServiceError, service.restart)
+        self.assertEqual('Node collection is empty', str(exception))
+
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': service.GET_NODES_CMD}, []),
         ])
