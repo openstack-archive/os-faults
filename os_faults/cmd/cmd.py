@@ -11,41 +11,126 @@
 # under the License.
 
 import argparse
+import inspect
 import logging
-
 import sys
+import textwrap
 
 import os_faults
+from os_faults.api import cloud_management
+from os_faults.api import node_collection as node_collection_pkg
+from os_faults.api import service as service_pkg
+from os_faults import registry
 
 
-# todo (ishakhat): list available actions and services
-USAGE = """os-inject-fault [-h] [-c CONFIG] [-d] [-v] [command]
+def describe_actions(klazz):
+    methods = (m for m in inspect.getmembers(
+        klazz,
+        predicate=lambda o: ((inspect.isfunction(o) or inspect.ismethod(o)) and
+                             hasattr(o, '__public__'))))
+    return ['%s - %s' % (m[0], m[1].__doc__.split('\n')[0])
+            for m in sorted(methods)]
 
-Service-based command performs specified action against service on
+SERVICE_ACTIONS = describe_actions(service_pkg.Service)
+NODE_ACTIONS = describe_actions(node_collection_pkg.NodeCollection)
+
+USAGE = 'os-inject-fault [-h] [-c CONFIG] [-d] [-v] [command]'
+HELP_TEMPLATE = """
+Built-in drivers:
+%(drivers)s
+
+*Service-oriented* commands perform specified action against service on
 all, on one random node or on the node specified by FQDN:
 
   <action> <service> service [on (random|one|single|<fqdn> node[s])]
 
-Node-based command performs specified action on all or selected service's
-node:
-
-  <action> [random|one|single] <service> node[s]
-
-Network-management command is a subset of node-based query::
-
-  disable|enable network <network name> on <service> node[s]
+  where:
+    action is one of:
+      %(service_action)s
+    service is one of supported by driver:
+%(services)s
 
 Examples:
+    * "Restart Keystone service" - restarts Keystone service on all nodes.
+    * "kill nova-api service on one node" - restarts Nova API on one
+      randomly-picked node.
 
- * Restart Keystone service - restarts Keystone service on all nodes
- * kill nova-api service on one node - restarts Nova API on one of nodes
- * Reboot one node with mysql - reboots one random node with MySQL
- * Reboot node-2.domain.tld node - reboot node with specified name
+*Node-oriented* commands perform specified action on node specified by FQDN
+or set of service's nodes:
+
+  <action> [random|one|single|<fqdn>] node[s] [with <service> service]
+
+  where:
+    action is one of:
+      %(node_action)s
+    service is one of supported by driver:
+%(services)s
+
+Examples:
+    * "Reboot one node with mysql" - reboots one random node with MySQL.
+    * "Reset node-2.domain.tld node" - reset node node-2.domain.tld.
+
+*Network-oriented* commands are subset of node-oriented and perform network
+management operation on selected nodes:
+
+  [connect|disconnect] <network> network on [random|one|single|<fqdn>] node[s]
+    [with <service> service]
+
+  where:
+    network is one of supported by driver:
+%(networks)s
+    service is one of supported by driver:
+%(services)s
+
+Examples:
+    * "Disconnect management network on nodes with rabbitmq service" - shuts
+      down management network interface on all nodes where rabbitmq runs.
+    * "Connect storage network on node-1.domain.tld node" - enables storage
+      network interface on node-1.domain.tld.
+
+For more details please refer to docs: http://os-faults.readthedocs.io/
 """
 
 
+def _list_items(group, items):
+    s = '\n'.join(
+        textwrap.wrap(', '.join(sorted(items)),
+                      subsequent_indent=' ' * (len(group) + 8),
+                      break_on_hyphens=False))
+    return '      %s: %s' % (group, s)
+
+
+def _make_epilog():
+    drivers = registry.get_drivers()
+    services_strings = []
+    networks_strings = []
+    driver_descriptions = []
+
+    for driver_name, driver in drivers.items():
+        driver_descriptions.append(
+            '  %s - %s' % (driver_name, driver.get_driver_description()))
+
+        if issubclass(driver, cloud_management.CloudManagement):
+            services_strings.append(
+                _list_items(driver_name, driver.list_supported_services()))
+            networks_strings.append(
+                _list_items(driver_name, driver.list_supported_networks()))
+
+    return HELP_TEMPLATE % dict(
+        drivers='\n'.join(driver_descriptions),
+        service_action='\n      '.join(SERVICE_ACTIONS),
+        services='\n'.join(services_strings),
+        node_action='\n      '.join(sorted(NODE_ACTIONS)),
+        networks='\n'.join(networks_strings),
+    )
+
+
 def main():
-    parser = argparse.ArgumentParser(prog='os-inject-fault', usage=USAGE)
+    parser = argparse.ArgumentParser(
+        prog='os-inject-fault',
+        usage=USAGE,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=_make_epilog())
     parser.add_argument('-c', '--config', dest='config',
                         help='path to os-faults cloud connection config')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true')

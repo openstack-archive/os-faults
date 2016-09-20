@@ -443,6 +443,9 @@ SERVICE_NAME_TO_CLASS = {
 
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
+    DESCRIPTION = 'Fuel 9.x cloud management driver'
+    SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
+    SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
 
     def __init__(self, cloud_management_params):
         super(FuelManagement, self).__init__()
