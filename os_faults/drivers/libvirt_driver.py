@@ -22,6 +22,7 @@ from os_faults import utils
 
 class LibvirtDriver(power_management.PowerManagement):
     NAME = 'libvirt'
+    DESCRIPTION = 'Libvirt power management driver'
 
     def __init__(self, params):
         self.connection_uri = params['connection_uri']

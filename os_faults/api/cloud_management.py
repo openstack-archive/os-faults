@@ -52,3 +52,19 @@ class CloudManagement(base_driver.BaseDriver):
         :return: Service
         """
         pass
+
+    @classmethod
+    def list_supported_services(cls):
+        """Lists all services supported by this driver
+
+        :return: [String] list of service names
+        """
+        return cls.SUPPORTED_SERVICES
+
+    @classmethod
+    def list_supported_networks(cls):
+        """Lists all networks supported by nodes returned by this driver
+
+        :return: [String] list of network names
+        """
+        return cls.SUPPORTED_NETWORKS

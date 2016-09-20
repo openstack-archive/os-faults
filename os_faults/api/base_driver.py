@@ -14,7 +14,12 @@
 
 class BaseDriver(object):
     NAME = 'base'
+    DESCRIPTION = 'base driver'
 
     @classmethod
     def get_driver_name(cls):
         return cls.NAME
+
+    @classmethod
+    def get_driver_description(cls):
+        return cls.DESCRIPTION

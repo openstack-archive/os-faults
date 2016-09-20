@@ -79,7 +79,7 @@ class Service(object):
 
     @public
     def freeze(self, nodes=None, sec=None):
-        """SIGSTOP
+        """Pause service execution
 
         Send SIGSTOP to Service into network on all nodes or on particular
         subset. If sec is defined - it mean Service will be stopped for
@@ -92,7 +92,7 @@ class Service(object):
 
     @public
     def unfreeze(self, nodes=None):
-        """SIGCONT
+        """Resume service execution
 
         Send SIGCONT to Service into network on all nodes or on particular
         subset.
