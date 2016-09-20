@@ -19,6 +19,7 @@ import six
 
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
+from os_faults.api import consts
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
@@ -426,18 +427,18 @@ class HeatEngineService(FuelService):
 
 
 SERVICE_NAME_TO_CLASS = {
-    'keystone': KeystoneService,
-    'memcached': MemcachedService,
-    'mysql': MySQLService,
-    'rabbitmq': RabbitMQService,
-    'nova-api': NovaAPIService,
-    'glance-api': GlanceAPIService,
-    'nova-compute': NovaComputeService,
-    'nova-scheduler': NovaSchedulerService,
-    'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
-    'neutron-l3-agent': NeutronL3AgentService,
-    'heat-api': HeatAPIService,
-    'heat-engine': HeatEngineService,
+    consts.SERVICE_KEYSTONE: KeystoneService,
+    consts.SERVICE_MEMCACHED: MemcachedService,
+    consts.SERVICE_MYSQL: MySQLService,
+    consts.SERVICE_RABBITMQ: RabbitMQService,
+    consts.SERVICE_NOVA_API: NovaAPIService,
+    consts.SERVICE_GLANCE_API: GlanceAPIService,
+    consts.SERVICE_NOVA_COMPUTE: NovaComputeService,
+    consts.SERVICE_NOVA_SCHEDULER: NovaSchedulerService,
+    consts.SERVICE_NEUTRON_OPENVSWITCH_AGENT: NeutronOpenvswitchAgentService,
+    consts.SERVICE_NEUTRON_L3_AGENT: NeutronL3AgentService,
+    consts.SERVICE_HEAT_API: HeatAPIService,
+    consts.SERVICE_HEAT_ENGINE: HeatEngineService,
 }
 
 
