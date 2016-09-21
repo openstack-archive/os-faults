@@ -38,7 +38,14 @@ class FuelServiceTestCase(test.TestCase):
               ('mysql', fuel.MySQLService),
               ('rabbitmq', fuel.RabbitMQService),
               ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService))
+              ('glance-api', fuel.GlanceAPIService),
+              ('nova-compute', fuel.NovaComputeService),
+              ('nova-scheduler', fuel.NovaSchedulerService),
+              ('neutron-openvswitch-agent',
+               fuel.NeutronOpenvswitchAgentService),
+              ('neutron-l3-agent', fuel.NeutronL3AgentService),
+              ('heat-api', fuel.HeatAPIService),
+              ('heat-engine', fuel.HeatEngineService))
     @ddt.unpack
     def test_kill(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
