@@ -288,6 +288,126 @@ class GlanceAPIService(FuelService):
                     ' | awk {\'print $1\'} | xargs kill -18"')
 
 
+class NovaComputeService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-compute\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [n]ova-compute'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service nova-compute restart'
+    FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-compute'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [n]ova-compute | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]ova-compute'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
+class NovaSchedulerService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-scheduler\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service nova-scheduler restart'
+    FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [n]ova-scheduler | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
+class NeutronOpenvswitchAgentService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-openvswitch-agent\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = ('bash -c "if pcs resource show neutron-openvswitch-agent; '
+                   'then pcs resource restart neutron-openvswitch-agent; '
+                   'else service neutron-openvswitch-agent restart; fi"')
+    FREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [n]eutron-openvswitch-agent'
+                      ' | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
+class NeutronL3AgentService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-l3-agent\'"'
+    KILL_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = ('bash -c "if pcs resource show neutron-l3-agent; '
+                   'then pcs resource restart neutron-l3-agent; '
+                   'else service neutron-l3-agent restart; fi"')
+    FREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [n]eutron-l3-agent | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
+class HeatAPIService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep \'[h]eat-api \'"'
+    KILL_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service heat-api restart'
+    FREEZE_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep \\047[h]eat-api \\047'
+                      ' | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
+class HeatEngineService(FuelService):
+    GET_NODES_CMD = 'bash -c "ps ax | grep [h]eat-engine"'
+    KILL_CMD = ('bash -c "ps ax | grep [h]eat-engine'
+                ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'pcs resource restart p_heat-engine'
+    FREEZE_CMD = ('bash -c "ps ax | grep [h]eat-engine'
+                  ' | awk {\'print $1\'} | xargs kill -19"')
+    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
+                      'echo -n \'#!\' > $tf; '
+                      'echo -en \'/bin/bash\\npids=`ps ax | '
+                      'grep [h]eat-engine | awk {{\\047print $1\\047}}`; '
+                      'echo $pids | xargs kill -19; sleep {0}; '
+                      'echo $pids | xargs kill -18; rm \' >> $tf; '
+                      'echo -n $tf >> $tf; '
+                      'chmod 770 $tf; nohup $tf &"')
+    UNFREEZE_CMD = ('bash -c "ps ax | grep [h]eat-engine'
+                    ' | awk {\'print $1\'} | xargs kill -18"')
+
+
 SERVICE_NAME_TO_CLASS = {
     'keystone': KeystoneService,
     'memcached': MemcachedService,
@@ -295,6 +415,12 @@ SERVICE_NAME_TO_CLASS = {
     'rabbitmq': RabbitMQService,
     'nova-api': NovaAPIService,
     'glance-api': GlanceAPIService,
+    'nova-compute': NovaComputeService,
+    'nova-scheduler': NovaSchedulerService,
+    'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
+    'neutron-l3-agent': NeutronL3AgentService,
+    'heat-api': HeatAPIService,
+    'heat-engine': HeatEngineService,
 }
 
 
