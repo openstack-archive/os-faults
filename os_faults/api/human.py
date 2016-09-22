@@ -37,7 +37,8 @@ Human API understands commands like these (examples):
 def list_actions(klazz):
     return set(m[0].replace('_', ' ') for m in inspect.getmembers(
         klazz,
-        predicate=lambda o: inspect.ismethod(o) and hasattr(o, '__public__')))
+        predicate=lambda o: ((inspect.isfunction(o) or inspect.ismethod(o)) and
+                             hasattr(o, '__public__'))))
 
 RANDOMNESS = {'one', 'random', 'some', 'single'}
 RANDOMNESS_PATTERN = '|'.join(RANDOMNESS)
