@@ -269,6 +269,8 @@ class FuelServiceTestCase(test.TestCase):
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(('keystone', fuel.KeystoneService),
+              ('nova-api', fuel.NovaAPIService),
+              ('glance-api', fuel.GlanceAPIService),
               ('nova-compute', fuel.NovaComputeService),
               ('nova-scheduler', fuel.NovaSchedulerService),
               ('neutron-openvswitch-agent',

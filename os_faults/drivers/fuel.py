@@ -256,6 +256,7 @@ class NovaAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]ova-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service nova-api restart'
     FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-api'
                   ' | awk {\'print $1\'} | xargs kill -19"')
     FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
@@ -274,6 +275,7 @@ class GlanceAPIService(FuelService):
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[g]lance-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [g]lance-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
+    RESTART_CMD = 'service glance-api restart'
     FREEZE_CMD = ('bash -c "ps ax | grep [g]lance-api'
                   ' | awk {\'print $1\'} | xargs kill -19"')
     FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
