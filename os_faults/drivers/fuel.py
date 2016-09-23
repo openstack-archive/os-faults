@@ -459,11 +459,12 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            task = {'command': 'fuel node --json'}
+            task = {'command': 'fuel2 node list -f json'}
             result = self.execute_on_master_node(task)
             for r in json.loads(result[0].payload['stdout']):
                 self.cached_cloud_hosts.append(
-                    dict(ip=r['ip'], mac=r['mac'], fqdn=r['fqdn']))
+                    dict(ip=r['ip'], mac=r['mac'],
+                         fqdn='node-%s.domain.tld' % r['id']))
         return self.cached_cloud_hosts
 
     def execute_on_master_node(self, task):
