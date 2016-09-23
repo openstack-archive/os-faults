@@ -118,8 +118,6 @@ class AnsibleRunner(object):
             verbosity=100, check=False)
 
     def _run_play(self, play_source):
-        LOG.debug('Running play: %s', play_source)
-
         host_list = play_source['hosts']
 
         loader = dataloader.DataLoader()
@@ -153,8 +151,6 @@ class AnsibleRunner(object):
         finally:
             if tqm is not None:
                 tqm.cleanup()
-
-        LOG.debug('Execution result: %s', storage)
 
         return storage
 
@@ -201,5 +197,7 @@ class AnsibleRunner(object):
                 ek = (AnsibleExecutionUnreachable if only_unreachable
                       else AnsibleExecutionException)
                 raise ek(msg)
+
+        LOG.debug('Execution result: %s' % result)
 
         return result
