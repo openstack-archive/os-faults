@@ -118,8 +118,6 @@ class AnsibleRunner(object):
             verbosity=100, check=False)
 
     def _run_play(self, play_source):
-        LOG.debug('Running play: %s', play_source)
-
         host_list = play_source['hosts']
 
         loader = dataloader.DataLoader()
@@ -153,8 +151,6 @@ class AnsibleRunner(object):
         finally:
             if tqm is not None:
                 tqm.cleanup()
-
-        LOG.debug('Execution result: %s', storage)
 
         return storage
 
@@ -201,5 +197,14 @@ class AnsibleRunner(object):
                 ek = (AnsibleExecutionUnreachable if only_unreachable
                       else AnsibleExecutionException)
                 raise ek(msg)
+
+        msg = 'Execution result: %s' % result
+        if task['command'] == 'fuel node --json':
+            # Output of `fuel node --json` cmd can be extremely large.
+            msg = ("Execution result: host='{0}', command='{1}', "
+                   "status='{2}'".format(result[0].host,
+                                         ' '.join(result[0].payload['cmd']),
+                                         result[0].status))
+        LOG.debug(msg)
 
         return result
