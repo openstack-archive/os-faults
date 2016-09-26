@@ -103,3 +103,9 @@ class FuelNodeCollectionTestCase(test.TestCase):
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
             {'fuel_network_mgmt': {'operation': 'down',
                                    'network_name': 'storage'}})
+
+    def test_reboot(self):
+        self.node_collection.reboot()
+        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
+            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
+            {'command': 'reboot now'})

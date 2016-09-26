@@ -58,7 +58,8 @@ class FuelNodeCollection(node_collection.NodeCollection):
                                   hosts=random.sample(self.hosts, count))
 
     def reboot(self):
-        raise NotImplementedError
+        task = {'command': 'reboot now'}
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def oom(self):
         raise NotImplementedError
