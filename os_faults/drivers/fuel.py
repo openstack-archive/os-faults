@@ -58,6 +58,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
                                   hosts=random.sample(self.hosts, count))
 
     def reboot(self):
+        logging.info('Reboot nodes: %s', self)
         task = {'command': 'reboot now'}
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
@@ -65,9 +66,11 @@ class FuelNodeCollection(node_collection.NodeCollection):
         raise NotImplementedError
 
     def poweroff(self):
+        logging.info('Power off nodes: %s', self)
         self.power_management.poweroff(self.get_macs())
 
     def poweron(self):
+        logging.info('Power on nodes: %s', self)
         self.power_management.poweron(self.get_macs())
 
     def reset(self):
@@ -75,7 +78,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.power_management.reset(self.get_macs())
 
     def enable_network(self, network_name):
-        logging.info('Enable network: %s on nodes: %s', network_name, self)
+        logging.info("Enable '%s' network on nodes: %s", network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'up',
@@ -83,7 +86,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def disable_network(self, network_name):
-        logging.info('Disable network: %s on nodes: %s', network_name, self)
+        logging.info("Disable '%s' network on nodes: %s", network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'down',
@@ -133,45 +136,44 @@ class FuelService(service.Service):
         if not getattr(self, 'RESTART_CMD'):
             raise NotImplementedError('RESTART_CMD is undefined')
         nodes = nodes if nodes is not None else self.get_nodes()
-        task_result = self._run_task({'command': self.RESTART_CMD}, nodes)
-        logging.info('Restart %s, result: %s', str(self.__class__),
-                     task_result)
+        logging.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
+                     nodes.get_ips())
+        self._run_task({'command': self.RESTART_CMD}, nodes)
 
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        task_result = self._run_task({'command': self.KILL_CMD}, nodes)
-        logging.info('SIGKILL %s, result: %s', str(self.__class__),
-                     task_result)
+        logging.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
+                     nodes.get_ips())
+        self._run_task({'command': self.KILL_CMD}, nodes)
 
     def freeze(self, nodes=None, sec=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         cmd = self.FREEZE_SEC_CMD.format(sec) if sec else self.FREEZE_CMD
-        task_result = self._run_task({'command': cmd}, nodes)
-        logging.info('FREEZE({0}) {1}, result: {2}'.format(sec or '',
-                     self.__class__, task_result))
+        logging.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
+                     ('for %s sec ' % sec) if sec else '', nodes.get_ips())
+        self._run_task({'command': cmd}, nodes)
 
     def unfreeze(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        task_result = self._run_task({'command': self.UNFREEZE_CMD}, nodes)
-        logging.info('UNFREEZE %s, result: %s', str(self.__class__),
-                     task_result)
+        logging.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
+                     nodes.get_ips())
+        self._run_task({'command': self.UNFREEZE_CMD}, nodes)
 
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        task_result = self._run_task(
-            {'command': self.PLUG_CMD.format(self.PORT)}, nodes)
-        logging.info('Open port %s, result: %s', str(self.__class__),
-                     task_result)
+        logging.info("Open port %d for '%s' service on nodes: %s", self.PORT,
+                     self.SERVICE_NAME, nodes.get_ips())
+        self._run_task({'command': self.PLUG_CMD.format(self.PORT)}, nodes)
 
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        task_result = self._run_task(
-            {'command': self.UNPLUG_CMD.format(self.PORT)}, nodes)
-        logging.info('Close port %s, result: %s', str(self.__class__),
-                     task_result)
+        logging.info("Close port %d for '%s' service on nodes: %s",
+                     self.PORT, self.SERVICE_NAME, nodes.get_ips())
+        self._run_task({'command': self.UNPLUG_CMD.format(self.PORT)}, nodes)
 
 
 class KeystoneService(FuelService):
+    SERVICE_NAME = 'keystone'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[k]eystone-main\'"'
     KILL_CMD = ('bash -c "ps ax | grep [k]eystone'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -191,6 +193,7 @@ class KeystoneService(FuelService):
 
 
 class MemcachedService(FuelService):
+    SERVICE_NAME = 'memcached'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[m]emcached\'"'
     KILL_CMD = ('bash -c "ps ax | grep [m]emcached'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -210,6 +213,7 @@ class MemcachedService(FuelService):
 
 
 class MySQLService(FuelService):
+    SERVICE_NAME = 'mysql'
     GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
     KILL_CMD = ('bash -c "ps ax | grep [m]ysqld'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -235,6 +239,7 @@ class MySQLService(FuelService):
 
 
 class RabbitMQService(FuelService):
+    SERVICE_NAME = 'rabbitmq'
     GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
     KILL_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -254,6 +259,7 @@ class RabbitMQService(FuelService):
 
 
 class NovaAPIService(FuelService):
+    SERVICE_NAME = 'nova-api'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]ova-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -273,6 +279,7 @@ class NovaAPIService(FuelService):
 
 
 class GlanceAPIService(FuelService):
+    SERVICE_NAME = 'glance-api'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[g]lance-api\'"'
     KILL_CMD = ('bash -c "ps ax | grep [g]lance-api'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -292,6 +299,7 @@ class GlanceAPIService(FuelService):
 
 
 class NovaComputeService(FuelService):
+    SERVICE_NAME = 'nova-compute'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-compute\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]ova-compute'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -311,6 +319,7 @@ class NovaComputeService(FuelService):
 
 
 class NovaSchedulerService(FuelService):
+    SERVICE_NAME = 'nova-scheduler'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-scheduler\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -330,6 +339,7 @@ class NovaSchedulerService(FuelService):
 
 
 class NeutronOpenvswitchAgentService(FuelService):
+    SERVICE_NAME = 'neutron-openvswitch-agent'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-openvswitch-agent\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -352,6 +362,7 @@ class NeutronOpenvswitchAgentService(FuelService):
 
 
 class NeutronL3AgentService(FuelService):
+    SERVICE_NAME = 'neutron-l3-agent'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-l3-agent\'"'
     KILL_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -373,6 +384,7 @@ class NeutronL3AgentService(FuelService):
 
 
 class HeatAPIService(FuelService):
+    SERVICE_NAME = 'heat-api'
     GET_NODES_CMD = 'bash -c "ps ax | grep \'[h]eat-api \'"'
     KILL_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
                 ' | awk {\'print $1\'} | xargs kill -9"')
@@ -393,6 +405,7 @@ class HeatAPIService(FuelService):
 
 
 class HeatEngineService(FuelService):
+    SERVICE_NAME = 'heat-engine'
     GET_NODES_CMD = 'bash -c "ps ax | grep [h]eat-engine"'
     KILL_CMD = ('bash -c "ps ax | grep [h]eat-engine'
                 ' | awk {\'print $1\'} | xargs kill -9"')
