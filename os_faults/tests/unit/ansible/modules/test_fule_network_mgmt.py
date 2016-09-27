@@ -15,7 +15,7 @@ import ddt
 import mock
 
 from os_faults.ansible.modules import fuel_network_mgmt
-from os_faults.tests import test
+from os_faults.tests.unit import test
 
 
 @ddt.ddt

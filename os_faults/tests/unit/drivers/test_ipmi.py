@@ -16,7 +16,7 @@ import mock
 
 from os_faults.drivers import ipmi
 from os_faults import error
-from os_faults.tests import test
+from os_faults.tests.unit import test
 
 
 @ddt.ddt
