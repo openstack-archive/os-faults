@@ -1,7 +1,7 @@
 [run]
 branch = True
 source = os_faults
-omit = os_faults/tests/*
+omit = os_faults/tests/unit/*
 
 [report]
 ignore_errors = True
