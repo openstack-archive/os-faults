@@ -15,8 +15,7 @@ import ddt
 import mock
 
 from os_faults.drivers import libvirt_driver
-from os_faults.tests import test
-
+from os_faults.tests.unit import test
 
 DRIVER_PATH = 'os_faults.drivers.libvirt_driver'
 

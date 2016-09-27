@@ -17,7 +17,7 @@ from os_faults.api import error
 from os_faults.api import human
 from os_faults.api import node_collection
 from os_faults.api import service as service_api
-from os_faults.tests import test
+from os_faults.tests.unit import test
 
 
 @ddt.ddt

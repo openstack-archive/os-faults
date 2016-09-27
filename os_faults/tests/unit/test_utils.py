@@ -15,7 +15,7 @@ import threading
 import mock
 
 from os_faults.api import error
-from os_faults.tests import test
+from os_faults.tests.unit import test
 from os_faults import utils
 
 

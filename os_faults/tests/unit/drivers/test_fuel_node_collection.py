@@ -12,12 +12,13 @@
 # limitations under the License.
 
 import copy
+
 import mock
 
 from os_faults.api import error
 from os_faults.api import power_management
 from os_faults.drivers import fuel
-from os_faults.tests import test
+from os_faults.tests.unit import test
 
 
 class FuelNodeCollectionTestCase(test.TestCase):
