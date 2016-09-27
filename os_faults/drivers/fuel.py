@@ -77,16 +77,17 @@ class FuelNodeCollection(node_collection.NodeCollection):
         logging.info('Reset nodes: %s', self)
         self.power_management.reset(self.get_macs())
 
-    def enable_network(self, network_name):
-        logging.info("Enable '%s' network on nodes: %s", network_name, self)
+    def connect(self, network_name):
+        logging.info("Connect network '%s' on nodes: %s", network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'up',
         }}
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
-    def disable_network(self, network_name):
-        logging.info("Disable '%s' network on nodes: %s", network_name, self)
+    def disconnect(self, network_name):
+        logging.info("Disconnect network '%s' on nodes: %s",
+                     network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'down',
