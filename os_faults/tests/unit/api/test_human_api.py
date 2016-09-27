@@ -124,10 +124,10 @@ class TestHumanAPI(test.TestCase):
         destructor.get_nodes.assert_called_once_with(fqdns=['node-2.local'])
         getattr(nodes, action).assert_called_once()
 
-    @ddt.data(('Disable network', 'disable_network'),
-              ('Enable network', 'enable_network'))
+    @ddt.data(('Disconnect', 'disconnect'),
+              ('Connect', 'connect'))
     @ddt.unpack
-    def test_disable_network_node_by_fqdn(self, user_action, action):
+    def test_network_management_on_nodes_by_fqdn(self, user_action, action):
         destructor = mock.MagicMock()
         nodes = mock.MagicMock(node_collection.NodeCollection)
         destructor.get_nodes = mock.MagicMock(return_value=nodes)

@@ -127,8 +127,8 @@ Available actions:
  * `poweroff` - power off all nodes abruptly
  * `reset` - reset (cold restart) all nodes
  * `oom` - fill all node's RAM
- * `disable_network` - disable network with the specified name on all nodes
- * `enable_network` - enable network with the specified name on all nodes
+ * `disconnect` - disable network with the specified name on all nodes
+ * `connect` - enable network with the specified name on all nodes
 
 3. Operate with nodes
 ~~~~~~~~~~~~~~~~~~~~~
@@ -147,7 +147,7 @@ Get nodes where l3-agent runs and disable the management network on them:
 
     fqdns = neutron.l3_agent_list_hosting_router(router_id)
     nodes = destructor.get_nodes(fqdns=fqdns)
-    nodes.disable_network(network_name='management')
+    nodes.disconnect(network_name='management')
 
 4. Operate with services
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -60,10 +60,10 @@ class DevStackNode(node_collection.NodeCollection):
         logging.info('Reset nodes: %s', self)
         self.power_management.reset([self.host.mac])
 
-    def enable_network(self, network_name):
+    def connect(self, network_name):
         raise NotImplementedError
 
-    def disable_network(self, network_name):
+    def disconnect(self, network_name):
         raise NotImplementedError
 
 

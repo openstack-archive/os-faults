@@ -64,16 +64,16 @@ class NodeCollection(object):
         raise NotImplementedError
 
     @public
-    def disable_network(self, network_name):
-        """Disable network with name network_name on each of the nodes
+    def disconnect(self, network_name):
+        """Disconnect nodes from network with name network_name
 
         :param network_name: name of network
         """
         raise NotImplementedError
 
     @public
-    def enable_network(self, network_name):
-        """Enable network with name network_name on each of the nodes
+    def connect(self, network_name):
+        """Connect nodes to network with name network_name
 
         :param network_name: name of network
         """
