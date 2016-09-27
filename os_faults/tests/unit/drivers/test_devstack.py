@@ -12,13 +12,14 @@
 # limitations under the License.
 
 import copy
+
 import ddt
 import mock
 
 from os_faults.api import power_management
 from os_faults.drivers import devstack
-from os_faults.tests import fake
-from os_faults.tests import test
+from os_faults.tests.unit import fakes
+from os_faults.tests.unit import test
 
 
 class DevStackNodeTestCase(test.TestCase):
@@ -74,7 +75,7 @@ class DevStackManagementTestCase(test.TestCase):
     def test_verify(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAnsibleResult(payload={'stdout': 'node1.com'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': 'node1.com'})],
         ]
         devstack_management = devstack.DevStackManagement(self.conf)
         devstack_management.verify()
@@ -86,21 +87,21 @@ class DevStackManagementTestCase(test.TestCase):
     def test_execute(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAnsibleResult(payload={'stdout': '/root'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': '/root'})],
         ]
         devstack_management = devstack.DevStackManagement(self.conf)
         result = devstack_management.execute({'command': 'pwd'})
 
         ansible_runner_inst.execute.assert_called_once_with(
             ['10.0.0.2'], {'command': 'pwd'})
-        self.assertEqual([fake.FakeAnsibleResult(payload={'stdout': '/root'})],
-                         result)
+        self.assertEqual(
+            [fakes.FakeAnsibleResult(payload={'stdout': '/root'})], result)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
         ]
 
         devstack_management = devstack.DevStackManagement(self.conf)
@@ -121,7 +122,7 @@ class DevStackManagementTestCase(test.TestCase):
                                mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})]
+            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})]
         ]
 
         devstack_management = devstack.DevStackManagement(self.conf)
@@ -150,8 +151,8 @@ class DevStackServiceTestCase(test.TestCase):
     def test_restart(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fake.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
-            [fake.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
+            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
         devstack_management = devstack.DevStackManagement(self.conf)
