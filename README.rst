@@ -12,7 +12,7 @@ IPMI driver).
 * Free software: Apache license
 * Documentation: http://os-faults.readthedocs.io
 * Source: https://github.com/openstack/os-faults
-* Bugs: http://bugs.launchpad.net/os_faults
+* Bugs: http://bugs.launchpad.net/os-faults
 
 Usage
 -----
@@ -68,26 +68,36 @@ Simplified API
 
 Simplified API is used to inject faults in a human-friendly form.
 
-Service-based command performs specified `action` against `service` on
+**Service-oriented** command performs specified `action` against `service` on
 all, on one random node or on the node specified by FQDN::
 
-  <action> <service> service [on (random|one|single|<fqdn> node[s])]
-
-Node-based command performs specified `action` on all or selected service's
-node::
-
-  <action> [random|one|single] <service> node[s]
-
-Network-management command is a subset of node-based query::
-
-  disable|enable network <network name> on <service> node[s]
+    <action> <service> service [on (random|one|single|<fqdn> node[s])]
 
 Examples:
+    * `Restart Keystone service` - restarts Keystone service on all nodes.
+    * `kill nova-api service on one node` - restarts Nova API on one
+      randomly-picked node.
 
- * `Restart Keystone service` - restarts Keystone service on all nodes
- * `kill nova-api service on one node` - restarts Nova API on one of nodes
- * `Reboot one node with mysql` - reboots one random node with MySQL
- * `Reboot node-2.domain.tld node` - reboot node with specified name
+**Node-oriented** command performs specified `action` on node specified by FQDN
+or set of service's nodes::
+
+    <action> [random|one|single|<fqdn>] node[s] [with <service> service]
+
+Examples:
+    * `Reboot one node with mysql` - reboots one random node with MySQL.
+    * `Reset node-2.domain.tld node` - reset node `node-2.domain.tld`.
+
+**Network-oriented** command is a subset of node-oriented and performs network
+management operation on selected nodes::
+
+    <action> <network> network on [random|one|single|<fqdn>] node[s]
+        [with <service> service]
+
+Examples:
+    * `Disconnect management network on nodes with rabbitmq service` - shuts
+      down management network interface on all nodes where rabbitmq runs.
+    * `Connect storage network on node-1.domain.tld node` - enables storage
+      network interface on node-1.domain.tld.
 
 
 Extended API
@@ -127,8 +137,8 @@ Available actions:
  * `poweroff` - power off all nodes abruptly
  * `reset` - reset (cold restart) all nodes
  * `oom` - fill all node's RAM
- * `disable_network` - disable network with the specified name on all nodes
- * `enable_network` - enable network with the specified name on all nodes
+ * `disconnect` - disable network with the specified name on all nodes
+ * `connect` - enable network with the specified name on all nodes
 
 3. Operate with nodes
 ~~~~~~~~~~~~~~~~~~~~~
@@ -147,7 +157,7 @@ Get nodes where l3-agent runs and disable the management network on them:
 
     fqdns = neutron.l3_agent_list_hosting_router(router_id)
     nodes = destructor.get_nodes(fqdns=fqdns)
-    nodes.disable_network(network_name='management')
+    nodes.disconnect(network_name='management')
 
 4. Operate with services
 ~~~~~~~~~~~~~~~~~~~~~~~~
