@@ -89,7 +89,7 @@ class TestHumanAPI(test.TestCase):
 
         self.service.get_nodes = mock.MagicMock(return_value=nodes)
 
-        command = '%s node with %s' % (action, service_name)
+        command = '%s node with %s service' % (action, service_name)
         human.execute(self.destructor, command)
 
         self.destructor.get_service.assert_called_once_with(name=service_name)
@@ -105,7 +105,7 @@ class TestHumanAPI(test.TestCase):
         self.service.get_nodes = mock.MagicMock(return_value=nodes)
         nodes.pick = mock.MagicMock(return_value=nodes2)
 
-        command = '%s one node with %s' % (action, service_name)
+        command = '%s one node with %s service' % (action, service_name)
         human.execute(self.destructor, command)
 
         self.destructor.get_service.assert_called_once_with(name=service_name)
@@ -132,11 +132,50 @@ class TestHumanAPI(test.TestCase):
         nodes = mock.MagicMock(node_collection.NodeCollection)
         destructor.get_nodes = mock.MagicMock(return_value=nodes)
 
-        command = '%s storage on node-2.local node' % user_action
+        command = '%s storage network on node-2.local node' % user_action
         human.execute(destructor, command)
 
         destructor.get_nodes.assert_called_once_with(fqdns=['node-2.local'])
         getattr(nodes, action).assert_called_once_with(network_name='storage')
+
+    @ddt.data(('disconnect', 'storage', 'mysql'),
+              ('connect', 'management', 'rabbitmq'))
+    @ddt.unpack
+    def test_network_management_on_nodes_by_service(
+            self, action, network_name, service_name):
+        nodes = mock.MagicMock(node_collection.NodeCollection)
+
+        self.service.get_nodes = mock.MagicMock(return_value=nodes)
+
+        command = '%s %s network on node with %s service' % (
+            action, network_name, service_name)
+        human.execute(self.destructor, command)
+
+        self.destructor.get_service.assert_called_once_with(name=service_name)
+        self.service.get_nodes.assert_called_once()
+        getattr(nodes, action).assert_called_once_with(
+            network_name=network_name)
+
+    @ddt.data(('disconnect', 'storage', 'one', 'mysql'),
+              ('connect', 'management', 'random', 'rabbitmq'))
+    @ddt.unpack
+    def test_network_management_on_nodes_by_service_picked_node(
+            self, action, network_name, node, service_name):
+        nodes = mock.MagicMock(node_collection.NodeCollection)
+        nodes2 = mock.MagicMock(node_collection.NodeCollection)
+
+        self.service.get_nodes = mock.MagicMock(return_value=nodes)
+        nodes.pick = mock.MagicMock(return_value=nodes2)
+
+        command = '%s %s network on %s node with %s service' % (
+            action, network_name, node, service_name)
+        human.execute(self.destructor, command)
+
+        self.destructor.get_service.assert_called_once_with(name=service_name)
+        self.service.get_nodes.assert_called_once()
+        nodes.pick.assert_called_once()
+        getattr(nodes2, action).assert_called_once_with(
+            network_name=network_name)
 
     def test_malformed_query(self):
         destructor = mock.MagicMock()
