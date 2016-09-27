@@ -10,16 +10,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""
-test_os_faults
-----------------------------------
-
-Tests for `os_faults` module.
-"""
-
-import mock
 import os
 import yaml
+
+import mock
 
 import os_faults
 from os_faults.api import error
@@ -27,7 +21,7 @@ from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
 from os_faults.drivers import libvirt_driver
-from os_faults.tests import test
+from os_faults.tests.unit import test
 
 
 class OSFaultsTestCase(test.TestCase):

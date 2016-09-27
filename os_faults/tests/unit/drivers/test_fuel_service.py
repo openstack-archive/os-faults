@@ -17,8 +17,8 @@ import mock
 from os_faults.ansible import executor
 from os_faults.api import error
 from os_faults.drivers import fuel
-from os_faults.tests import fake
-from os_faults.tests import test
+from os_faults.tests.unit import fakes
+from os_faults.tests.unit import test
 
 
 @ddt.ddt
@@ -27,7 +27,7 @@ class FuelServiceTestCase(test.TestCase):
     def setUp(self):
         super(FuelServiceTestCase, self).setUp()
         self.conf = {'address': 'fuel.local', 'username': 'root'}
-        self.fake_ansible_result = fake.FakeAnsibleResult(
+        self.fake_ansible_result = fakes.FakeAnsibleResult(
             payload={'stdout': '[{"ip": "10.0.0.2", "mac": "02", "id": "2"},'
                                ' {"ip": "10.0.0.3", "mac": "03", "id": "3"}]'})
 
@@ -49,14 +49,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -91,14 +91,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -133,14 +133,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -177,14 +177,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -208,14 +208,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -240,14 +240,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -281,14 +281,14 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -310,15 +310,15 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2'),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2',
-                                    status=executor.STATUS_FAILED),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3')]
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2',
+                                     status=executor.STATUS_FAILED),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
@@ -340,12 +340,12 @@ class FuelServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
-            [fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.2',
-                                    status=executor.STATUS_FAILED),
-             fake.FakeAnsibleResult(payload={'stdout': ''},
-                                    host='10.0.0.3',
-                                    status=executor.STATUS_FAILED)],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2',
+                                     status=executor.STATUS_FAILED),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3',
+                                     status=executor.STATUS_FAILED)],
         ]
 
         fuel_managment = fuel.FuelManagement(self.conf)
