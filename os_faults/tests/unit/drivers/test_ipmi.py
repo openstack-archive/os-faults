@@ -13,6 +13,7 @@
 
 import ddt
 import mock
+from pyghmi import exceptions as pyghmi_exc
 
 from os_faults.drivers import ipmi
 from os_faults import error
@@ -53,6 +54,15 @@ class IPMIDriverTestCase(test.TestCase):
         self.driver._run_set_power_cmd('00:00:00:00:00:00',
                                        'off', expected_state='off')
         ipmicmd.set_power.assert_called_once_with('off', wait=True)
+
+    @mock.patch('pyghmi.ipmi.command.Command')
+    def test__run_set_power_cmd_ipmi_exc(self, mock_command):
+        ipmicmd = mock_command.return_value
+        ipmicmd.set_power.side_effect = pyghmi_exc.IpmiException()
+
+        self.assertRaises(pyghmi_exc.IpmiException,
+                          self.driver._run_set_power_cmd,
+                          '00:00:00:00:00:00', 'off', expected_state='off')
 
     @mock.patch('pyghmi.ipmi.command.Command')
     def test__run_set_power_cmd_unexpected_power_state(self, mock_command):

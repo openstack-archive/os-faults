@@ -15,6 +15,7 @@ import ddt
 import mock
 
 from os_faults.drivers import libvirt_driver
+from os_faults import error
 from os_faults.tests.unit import test
 
 
@@ -54,6 +55,19 @@ class LibvirtDriverTestCase(test.TestCase):
 
         domain = self.driver._find_domain_by_mac_address('52:54:00:f9:b8:f9')
         self.assertEqual(domain, domain2)
+
+    @mock.patch(DRIVER_PATH + '.LibvirtDriver._get_connection')
+    def test__find_domain_by_mac_address_domain_not_found(
+            self, mock__get_connection):
+        domain1 = mock.MagicMock()
+        domain1.XMLDesc.return_value = '52:54:00:ab:64:42'
+        domain2 = mock.MagicMock()
+        domain2.XMLDesc.return_value = '52:54:00:f9:b8:f9'
+        self.driver.conn.listAllDomains.return_value = [domain1, domain2]
+
+        self.assertRaises(error.PowerManagementError,
+                          self.driver._find_domain_by_mac_address,
+                          '00:00:00:00:00:01')
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
     @ddt.data(('_poweroff', 'destroy'), ('_poweron', 'create'),
