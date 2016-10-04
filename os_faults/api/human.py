@@ -28,9 +28,12 @@ Human API understands commands like these (examples):
  * freeze <service> service [on (random|one|single|<fqdn> node[s])]
    [for <T> seconds]
  * unfreeze <service> service [on (random|one|single|<fqdn> node[s])]
- * reboot [random|one|single|<fqdn>] node[s] [with <service>]
- * disable network <name> on <service> node[s]
- * enable network <name> on <service> node[s]
+ * reboot [random|one|single|<fqdn>] node[s] [with <service> service]
+ * reset [random|one|single|<fqdn>] node[s] [with <service> service]
+ * disconnect <name> network on [random|one|single|<fqdn>] node[s]
+   [with <service> service]
+ * connect <name> network on [random|one|single|<fqdn>] node[s]
+   [with <service> service]
 """
 
 
@@ -54,10 +57,10 @@ PATTERNS = [
                '(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
                SERVICE_ACTIONS_PATTERN),
     re.compile('(?P<action>%s)'
-               '(\s+(?P<network>\w+)\s+on)?'
+               '(\s+(?P<network>\w+)\s+network\s+on)?'
                '(\s+(?P<node>%s|\S+))?'
-               '\s+node'
-               '(\s+with\s+(?P<service>\S+))?' %
+               '\s+nodes?'
+               '(\s+with\s+(?P<service>\S+)\s+service)?' %
                (NODE_ACTIONS_PATTERN, RANDOMNESS_PATTERN)),
 ]
 
@@ -104,8 +107,12 @@ def execute(destructor, command):
             if node_name in RANDOMNESS:
                 nodes = nodes.pick()
 
+            kwargs = {}
+            if network_name:
+                kwargs['network_name'] = network_name
+
             fn = getattr(nodes, action)
-            fn()
+            fn(**kwargs)
     else:  # nodes operation
         nodes = destructor.get_nodes(fqdns=[node_name])
 

@@ -91,15 +91,15 @@ class FuelNodeCollectionTestCase(test.TestCase):
             ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
              '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
 
-    def test_enable_network(self):
-        self.node_collection.enable_network(network_name='storage')
+    def test_connect(self):
+        self.node_collection.connect(network_name='storage')
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
             {'fuel_network_mgmt': {'operation': 'up',
                                    'network_name': 'storage'}})
 
-    def test_disable_network(self):
-        self.node_collection.disable_network(network_name='storage')
+    def test_disconnect(self):
+        self.node_collection.disconnect(network_name='storage')
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
             {'fuel_network_mgmt': {'operation': 'down',

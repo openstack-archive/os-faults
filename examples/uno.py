@@ -65,10 +65,10 @@ def main():
     logging.info('Node node-2.domain.tld: %s', nodes)
 
     logging.info('# Disable public network on node-2.domain.tld')
-    nodes.disable_network(network_name='public')
+    nodes.disconnect(network_name='public')
 
     logging.info('# Enable public network on node-2.domain.tld')
-    nodes.enable_network(network_name='public')
+    nodes.connect(network_name='public')
 
     logging.info('# Kill Glance API service on a single node')
     service = destructor.get_service(name='glance-api')
