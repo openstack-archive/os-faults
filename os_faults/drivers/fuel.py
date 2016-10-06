@@ -442,6 +442,8 @@ SERVICE_NAME_TO_CLASS = {
 
 
 class FuelManagement(cloud_management.CloudManagement):
+    NAME = 'fuel'
+
     def __init__(self, cloud_management_params):
         super(FuelManagement, self).__init__()
 

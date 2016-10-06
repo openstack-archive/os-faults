@@ -22,6 +22,8 @@ from os_faults import utils
 
 
 class IPMIDriver(power_management.PowerManagement):
+    NAME = 'ipmi'
+
     def __init__(self, params):
         self.mac_to_bmc = params['mac_to_bmc']
 

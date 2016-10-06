@@ -15,9 +15,11 @@ import abc
 
 import six
 
+from os_faults.api import base_driver
+
 
 @six.add_metaclass(abc.ABCMeta)
-class CloudManagement(object):
+class CloudManagement(base_driver.BaseDriver):
     def __init__(self):
         self.power_management = None
 
