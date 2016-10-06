@@ -108,6 +108,10 @@ class DevStackManagement(cloud_management.CloudManagement):
             become=True)
         self.host = None
 
+    @classmethod
+    def get_driver_name(cls):
+        return 'devstack'
+
     def verify(self):
         """Verify connection to the cloud."""
         task = {'command': 'hostname'}

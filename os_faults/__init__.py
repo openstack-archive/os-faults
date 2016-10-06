@@ -18,10 +18,7 @@ import yaml
 
 from os_faults.api import error
 from os_faults.api import human
-from os_faults.drivers import devstack
-from os_faults.drivers import fuel
-from os_faults.drivers import ipmi
-from os_faults.drivers import libvirt_driver
+from os_faults import registry
 
 __version__ = pbr.version.VersionInfo('os_faults').version_string()
 
@@ -54,26 +51,31 @@ def _read_config(config_filename):
     raise error.OSFError(msg)
 
 
+def _init_driver(params):
+    all_drivers = registry.get_drivers()
+
+    name = params.get('driver')
+    if not name:
+        return None
+
+    if name not in all_drivers:
+        raise Exception('Driver %s is not found' % name)
+
+    return all_drivers[name](params)
+
+
 def connect(cloud_config=None, config_filename=None):
     if not cloud_config:
         cloud_config = _read_config(config_filename)
 
-    cloud_management = None
     cloud_management_params = cloud_config.get('cloud_management') or {}
+    cloud_management = _init_driver(cloud_management_params)
 
-    if cloud_management_params.get('driver') == 'fuel':
-        cloud_management = fuel.FuelManagement(cloud_management_params)
-    elif cloud_management_params.get('driver') == 'devstack':
-        cloud_management = devstack.DevStackManagement(cloud_management_params)
+    if not cloud_management:
+        raise Exception('Cloud management driver is missing')
 
-    power_management = None
     power_management_params = cloud_config.get('power_management') or {}
-
-    if power_management_params.get('driver') == 'libvirt':
-        power_management = libvirt_driver.LibvirtDriver(
-            power_management_params)
-    elif power_management_params.get('driver') == 'ipmi':
-        power_management = ipmi.IPMIDriver(power_management_params)
+    power_management = _init_driver(power_management_params)
 
     cloud_management.set_power_management(power_management)
 

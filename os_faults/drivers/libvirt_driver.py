@@ -25,6 +25,10 @@ class LibvirtDriver(power_management.PowerManagement):
         self.connection_uri = params['connection_uri']
         self._cached_conn = None
 
+    @classmethod
+    def get_driver_name(cls):
+        return 'libvirt'
+
     @property
     def conn(self):
         return self._get_connection()

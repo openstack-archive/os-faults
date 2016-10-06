@@ -459,6 +459,10 @@ class FuelManagement(cloud_management.CloudManagement):
         self.cached_cloud_hosts = list()
         self.fqdn_to_hosts = dict()
 
+    @classmethod
+    def get_driver_name(cls):
+        return 'fuel'
+
     def verify(self):
         """Verify connection to the cloud."""
         hosts = self._get_cloud_hosts()

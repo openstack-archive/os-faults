@@ -25,6 +25,10 @@ class IPMIDriver(power_management.PowerManagement):
     def __init__(self, params):
         self.mac_to_bmc = params['mac_to_bmc']
 
+    @classmethod
+    def get_driver_name(cls):
+        return 'ipmi'
+
     def _find_bmc_by_mac_address(self, mac_address):
         if mac_address not in self.mac_to_bmc:
             raise error.PowerManagementError(
