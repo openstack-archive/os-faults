@@ -28,8 +28,10 @@ class FuelServiceTestCase(test.TestCase):
         super(FuelServiceTestCase, self).setUp()
         self.conf = {'address': 'fuel.local', 'username': 'root'}
         self.fake_ansible_result = fakes.FakeAnsibleResult(
-            payload={'stdout': '[{"ip": "10.0.0.2", "mac": "02", "id": "2"},'
-                               ' {"ip": "10.0.0.3", "mac": "03", "id": "3"}]'})
+            payload={
+                'stdout': '[{"ip": "10.0.0.2", "mac": "02", "fqdn": "node-2"},'
+                          ' {"ip": "10.0.0.3", "mac": "03", "fqdn": "node-3"}]'
+            })
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(('keystone', fuel.KeystoneService),
@@ -66,7 +68,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.kill()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -108,7 +110,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.freeze()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -151,7 +153,7 @@ class FuelServiceTestCase(test.TestCase):
         delay_sec = 10
         service.freeze(nodes=None, sec=delay_sec)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -194,7 +196,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.unfreeze()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -225,7 +227,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.unplug()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -257,7 +259,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.plug()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -298,7 +300,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.restart()
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -328,7 +330,7 @@ class FuelServiceTestCase(test.TestCase):
         self.assertEqual('Task failed on some nodes', str(exception))
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service.GET_NODES_CMD}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -355,7 +357,7 @@ class FuelServiceTestCase(test.TestCase):
         self.assertEqual('Node collection is empty', str(exception))
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel2 node list -f json'}),
+            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service.GET_NODES_CMD}, []),
         ])
