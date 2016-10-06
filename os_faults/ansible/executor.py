@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from collections import namedtuple
+import copy
 import os
 
 from ansible.executor import task_queue_manager
@@ -32,6 +33,8 @@ STATUS_SKIPPED = 'SKIPPED'
 DEFAULT_ERROR_STATUSES = {STATUS_FAILED, STATUS_UNREACHABLE}
 
 SSH_COMMON_ARGS = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+STDOUT_LIMIT = 4096  # Symbols count
 
 
 class AnsibleExecutionException(Exception):
@@ -198,6 +201,13 @@ class AnsibleRunner(object):
                       else AnsibleExecutionException)
                 raise ek(msg)
 
-        LOG.debug('Execution result: %s' % result)
+        log_result = copy.deepcopy(result)
+        LOG.debug('Execution completed with %s result(s):' % len(log_result))
+        for lr in log_result:
+            if len(lr.payload['stdout']) > STDOUT_LIMIT:
+                lr.payload['stdout'] = (
+                    lr.payload['stdout'][:STDOUT_LIMIT] + '... <cut>')
+            del lr.payload['stdout_lines']
+            LOG.debug(lr)
 
         return result

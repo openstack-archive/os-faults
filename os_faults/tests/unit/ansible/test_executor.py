@@ -205,3 +205,23 @@ class AnsibleRunnerTestCase(test.TestCase):
         err = self.assertRaises(executor.AnsibleExecutionException,
                                 ex.execute, my_hosts, my_tasks, my_statuses)
         self.assertEqual(type(err), executor.AnsibleExecutionException)
+
+    @mock.patch('copy.deepcopy')
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
+    def test_execute_stdout_is_more_than_stdout_limit(
+            self, mock_run_playbook, mock_deepcopy):
+        result = mock.Mock()
+        result.payload = {'stdout': 'a' * (executor.STDOUT_LIMIT + 1),
+                          'stdout_lines': 'a' * (executor.STDOUT_LIMIT + 1)}
+        mock_run_playbook.return_value = [result]
+
+        mock_deepcopy.return_value = [result]
+        log_result = mock_deepcopy.return_value[0]
+
+        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_tasks = 'my_task'
+        ex = executor.AnsibleRunner()
+        ex.execute(my_hosts, my_tasks)
+
+        self.assertEqual('a' * executor.STDOUT_LIMIT + '... <cut>',
+                         log_result.payload['stdout'])
