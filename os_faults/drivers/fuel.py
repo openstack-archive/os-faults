@@ -474,9 +474,12 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            task = {'command': 'fuel2 node list -f json'}
+            task = {'command': 'fuel node --json'}
             result = self.execute_on_master_node(task)
-            return json.loads(result[0].payload['stdout'])
+            for r in json.loads(result[0].payload['stdout']):
+                host = {'ip': r['ip'], 'mac': r['mac'], 'fqdn': r['fqdn']}
+                self.cached_cloud_hosts.append(host)
+                self.fqdn_to_hosts[host['fqdn']] = host
 
         return self.cached_cloud_hosts
 
@@ -501,24 +504,18 @@ class FuelManagement(cloud_management.CloudManagement):
         else:
             return self.cloud_executor.execute(hosts, task, [])
 
-    def _retrieve_hosts_fqdn(self):
-        for host in self._get_cloud_hosts():
-            host['fqdn'] = 'node-%s.domain.tld' % host['id']
-            self.fqdn_to_hosts[host['fqdn']] = host
-
     def get_nodes(self, fqdns=None):
         """Get nodes in the cloud
 
         This function returns NodesCollection representing all nodes in the
-        cloud or only those that has specified FQDNs.
+        cloud or only those that were specified by FQDNs.
         :param fqdns: list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """
+        hosts = self._get_cloud_hosts()
+
         if fqdns:
-            # return only specified
             logging.debug('Trying to find nodes with FQDNs: %s', fqdns)
-            if not self.fqdn_to_hosts:
-                self._retrieve_hosts_fqdn()
             hosts = list()
             for fqdn in fqdns:
                 if fqdn in self.fqdn_to_hosts:
@@ -527,9 +524,7 @@ class FuelManagement(cloud_management.CloudManagement):
                     raise error.NodeCollectionError(
                         'Node with FQDN \'%s\' not found!' % fqdn)
             logging.debug('The following nodes were found: %s', hosts)
-        else:
-            # return all nodes
-            hosts = self._get_cloud_hosts()
+
         return FuelNodeCollection(cloud_management=self,
                                   power_management=self.power_management,
                                   hosts=hosts)
