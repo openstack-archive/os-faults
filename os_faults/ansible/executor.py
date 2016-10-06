@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 from collections import namedtuple
 import os
 
@@ -198,6 +199,11 @@ class AnsibleRunner(object):
                       else AnsibleExecutionException)
                 raise ek(msg)
 
-        LOG.debug('Execution result: %s' % result)
+        log_result = copy.deepcopy(result)
+        for r in log_result:
+            if len(r.payload['stdout'].encode('utf-8')) > 4096:
+                msg = '<Output is removed because its size is more than 4 KB!>'
+                r.payload['stdout'] = r.payload['stdout_lines'] = msg
+        LOG.debug('Execution result: %s' % log_result)
 
         return result

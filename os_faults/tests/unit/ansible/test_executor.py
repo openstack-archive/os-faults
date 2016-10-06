@@ -205,3 +205,21 @@ class AnsibleRunnerTestCase(test.TestCase):
         err = self.assertRaises(executor.AnsibleExecutionException,
                                 ex.execute, my_hosts, my_tasks, my_statuses)
         self.assertEqual(type(err), executor.AnsibleExecutionException)
+
+    @mock.patch('copy.deepcopy')
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
+    def test_execute_large_stdout(self, mock_run_playbook, mock_deepcopy):
+        result = mock.MagicMock()
+        result.payload = {'stdout': 'a' * 4097}
+        mock_run_playbook.return_value = [result]
+
+        mock_deepcopy.return_value = [result]
+        log_result = mock_deepcopy.return_value[0]
+
+        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_tasks = 'my_task'
+        ex = executor.AnsibleRunner()
+        ex.execute(my_hosts, my_tasks)
+
+        self.assertEqual('<Output is removed because its size is '
+                         'more than 4 KB!>', log_result.payload['stdout'])
