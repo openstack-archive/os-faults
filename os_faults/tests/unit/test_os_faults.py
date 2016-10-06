@@ -79,6 +79,18 @@ class OSFaultsTestCase(test.TestCase):
         self.assertIsInstance(destructor, fuel.FuelManagement)
         self.assertIsInstance(destructor.power_management, ipmi.IPMIDriver)
 
+    def test_connect_driver_not_found(self):
+        cloud_config = {
+            'cloud_management': {
+                'driver': 'non-existing',
+            }
+        }
+        self.assertRaises(error.OSFError, os_faults.connect, cloud_config)
+
+    def test_connect_driver_not_specified(self):
+        cloud_config = {}
+        self.assertRaises(error.OSFError, os_faults.connect, cloud_config)
+
     @mock.patch('os.path.exists', return_value=True)
     def test_connect_with_config_file(self, mock_os_path_exists):
         mock_os_faults_open = mock.mock_open(

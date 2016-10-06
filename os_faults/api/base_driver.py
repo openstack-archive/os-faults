@@ -11,24 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 
-import six
+class BaseDriver(object):
+    NAME = 'base'
 
-from os_faults.api import base_driver
-
-
-@six.add_metaclass(abc.ABCMeta)
-class PowerManagement(base_driver.BaseDriver):
-
-    @abc.abstractmethod
-    def poweroff(self, hosts):
-        pass
-
-    @abc.abstractmethod
-    def poweron(self, hosts):
-        pass
-
-    @abc.abstractmethod
-    def reset(self, hosts):
-        pass
+    @classmethod
+    def get_driver_name(cls):
+        return cls.NAME
