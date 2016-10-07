@@ -65,6 +65,12 @@ def _init_driver(params):
 
 
 def connect(cloud_config=None, config_filename=None):
+    """Connect to the cloud
+
+    :param cloud_config: dict with cloud and power management params
+    :param config_filename: name of the file where to read config from
+    :return: CloudManagement object
+    """
     if not cloud_config:
         cloud_config = _read_config(config_filename)
 

@@ -1,22 +1,35 @@
-.. os-faults documentation master file, created by
-   sphinx-quickstart on Tue Jul  9 22:26:36 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+=========
+OS-Faults
+=========
 
-Welcome to os-faults's documentation!
-=====================================
+**OpenStack fault-injection library**
 
-Contents:
+The library does destructive actions inside an OpenStack cloud. It provides
+an abstraction layer over different types of cloud deployments. The actions
+are implemented as drivers (e.g. DevStack driver, Fuel driver, Libvirt driver,
+IPMI driver).
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
 
-   readme
    installation
    usage
+   cli
+   api
    contributing
 
-Indices and tables
+Release Notes
+=============
+
+.. toctree::
+   :maxdepth: 1
+
+   history
+
+Indices and Tables
 ==================
 
 * :ref:`genindex`

@@ -2,7 +2,7 @@
 OS-Faults
 =========
 
-**OpenStack faults injection library**
+**OpenStack fault-injection library**
 
 The library does destructive actions inside an OpenStack cloud. It provides
 an abstraction layer over different types of cloud deployments. The actions
@@ -14,8 +14,8 @@ IPMI driver).
 * Source: https://github.com/openstack/os-faults
 * Bugs: http://bugs.launchpad.net/os-faults
 
-Usage
------
+Configuration
+-------------
 
 The cloud deployment configuration schema is an extension to the cloud config
 used by the `os-client-config <https://github.com/openstack/os-client-config>`_
