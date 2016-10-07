@@ -14,8 +14,8 @@ IPMI driver).
 * Source: https://github.com/openstack/os-faults
 * Bugs: http://bugs.launchpad.net/os-faults
 
-Usage
------
+Configuration
+-------------
 
 The cloud deployment configuration schema is an extension to the cloud config
 used by the `os-client-config <https://github.com/openstack/os-client-config>`_
