@@ -21,6 +21,8 @@ from os_faults import utils
 
 
 class LibvirtDriver(power_management.PowerManagement):
+    NAME = 'libvirt'
+
     def __init__(self, params):
         self.connection_uri = params['connection_uri']
         self._cached_conn = None

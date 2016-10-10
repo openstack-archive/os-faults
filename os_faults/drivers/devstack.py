@@ -96,6 +96,8 @@ SERVICE_NAME_TO_CLASS = {
 
 
 class DevStackManagement(cloud_management.CloudManagement):
+    NAME = 'devstack'
+
     def __init__(self, cloud_management_params):
         super(DevStackManagement, self).__init__()
 
