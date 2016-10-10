@@ -20,16 +20,20 @@ def main():
     cloud_config = {
         'cloud_management': {
             'driver': 'fuel',
-            'address': 'fuel.local',
-            'username': 'root',
+            'args': {
+                'address': 'fuel.local',
+                'username': 'root',
+            }
         },
         'power_management': {
             'driver': 'ipmi',
-            'mac_to_bmc': {
-                '00:00:00:00:00:00': {
-                    'address': '55.55.55.55',
-                    'username': 'foo',
-                    'password': 'bar',
+            'args': {
+                'mac_to_bmc': {
+                    '00:00:00:00:00:00': {
+                        'address': '55.55.55.55',
+                        'username': 'foo',
+                        'password': 'bar',
+                    }
                 }
             }
         }

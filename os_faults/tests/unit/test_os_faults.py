@@ -31,12 +31,16 @@ class OSFaultsTestCase(test.TestCase):
         self.cloud_config = {
             'cloud_management': {
                 'driver': 'fuel',
-                'address': '10.30.00.5',
-                'username': 'root',
+                'args': {
+                    'address': '10.30.00.5',
+                    'username': 'root',
+                }
             },
             'power_management': {
                 'driver': 'libvirt',
-                'connection_uri': "qemu+ssh://user@10.30.20.21/system"
+                'args': {
+                    'connection_uri': "qemu+ssh://user@10.30.20.21/system"
+                }
             }
         }
 
@@ -44,8 +48,10 @@ class OSFaultsTestCase(test.TestCase):
         cloud_config = {
             'cloud_management': {
                 'driver': 'devstack',
-                'address': 'devstack.local',
-                'username': 'developer',
+                'args': {
+                    'address': 'devstack.local',
+                    'username': 'developer',
+                }
             }
         }
         destructor = os_faults.connect(cloud_config)
@@ -61,16 +67,20 @@ class OSFaultsTestCase(test.TestCase):
         cloud_config = {
             'cloud_management': {
                 'driver': 'fuel',
-                'address': '10.30.00.5',
-                'username': 'root',
+                'args': {
+                    'address': '10.30.00.5',
+                    'username': 'root',
+                }
             },
             'power_management': {
                 'driver': 'ipmi',
-                'mac_to_bmc': {
-                    '00:00:00:00:00:00': {
-                        'address': '55.55.55.55',
-                        'username': 'foo',
-                        'password': 'bar',
+                'args': {
+                    'mac_to_bmc': {
+                        '00:00:00:00:00:00': {
+                            'address': '55.55.55.55',
+                            'username': 'foo',
+                            'password': 'bar',
+                        }
                     }
                 }
             }
@@ -85,10 +95,11 @@ class OSFaultsTestCase(test.TestCase):
                 'driver': 'non-existing',
             }
         }
-        self.assertRaises(error.OSFError, os_faults.connect, cloud_config)
+        self.assertRaises(
+            error.OSFDriverNotFound, os_faults.connect, cloud_config)
 
     def test_connect_driver_not_specified(self):
-        cloud_config = {}
+        cloud_config = {'foo': 'bar'}
         self.assertRaises(error.OSFError, os_faults.connect, cloud_config)
 
     @mock.patch('os.path.exists', return_value=True)

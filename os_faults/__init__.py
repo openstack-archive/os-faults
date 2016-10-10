@@ -52,16 +52,8 @@ def _read_config(config_filename):
 
 
 def _init_driver(params):
-    all_drivers = registry.get_drivers()
-
-    name = params.get('driver')
-    if not name:
-        return None
-
-    if name not in all_drivers:
-        raise error.OSFError('Driver %s is not found' % name)
-
-    return all_drivers[name](params)
+    driver_cls = registry.get_driver(params['driver'])
+    return driver_cls(params.get('args', {}))
 
 
 def connect(cloud_config=None, config_filename=None):
@@ -71,19 +63,19 @@ def connect(cloud_config=None, config_filename=None):
     :param config_filename: name of the file where to read config from
     :return: CloudManagement object
     """
-    if not cloud_config:
+    if cloud_config is None:
         cloud_config = _read_config(config_filename)
 
-    cloud_management_params = cloud_config.get('cloud_management') or {}
-    cloud_management = _init_driver(cloud_management_params)
-
-    if not cloud_management:
+    if 'cloud_management' not in cloud_config:
         raise error.OSFError('Cloud management driver name is not specified')
 
-    power_management_params = cloud_config.get('power_management') or {}
-    power_management = _init_driver(power_management_params)
+    cloud_management_conf = cloud_config['cloud_management']
+    cloud_management = _init_driver(cloud_management_conf)
 
-    cloud_management.set_power_management(power_management)
+    power_management_conf = cloud_config.get('power_management', {})
+    if power_management_conf:
+        power_management = _init_driver(power_management_conf)
+        cloud_management.set_power_management(power_management)
 
     return cloud_management
 

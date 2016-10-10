@@ -20,12 +20,16 @@ def main():
     cloud_config = {
         'cloud_management': {
             'driver': 'fuel',
-            'address': 'fuel.local',
-            'username': 'root',
+            'args': {
+                'address': 'fuel.local',
+                'username': 'root',
+            }
         },
         'power_management': {
             'driver': 'libvirt',
-            'connection_uri': "qemu+ssh://ubuntu@host.local/system"
+            'args': {
+                'connection_uri': "qemu+ssh://ubuntu@host.local/system"
+            }
         }
     }
 
@@ -43,6 +47,7 @@ def main():
     one = nodes.pick()
     one.poweroff()
     one.poweron()
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',

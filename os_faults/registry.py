@@ -18,6 +18,7 @@ import sys
 from oslo_utils import importutils
 
 from os_faults.api import base_driver
+from os_faults.api import error
 from os_faults import drivers
 
 DRIVERS = {}
@@ -57,7 +58,7 @@ def _list_drivers():
             klazz = class_info[1]
 
             if issubclass(klazz, base_driver.BaseDriver):
-                yield class_info[1]
+                yield klazz
 
 
 def get_drivers():
@@ -67,3 +68,12 @@ def get_drivers():
         DRIVERS = dict((k.get_driver_name(), k) for k in _list_drivers())
 
     return DRIVERS
+
+
+def get_driver(name):
+    all_drivers = get_drivers()
+
+    if name not in all_drivers:
+        raise error.OSFDriverNotFound('Driver %s is not found' % name)
+
+    return all_drivers[name]

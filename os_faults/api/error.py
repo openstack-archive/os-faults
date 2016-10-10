@@ -30,3 +30,7 @@ class ServiceError(OSFError):
 
 class NodeCollectionError(OSFError):
     """Base Error class for NodeCollection API"""
+
+
+class OSFDriverNotFound(OSFError):
+    """Driver Not Found by os-faults registry"""

@@ -20,8 +20,10 @@ def main():
     cloud_config = {
         'cloud_management': {
             'driver': 'devstack',
-            'address': 'devstack.local',
-            'username': 'developer',
+            'args': {
+                'address': 'devstack.local',
+                'username': 'developer',
+            }
         }
     }
 

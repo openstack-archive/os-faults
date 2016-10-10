@@ -26,13 +26,17 @@ library:
     cloud_config = {
         'cloud_management': {
             'driver': 'devstack',
-            'address': 'devstack.local',
-            'username': 'root',
+            'args': {
+                'address': 'devstack.local',
+                'username': 'root',
+            }
         },
         'power_management': {
             'driver': 'libvirt',
-            'address': 'host.local',
-            'username': 'root',
+            'args': {
+                'address': 'host.local',
+                'username': 'root',
+            }
         }
     }
 
