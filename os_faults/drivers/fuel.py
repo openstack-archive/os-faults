@@ -15,6 +15,8 @@ import abc
 import json
 import logging
 import random
+import signal
+
 import six
 
 from os_faults.ansible import executor
@@ -124,8 +126,9 @@ class FuelService(service.Service):
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
         results = self.cloud_management.execute_on_cloud(
-            ips, {'command': self.GET_NODES_CMD}, False)
+            ips, {'command': cmd}, False)
         success_ips = [r.host for r in results
                        if r.status == executor.STATUS_OK]
         hosts = [h for h in nodes.hosts if h['ip'] in success_ips]
@@ -145,20 +148,25 @@ class FuelService(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
                      nodes.get_ips())
-        self._run_task({'command': self.KILL_CMD}, nodes)
+        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
+        self._run_task(cmd, nodes)
 
     def freeze(self, nodes=None, sec=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        cmd = self.FREEZE_SEC_CMD.format(sec) if sec else self.FREEZE_CMD
+        if sec:
+            cmd = {'freeze': {'grep': self.GREP, 'sec': sec}}
+        else:
+            cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGSTOP}}
         logging.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
                      ('for %s sec ' % sec) if sec else '', nodes.get_ips())
-        self._run_task({'command': cmd}, nodes)
+        self._run_task(cmd, nodes)
 
     def unfreeze(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
                      nodes.get_ips())
-        self._run_task({'command': self.UNFREEZE_CMD}, nodes)
+        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGCONT}}
+        self._run_task(cmd, nodes)
 
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
@@ -175,61 +183,19 @@ class FuelService(service.Service):
 
 class KeystoneService(FuelService):
     SERVICE_NAME = 'keystone'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[k]eystone-main\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [k]eystone'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[k]eystone'
     RESTART_CMD = 'service apache2 restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [k]eystone'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [k]eystone | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [k]eystone'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class MemcachedService(FuelService):
     SERVICE_NAME = 'memcached'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[m]emcached\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [m]emcached'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[m]emcached'
     RESTART_CMD = 'service memcached restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [m]emcached'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [m]emcached | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [m]emcached'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class MySQLService(FuelService):
     SERVICE_NAME = 'mysql'
-    GET_NODES_CMD = 'bash -c "netstat -tap | grep \'.*LISTEN.*mysqld\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [m]ysqld'
-                ' | awk {\'print $1\'} | xargs kill -9"')
-    FREEZE_CMD = ('bash -c "ps ax | grep [m]ysqld'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [m]ysqld | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [m]ysqld'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
+    GREP = '[m]ysqld'
     PORT = 3307
     PLUG_CMD = ('bash -c "rule=`iptables -L INPUT -n --line-numbers | '
                 'grep \"MySQL_temporary_DROP\" | cut -d \' \' -f1`; '
@@ -241,188 +207,60 @@ class MySQLService(FuelService):
 
 class RabbitMQService(FuelService):
     SERVICE_NAME = 'rabbitmq'
-    GET_NODES_CMD = 'bash -c "rabbitmqctl status | grep \'pid,\'"'
-    KILL_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
-                ' | awk {\'print $1\'} | xargs kill -9"')
-    FREEZE_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep \\047[r]abbit tcp_listeners\\047 | '
-                      'awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep \'[r]abbit tcp_listeners\''
-                    ' | awk {\'print $1\'} | xargs kill -18"')
+    GREP = '[r]abbit tcp_listeners'
+    RESTART_CMD = 'service rabbitmq-server restart'
 
 
 class NovaAPIService(FuelService):
     SERVICE_NAME = 'nova-api'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-api\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [n]ova-api'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[n]ova-api'
     RESTART_CMD = 'service nova-api restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-api'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [n]ova-api | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]ova-api'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class GlanceAPIService(FuelService):
     SERVICE_NAME = 'glance-api'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[g]lance-api\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [g]lance-api'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[g]lance-api'
     RESTART_CMD = 'service glance-api restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [g]lance-api'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [g]lance-api | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [g]lance-api'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class NovaComputeService(FuelService):
     SERVICE_NAME = 'nova-compute'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-compute\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [n]ova-compute'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[n]ova-compute'
     RESTART_CMD = 'service nova-compute restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-compute'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [n]ova-compute | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]ova-compute'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class NovaSchedulerService(FuelService):
     SERVICE_NAME = 'nova-scheduler'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]ova-scheduler\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[n]ova-scheduler'
     RESTART_CMD = 'service nova-scheduler restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [n]ova-scheduler | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]ova-scheduler'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class NeutronOpenvswitchAgentService(FuelService):
     SERVICE_NAME = 'neutron-openvswitch-agent'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-openvswitch-agent\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[n]eutron-openvswitch-agent'
     RESTART_CMD = ('bash -c "if pcs resource show neutron-openvswitch-agent; '
                    'then pcs resource restart neutron-openvswitch-agent; '
                    'else service neutron-openvswitch-agent restart; fi"')
-    FREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [n]eutron-openvswitch-agent'
-                      ' | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-openvswitch-agent'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class NeutronL3AgentService(FuelService):
     SERVICE_NAME = 'neutron-l3-agent'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[n]eutron-l3-agent\'"'
-    KILL_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[n]eutron-l3-agent'
     RESTART_CMD = ('bash -c "if pcs resource show neutron-l3-agent; '
                    'then pcs resource restart neutron-l3-agent; '
                    'else service neutron-l3-agent restart; fi"')
-    FREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [n]eutron-l3-agent | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [n]eutron-l3-agent'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class HeatAPIService(FuelService):
     SERVICE_NAME = 'heat-api'
-    GET_NODES_CMD = 'bash -c "ps ax | grep \'[h]eat-api \'"'
-    KILL_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[h]eat-api'
     RESTART_CMD = 'service heat-api restart'
-    FREEZE_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep \\047[h]eat-api \\047'
-                      ' | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep \'[h]eat-api \''
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 class HeatEngineService(FuelService):
     SERVICE_NAME = 'heat-engine'
-    GET_NODES_CMD = 'bash -c "ps ax | grep [h]eat-engine"'
-    KILL_CMD = ('bash -c "ps ax | grep [h]eat-engine'
-                ' | awk {\'print $1\'} | xargs kill -9"')
+    GREP = '[h]eat-engine'
     RESTART_CMD = 'pcs resource restart p_heat-engine'
-    FREEZE_CMD = ('bash -c "ps ax | grep [h]eat-engine'
-                  ' | awk {\'print $1\'} | xargs kill -19"')
-    FREEZE_SEC_CMD = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
-                      'echo -n \'#!\' > $tf; '
-                      'echo -en \'/bin/bash\\npids=`ps ax | '
-                      'grep [h]eat-engine | awk {{\\047print $1\\047}}`; '
-                      'echo $pids | xargs kill -19; sleep {0}; '
-                      'echo $pids | xargs kill -18; rm \' >> $tf; '
-                      'echo -n $tf >> $tf; '
-                      'chmod 770 $tf; nohup $tf &"')
-    UNFREEZE_CMD = ('bash -c "ps ax | grep [h]eat-engine'
-                    ' | awk {\'print $1\'} | xargs kill -18"')
 
 
 SERVICE_NAME_TO_CLASS = {
