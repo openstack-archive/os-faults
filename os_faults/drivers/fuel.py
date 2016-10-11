@@ -446,6 +446,18 @@ class FuelManagement(cloud_management.CloudManagement):
     DESCRIPTION = 'Fuel 9.x cloud management driver'
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'properties': {
+            'address': {'type': 'string'},
+            'username': {'type': 'string'},
+            'private_key_file': {'type': 'string'},
+
+        },
+        'required': ['address', 'username'],
+        'additionalProperties': False,
+    }
 
     def __init__(self, cloud_management_params):
         super(FuelManagement, self).__init__()

@@ -24,6 +24,28 @@ from os_faults import utils
 class IPMIDriver(power_management.PowerManagement):
     NAME = 'ipmi'
     DESCRIPTION = 'IPMI power management driver'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'properties': {
+            'mac_to_bmc': {
+                'type': 'object',
+                'patternProperties': {
+                    '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$': {
+                        'type': 'object',
+                        'properties': {
+                            'address': {'type': 'string'},
+                            'username': {'type': 'string'},
+                            'password': {'type': 'string'},
+                        },
+                        'required': ['address', 'username', 'password']
+                    }
+                }
+            }
+        },
+        'required': ['mac_to_bmc'],
+        'additionalProperties': False,
+    }
 
     def __init__(self, params):
         self.mac_to_bmc = params['mac_to_bmc']

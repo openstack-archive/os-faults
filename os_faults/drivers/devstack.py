@@ -100,6 +100,18 @@ class DevStackManagement(cloud_management.CloudManagement):
     DESCRIPTION = 'Single node DevStack management driver'
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['all-in-one']
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'properties': {
+            'address': {'type': 'string'},
+            'username': {'type': 'string'},
+            'private_key': {'type': 'string'},
+
+        },
+        'required': ['address', 'username'],
+        'additionalProperties': False,
+    }
 
     def __init__(self, cloud_management_params):
         super(DevStackManagement, self).__init__()

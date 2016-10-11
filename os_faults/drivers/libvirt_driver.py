@@ -23,6 +23,16 @@ from os_faults import utils
 class LibvirtDriver(power_management.PowerManagement):
     NAME = 'libvirt'
     DESCRIPTION = 'Libvirt power management driver'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'properties': {
+            'connection_uri': {'type': 'string'},
+
+        },
+        'required': ['connection_uri'],
+        'additionalProperties': False,
+    }
 
     def __init__(self, params):
         self.connection_uri = params['connection_uri']

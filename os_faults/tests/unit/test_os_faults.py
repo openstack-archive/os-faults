@@ -11,9 +11,10 @@
 # under the License.
 
 import os
-import yaml
 
+import jsonschema
 import mock
+import yaml
 
 import os_faults
 from os_faults.api import error
@@ -93,6 +94,7 @@ class OSFaultsTestCase(test.TestCase):
         cloud_config = {
             'cloud_management': {
                 'driver': 'non-existing',
+                'args': {},
             }
         }
         self.assertRaises(
@@ -100,7 +102,8 @@ class OSFaultsTestCase(test.TestCase):
 
     def test_connect_driver_not_specified(self):
         cloud_config = {'foo': 'bar'}
-        self.assertRaises(error.OSFError, os_faults.connect, cloud_config)
+        self.assertRaises(
+            jsonschema.ValidationError, os_faults.connect, cloud_config)
 
     @mock.patch('os.path.exists', return_value=True)
     def test_connect_with_config_file(self, mock_os_path_exists):

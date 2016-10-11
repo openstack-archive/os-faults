@@ -13,6 +13,7 @@
 import os
 
 import appdirs
+import jsonschema
 import pbr.version
 import yaml
 
@@ -36,6 +37,32 @@ CONFIG_FILES = [
     for s in ['.json', '.yaml', '.yml']
 ]
 
+CONFIG_SCHEMA = {
+    'type': 'object',
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'properties': {
+        'cloud_management': {
+            'type': 'object',
+            'properties': {
+                'driver': {'type': 'string'},
+                'args': {'type': 'object'},
+            },
+            'required': ['driver', 'args'],
+            'additionalProperties': False,
+        },
+        'power_management': {
+            'type': 'object',
+            'properties': {
+                'driver': {'type': 'string'},
+                'args': {'type': 'object'},
+            },
+            'required': ['driver', 'args'],
+            'additionalProperties': False,
+        }
+    },
+    'required': ['cloud_management'],
+}
+
 
 def _read_config(config_filename):
     os_faults_config = config_filename or os.environ.get('OS_FAULTS_CONFIG')
@@ -53,7 +80,8 @@ def _read_config(config_filename):
 
 def _init_driver(params):
     driver_cls = registry.get_driver(params['driver'])
-    return driver_cls(params.get('args', {}))
+    jsonschema.validate(params['args'], driver_cls.CONFIG_SCHEMA)
+    return driver_cls(params['args'])
 
 
 def connect(cloud_config=None, config_filename=None):
@@ -66,13 +94,12 @@ def connect(cloud_config=None, config_filename=None):
     if cloud_config is None:
         cloud_config = _read_config(config_filename)
 
-    if 'cloud_management' not in cloud_config:
-        raise error.OSFError('Cloud management driver name is not specified')
+    jsonschema.validate(cloud_config, CONFIG_SCHEMA)
 
     cloud_management_conf = cloud_config['cloud_management']
     cloud_management = _init_driver(cloud_management_conf)
 
-    power_management_conf = cloud_config.get('power_management', {})
+    power_management_conf = cloud_config.get('power_management')
     if power_management_conf:
         power_management = _init_driver(power_management_conf)
         cloud_management.set_power_management(power_management)
