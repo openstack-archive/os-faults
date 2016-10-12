@@ -108,12 +108,7 @@ class FuelManagementTestCase(test.TestCase):
                          [{'ip': '10.0.0.3', 'mac': '03', 'fqdn': 'node-3'}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('mysql', fuel.MySQLService),
-              ('rabbitmq', fuel.RabbitMQService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('memcached', fuel.MemcachedService))
+    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_get_service_nodes(self, service_name, service_cls,
                                mock_ansible_runner):
@@ -136,10 +131,11 @@ class FuelManagementTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         nodes = service.get_nodes()
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': cmd}, []),
         ])
         self.assertEqual(nodes.hosts,
                          [{'ip': '10.0.0.3', 'mac': '03', "fqdn": "node-3"}])

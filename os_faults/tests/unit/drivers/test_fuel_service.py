@@ -34,18 +34,7 @@ class FuelServiceTestCase(test.TestCase):
             })
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('mysql', fuel.MySQLService),
-              ('rabbitmq', fuel.RabbitMQService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('nova-compute', fuel.NovaComputeService),
-              ('nova-scheduler', fuel.NovaSchedulerService),
-              ('neutron-openvswitch-agent',
-               fuel.NeutronOpenvswitchAgentService),
-              ('neutron-l3-agent', fuel.NeutronL3AgentService),
-              ('heat-api', fuel.HeatAPIService),
-              ('heat-engine', fuel.HeatEngineService))
+    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_kill(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -67,27 +56,19 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.kill()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.KILL_CMD}),
+                      {'kill': {'grep': service_cls.GREP, 'sig': 9}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('mysql', fuel.MySQLService),
-              ('rabbitmq', fuel.RabbitMQService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('nova-compute', fuel.NovaComputeService),
-              ('nova-scheduler', fuel.NovaSchedulerService),
-              ('neutron-openvswitch-agent',
-               fuel.NeutronOpenvswitchAgentService),
-              ('neutron-l3-agent', fuel.NeutronL3AgentService),
-              ('heat-api', fuel.HeatAPIService),
-              ('heat-engine', fuel.HeatEngineService))
+    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_freeze(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -109,27 +90,19 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.freeze()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.FREEZE_CMD}),
+                      {'kill': {'grep': service_cls.GREP, 'sig': 19}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('mysql', fuel.MySQLService),
-              ('rabbitmq', fuel.RabbitMQService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('nova-compute', fuel.NovaComputeService),
-              ('nova-scheduler', fuel.NovaSchedulerService),
-              ('neutron-openvswitch-agent',
-               fuel.NeutronOpenvswitchAgentService),
-              ('neutron-l3-agent', fuel.NeutronL3AgentService),
-              ('heat-api', fuel.HeatAPIService),
-              ('heat-engine', fuel.HeatEngineService))
+    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_freeze_sec(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -152,28 +125,20 @@ class FuelServiceTestCase(test.TestCase):
 
         delay_sec = 10
         service.freeze(nodes=None, sec=delay_sec)
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command':
-                      service_cls.FREEZE_SEC_CMD.format(delay_sec)}),
+                      {'freeze': {'grep': service_cls.GREP,
+                                  'sec': delay_sec}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('mysql', fuel.MySQLService),
-              ('rabbitmq', fuel.RabbitMQService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('nova-compute', fuel.NovaComputeService),
-              ('nova-scheduler', fuel.NovaSchedulerService),
-              ('neutron-openvswitch-agent',
-               fuel.NeutronOpenvswitchAgentService),
-              ('neutron-l3-agent', fuel.NeutronL3AgentService),
-              ('heat-api', fuel.HeatAPIService),
-              ('heat-engine', fuel.HeatEngineService))
+    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_unfreeze(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -195,12 +160,15 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.unfreeze()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.UNFREEZE_CMD}),
+                      {'kill': {'grep': service_cls.GREP, 'sig': 18}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -226,10 +194,13 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.unplug()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command':
                       service_cls.UNPLUG_CMD.format(service_cls.PORT)}),
@@ -258,10 +229,13 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.plug()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command':
                       service_cls.PLUG_CMD.format(service_cls.PORT)}),
@@ -299,10 +273,13 @@ class FuelServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.restart()
+
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service_cls.RESTART_CMD}),
         ])
@@ -329,10 +306,12 @@ class FuelServiceTestCase(test.TestCase):
         exception = self.assertRaises(error.ServiceError, service.restart)
         self.assertEqual('Task failed on some nodes', str(exception))
 
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': service.RESTART_CMD}),
         ])
@@ -356,8 +335,10 @@ class FuelServiceTestCase(test.TestCase):
         exception = self.assertRaises(error.ServiceError, service.restart)
         self.assertEqual('Node collection is empty', str(exception))
 
+        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+            service.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service.GET_NODES_CMD}, []),
+                      {'command': get_nodes_cmd}, []),
         ])
