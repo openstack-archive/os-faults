@@ -22,8 +22,7 @@ library:
         'power_management': {
             'driver': 'libvirt',
             'args': {
-                'address': 'host.local',
-                'username': 'root',
+                'connection_uri': 'qemu+unix:///system',
             }
         }
     }
