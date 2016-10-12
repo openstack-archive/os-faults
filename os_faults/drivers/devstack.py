@@ -106,7 +106,7 @@ class DevStackManagement(cloud_management.CloudManagement):
         'properties': {
             'address': {'type': 'string'},
             'username': {'type': 'string'},
-            'private_key': {'type': 'string'},
+            'private_key_file': {'type': 'string'},
 
         },
         'required': ['address', 'username'],
@@ -118,7 +118,7 @@ class DevStackManagement(cloud_management.CloudManagement):
 
         self.address = cloud_management_params['address']
         self.username = cloud_management_params['username']
-        self.private_key_file = cloud_management_params.get('private_key')
+        self.private_key_file = cloud_management_params.get('private_key_file')
 
         self.executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,

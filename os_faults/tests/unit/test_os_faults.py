@@ -35,6 +35,7 @@ class OSFaultsTestCase(test.TestCase):
                 'args': {
                     'address': '10.30.00.5',
                     'username': 'root',
+                    'private_key_file': '/my/path/pk.key',
                 }
             },
             'power_management': {
@@ -52,6 +53,7 @@ class OSFaultsTestCase(test.TestCase):
                 'args': {
                     'address': 'devstack.local',
                     'username': 'developer',
+                    'private_key_file': '/my/path/pk.key',
                 }
             }
         }
