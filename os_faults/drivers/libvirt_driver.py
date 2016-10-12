@@ -13,8 +13,6 @@
 
 import logging
 
-import libvirt
-
 from os_faults.api import error
 from os_faults.api import power_management
 from os_faults import utils
@@ -44,6 +42,11 @@ class LibvirtDriver(power_management.PowerManagement):
 
     def _get_connection(self):
         if self._cached_conn is None:
+            try:
+                import libvirt
+            except ImportError:
+                raise error.OSFError('libvirt-python is required '
+                                     'to use LibvirtDriver')
             self._cached_conn = libvirt.open(self.connection_uri)
 
         return self._cached_conn
