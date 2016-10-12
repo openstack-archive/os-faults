@@ -14,6 +14,20 @@ IPMI driver).
 * Source: https://github.com/openstack/os-faults
 * Bugs: http://bugs.launchpad.net/os-faults
 
+
+Installation
+------------
+
+Reqular installation::
+
+    pip install os-faults
+
+The labrary contains optinal libvirt driver, if you plan to use it,
+please use the following command to install os-faults with extra dependencies::
+
+    pip install os-faults[libvirt]
+
+
 Configuration
 -------------
 
