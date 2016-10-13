@@ -43,6 +43,11 @@ class DevStackNodeTestCase(test.TestCase):
     def test_pick(self):
         self.assertIs(self.node_collection, self.node_collection.pick())
 
+    def test_run_task(self):
+        self.node_collection.run_task({'foo': 'bar'})
+        self.mock_cloud_management.execute.assert_called_once_with(
+            '10.0.0.2', {'foo': 'bar'})
+
     def test_reboot(self):
         self.node_collection.reboot()
         self.mock_cloud_management.execute.assert_called_once_with(
