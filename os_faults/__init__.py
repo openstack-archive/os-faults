@@ -21,7 +21,13 @@ from os_faults.api import error
 from os_faults.api import human
 from os_faults import registry
 
-__version__ = pbr.version.VersionInfo('os_faults').version_string()
+
+def get_version():
+    return pbr.version.VersionInfo('os_faults').version_string()
+
+
+def get_release():
+    return pbr.version.VersionInfo('os_faults').release_string()
 
 
 APPDIRS = appdirs.AppDirs(appname='openstack', appauthor='OpenStack')

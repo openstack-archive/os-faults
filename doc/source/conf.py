@@ -15,6 +15,8 @@
 import os
 import sys
 
+import pbr
+
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -26,6 +28,10 @@ extensions = [
     'sphinxcontrib.programoutput',
     'oslosphinx'
 ]
+
+version = pbr.version.VersionInfo('os_faults').version_string()
+# The full version, including alpha/beta/rc tags.
+release = pbr.version.VersionInfo('os_faults').release_string()
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
