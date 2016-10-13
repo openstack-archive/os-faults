@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import logging
 import threading
 import traceback
@@ -51,3 +52,22 @@ class ThreadsWrapper(object):
     def join_threads(self):
         for thread in self.threads:
             thread.join()
+
+
+def required_variables(*variables):
+    """Class method decorator to check that required variables are present"""
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(self, *args, **kawrgs):
+            missing_vars = []
+            for var in variables:
+                if not hasattr(self, var):
+                    missing_vars.append(var)
+            if missing_vars:
+                missing_vars = ', '.join(missing_vars)
+                msg = '{} required for {}.{}'.format(
+                    missing_vars, self.__class__.__name__, fn.__name__)
+                raise NotImplementedError(msg)
+            return fn(self, *args, **kawrgs)
+        return wrapper
+    return decorator
