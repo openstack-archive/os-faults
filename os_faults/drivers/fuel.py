@@ -170,15 +170,21 @@ class FuelService(service.Service):
 
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Open port %d for '%s' service on nodes: %s", self.PORT,
-                     self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'command': self.PLUG_CMD.format(self.PORT)}, nodes)
+        logging.info("Open port %d for '%s' service on nodes: %s",
+                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
+        self._run_task({'iptables': {'protocol': self.PORT[0],
+                                     'port': self.PORT[1],
+                                     'action': 'unblock',
+                                     'service': self.SERVICE_NAME}}, nodes)
 
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Close port %d for '%s' service on nodes: %s",
-                     self.PORT, self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'command': self.UNPLUG_CMD.format(self.PORT)}, nodes)
+                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
+        self._run_task({'iptables': {'protocol': self.PORT[0],
+                                     'port': self.PORT[1],
+                                     'action': 'block',
+                                     'service': self.SERVICE_NAME}}, nodes)
 
 
 class KeystoneService(FuelService):
@@ -196,13 +202,7 @@ class MemcachedService(FuelService):
 class MySQLService(FuelService):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
-    PORT = 3307
-    PLUG_CMD = ('bash -c "rule=`iptables -L INPUT -n --line-numbers | '
-                'grep \"MySQL_temporary_DROP\" | cut -d \' \' -f1`; '
-                'for arg in $rule; do iptables -D INPUT -p tcp --dport {0} '
-                '-j DROP -m comment --comment "MySQL_temporary_DROP"; done"')
-    UNPLUG_CMD = ('bash -c "iptables -I INPUT 1 -p tcp --dport {0} -j DROP '
-                  '-m comment --comment \"MySQL_temporary_DROP\""')
+    PORT = ('tcp', 3307)
 
 
 class RabbitMQService(FuelService):

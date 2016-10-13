@@ -202,8 +202,10 @@ class FuelServiceTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command':
-                      service_cls.UNPLUG_CMD.format(service_cls.PORT)}),
+                      {'iptables': {'protocol': service_cls.PORT[0],
+                                    'port': service_cls.PORT[1],
+                                    'action': 'block',
+                                    'service': service_cls.SERVICE_NAME}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -237,8 +239,10 @@ class FuelServiceTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command':
-                      service_cls.PLUG_CMD.format(service_cls.PORT)}),
+                      {'iptables': {'protocol': service_cls.PORT[0],
+                                    'port': service_cls.PORT[1],
+                                    'action': 'unblock',
+                                    'service': service_cls.SERVICE_NAME}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
