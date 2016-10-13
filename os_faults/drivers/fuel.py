@@ -394,3 +394,5 @@ class FuelManagement(cloud_management.CloudManagement):
             klazz = SERVICE_NAME_TO_CLASS[name]
             return klazz(cloud_management=self,
                          power_management=self.power_management)
+        raise error.ServiceError('{} driver does not have {} service'.format(
+            self.NAME.title(), name))
