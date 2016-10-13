@@ -387,10 +387,13 @@ class FuelManagement(cloud_management.CloudManagement):
     def get_service(self, name):
         """Get service with specified name
 
-        :param name: name of the serives
+        :param name: name of the service
         :return: Service
         """
         if name in SERVICE_NAME_TO_CLASS:
             klazz = SERVICE_NAME_TO_CLASS[name]
             return klazz(cloud_management=self,
                          power_management=self.power_management)
+        raise error.ServiceError(
+            '{} driver does not support {} service'.format(
+                self.NAME.title(), name))
