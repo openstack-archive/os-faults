@@ -21,7 +21,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import service
-
+from os_faults import utils
 
 HostClass = namedtuple('HostClass', ['ip', 'mac'])
 
@@ -80,13 +80,15 @@ class DevStackService(service.Service):
     def get_nodes(self):
         return self.cloud_management.get_nodes()
 
+    @utils.require_variables('RESTART_CMD', 'SERVICE_NAME')
     def restart(self, nodes=None):
         task = {'command': self.RESTART_CMD}
         exec_res = self.cloud_management.execute(task)
-        logging.info('Restart the service, result: %s', exec_res)
+        logging.info('Restart %s result: %s', self.SERVICE_NAME, exec_res)
 
 
 class KeystoneService(DevStackService):
+    SERVICE_NAME = 'keystone'
     RESTART_CMD = 'service apache2 restart'
 
 
