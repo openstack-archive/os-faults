@@ -1,6 +1,6 @@
-=========
-OS-Faults
-=========
+===================
+OS-Faults |release|
+===================
 
 **OpenStack fault-injection library**
 
