@@ -15,6 +15,7 @@ import ddt
 import mock
 
 from os_faults.ansible import executor
+from os_faults.api import error
 from os_faults.drivers import fuel
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
@@ -139,3 +140,11 @@ class FuelManagementTestCase(test.TestCase):
         ])
         self.assertEqual(nodes.hosts,
                          [{'ip': '10.0.0.3', 'mac': '03', "fqdn": "node-3"}])
+
+    def test_get_unknown_service(self):
+        fuel_managment = fuel.FuelManagement({
+            'address': 'fuel.local',
+            'username': 'root',
+        })
+        self.assertRaises(error.ServiceError,
+                          fuel_managment.get_service, 'unknown')
