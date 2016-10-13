@@ -70,3 +70,29 @@ class UtilsTestCase(test.TestCase):
 
         thread_1.join.assert_called_once()
         thread_2.join.assert_called_once()
+
+
+class MyClass(object):
+    FOO = 10
+
+    @utils.require_variable('FOO')
+    def method(self, a, b):
+        return self.FOO + a + b
+
+    @utils.require_variable('BAR', 'BAZ')
+    def method_that_miss_variables(self):
+        return self.BAR, self.BAZ
+
+
+class RequireVariableTestCase(test.TestCase):
+
+    def test_require_variable(self):
+        inst = MyClass()
+        self.assertEqual(inst.method(1, b=2), 13)
+
+    def test_require_variable_not_implemented(self):
+        inst = MyClass()
+        err = self.assertRaises(NotImplementedError,
+                                inst.method_that_miss_variables)
+        msg = 'BAR, BAZ required for MyClass.method_that_miss_variables'
+        self.assertEqual(str(err), msg)

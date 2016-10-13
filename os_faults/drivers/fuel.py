@@ -24,6 +24,7 @@ from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
+from os_faults import utils
 
 
 class FuelNodeCollection(node_collection.NodeCollection):
@@ -136,14 +137,14 @@ class FuelService(service.Service):
                                   power_management=self.power_management,
                                   hosts=hosts)
 
+    @utils.require_variable('RESTART_CMD', 'SERVICE_NAME')
     def restart(self, nodes=None):
-        if not getattr(self, 'RESTART_CMD'):
-            raise NotImplementedError('RESTART_CMD is undefined')
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
                      nodes.get_ips())
         self._run_task({'command': self.RESTART_CMD}, nodes)
 
+    @utils.require_variable('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
@@ -151,6 +152,7 @@ class FuelService(service.Service):
         cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
+    @utils.require_variable('GREP', 'SERVICE_NAME')
     def freeze(self, nodes=None, sec=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         if sec:
@@ -161,6 +163,7 @@ class FuelService(service.Service):
                      ('for %s sec ' % sec) if sec else '', nodes.get_ips())
         self._run_task(cmd, nodes)
 
+    @utils.require_variable('GREP', 'SERVICE_NAME')
     def unfreeze(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
@@ -168,6 +171,7 @@ class FuelService(service.Service):
         cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGCONT}}
         self._run_task(cmd, nodes)
 
+    @utils.require_variable('PORT', 'SERVICE_NAME')
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Open port %d for '%s' service on nodes: %s",
@@ -177,6 +181,7 @@ class FuelService(service.Service):
                                      'action': 'unblock',
                                      'service': self.SERVICE_NAME}}, nodes)
 
+    @utils.require_variable('PORT', 'SERVICE_NAME')
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         logging.info("Close port %d for '%s' service on nodes: %s",
