@@ -28,6 +28,15 @@ class NodeCollection(object):
         :return: NodeCollection consisting just one node
         """
 
+    @abc.abstractmethod
+    def run_task(self, task, raise_on_error=True):
+        """Run ansible task on node colection
+
+        :param task: ansible task as dict
+        :param raise_on_error: throw exception in case of error
+        :return: AnsibleExecutionRecord with results of task
+        """
+
     @public
     def reboot(self):
         """Reboot all nodes gracefully
