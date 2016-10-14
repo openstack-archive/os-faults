@@ -172,12 +172,11 @@ class AnsibleRunnerTestCase(test.TestCase):
         my_tasks = 'my_task'
         my_statuses = {executor.STATUS_FAILED,
                        executor.STATUS_SKIPPED, executor.STATUS_UNREACHABLE}
-        r0 = mock.Mock()
-        r0.host = my_hosts[0]
-        r0.status = executor.STATUS_OK
-        r1 = mock.Mock()
-        r1.host = my_hosts[1]
-        r1.status = executor.STATUS_UNREACHABLE
+        r0 = executor.AnsibleExecutionRecord(
+            host=my_hosts[0], status=executor.STATUS_OK, task={}, payload={})
+        r1 = executor.AnsibleExecutionRecord(
+            host=my_hosts[1], status=executor.STATUS_UNREACHABLE,
+            task={}, payload={})
 
         mock_run_playbook.return_value = [r0, r1]
         ex = executor.AnsibleRunner()
@@ -192,12 +191,11 @@ class AnsibleRunnerTestCase(test.TestCase):
         my_tasks = 'my_task'
         my_statuses = {executor.STATUS_OK, executor.STATUS_FAILED,
                        executor.STATUS_SKIPPED, executor.STATUS_UNREACHABLE}
-        r0 = mock.Mock()
-        r0.host = my_hosts[0]
-        r0.status = executor.STATUS_OK
-        r1 = mock.Mock()
-        r1.host = my_hosts[1]
-        r1.status = executor.STATUS_UNREACHABLE
+        r0 = executor.AnsibleExecutionRecord(
+            host=my_hosts[0], status=executor.STATUS_OK, task={}, payload={})
+        r1 = executor.AnsibleExecutionRecord(
+            host=my_hosts[1], status=executor.STATUS_UNREACHABLE,
+            task={}, payload={})
 
         mock_run_playbook.return_value = [r0, r1]
         ex = executor.AnsibleRunner()
@@ -225,3 +223,23 @@ class AnsibleRunnerTestCase(test.TestCase):
 
         self.assertEqual('a' * executor.STDOUT_LIMIT + '... <cut>',
                          log_result.payload['stdout'])
+
+    @mock.patch('os_faults.ansible.executor.LOG.debug')
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
+    def test_execute_payload_without_stdout(self, mock_run_playbook,
+                                            mock_debug):
+        task = {'task': 'foo'}
+        host = '0.0.0.0'
+        result = executor.AnsibleExecutionRecord(
+            host=host, status=executor.STATUS_OK,
+            task=task, payload={'foo': 'bar'})
+        mock_run_playbook.return_value = [result]
+
+        ex = executor.AnsibleRunner()
+        ex.execute([host], task)
+
+        mock_debug.assert_has_calls((
+            mock.call('Executing task: %s on hosts: %s', task, [host]),
+            mock.call('Execution completed with 1 result(s):'),
+            mock.call(result),
+        ))

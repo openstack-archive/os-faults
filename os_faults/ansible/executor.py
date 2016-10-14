@@ -225,10 +225,12 @@ class AnsibleRunner(object):
         log_result = copy.deepcopy(result)
         LOG.debug('Execution completed with %s result(s):' % len(log_result))
         for lr in log_result:
-            if len(lr.payload['stdout']) > STDOUT_LIMIT:
-                lr.payload['stdout'] = (
-                    lr.payload['stdout'][:STDOUT_LIMIT] + '... <cut>')
-            del lr.payload['stdout_lines']
+            if 'stdout' in lr.payload:
+                if len(lr.payload['stdout']) > STDOUT_LIMIT:
+                    lr.payload['stdout'] = (
+                        lr.payload['stdout'][:STDOUT_LIMIT] + '... <cut>')
+            if 'stdout_lines' in lr.payload:
+                del lr.payload['stdout_lines']
             LOG.debug(lr)
 
         return result
