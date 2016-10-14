@@ -63,6 +63,12 @@ class FuelNodeCollectionTestCase(test.TestCase):
         self.assertEqual(1, len(one))
         self.assertIn(one.hosts[0], self.hosts)
 
+    def test_run_task(self):
+        self.node_collection.run_task({'foo': 'bar'}, raise_on_error=False)
+        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
+            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'], {'foo': 'bar'},
+            raise_on_error=False)
+
     def test_pick_count(self):
         two = self.node_collection.pick(count=2)
         self.assertEqual(2, len(two))

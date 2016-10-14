@@ -17,6 +17,7 @@ import mock
 import yaml
 
 import os_faults
+from os_faults.ansible import executor
 from os_faults.api import error
 from os_faults.drivers import devstack
 from os_faults.drivers import fuel
@@ -132,3 +133,16 @@ class OSFaultsTestCase(test.TestCase):
     @mock.patch('os.path.exists', return_value=False)
     def test_connect_no_config_files(self, mock_os_path_exists):
         self.assertRaises(error.OSFError, os_faults.connect)
+
+    @mock.patch('os.path.exists', side_effect=lambda x: 'bad' not in x)
+    @mock.patch('os.walk', side_effect=lambda x: ([x, [], []],
+                                                  [x + 'subdir', [], []]))
+    @mock.patch.object(executor, 'MODULE_PATHS', set())
+    def test_register_ansible_modules(self, mock_os_walk, mock_os_path_exists):
+        os_faults.register_ansible_modules(['/my/path/', '/other/path/'])
+        self.assertEqual(executor.get_module_paths(),
+                         {'/my/path/', '/my/path/subdir',
+                          '/other/path/', '/other/path/subdir'})
+
+        self.assertRaises(error.OSFError, os_faults.register_ansible_modules,
+                          ['/my/bad/path/'])
