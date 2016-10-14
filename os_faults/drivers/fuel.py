@@ -62,8 +62,8 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
     def run_task(self, task, raise_on_error=True):
         logging.info('Run task: %s on nodes: %s', task, self)
-        self.cloud_management.execute_on_cloud(self.get_ips(), task,
-                                               raise_on_error=raise_on_error)
+        return self.cloud_management.execute_on_cloud(
+            self.get_ips(), task, raise_on_error=raise_on_error)
 
     def reboot(self):
         logging.info('Reboot nodes: %s', self)

@@ -64,8 +64,12 @@ class FuelNodeCollectionTestCase(test.TestCase):
         self.assertIn(one.hosts[0], self.hosts)
 
     def test_run_task(self):
-        self.node_collection.run_task({'foo': 'bar'}, raise_on_error=False)
-        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
+        result = self.node_collection.run_task({'foo': 'bar'},
+                                               raise_on_error=False)
+        mock_execute_on_cloud = self.mock_cloud_management.execute_on_cloud
+        expected_result = mock_execute_on_cloud.return_value
+        self.assertIs(result, expected_result)
+        mock_execute_on_cloud.assert_called_once_with(
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'], {'foo': 'bar'},
             raise_on_error=False)
 

@@ -46,7 +46,7 @@ class DevStackNode(node_collection.NodeCollection):
     def run_task(self, task, raise_on_error=True):
         # TODO(astudenov): refactor DevStackManagement.execute
         # to be consistent with api
-        self.cloud_management.execute(self.host.ip, task)
+        return self.cloud_management.execute(self.host.ip, task)
 
     def reboot(self):
         task = {'command': 'reboot'}
