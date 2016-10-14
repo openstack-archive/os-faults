@@ -60,6 +60,11 @@ class FuelNodeCollection(node_collection.NodeCollection):
                                   power_management=self.power_management,
                                   hosts=random.sample(self.hosts, count))
 
+    def run_task(self, task, raise_on_error=True):
+        logging.info('Run task: %s on nodes: %s', task, self)
+        self.cloud_management.execute_on_cloud(self.get_ips(), task,
+                                               raise_on_error=raise_on_error)
+
     def reboot(self):
         logging.info('Reboot nodes: %s', self)
         task = {'command': 'reboot now'}
@@ -357,6 +362,7 @@ class FuelManagement(cloud_management.CloudManagement):
 
         :param hosts: List of host FQDNs
         :param task: Ansible task
+        :param raise_on_error: throw exception in case of error
         :return: Ansible execution result (list of records)
         """
         if raise_on_error:

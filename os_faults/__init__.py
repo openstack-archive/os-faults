@@ -17,6 +17,7 @@ import jsonschema
 import pbr.version
 import yaml
 
+from os_faults.ansible import executor
 from os_faults.api import error
 from os_faults.api import human
 from os_faults import registry
@@ -120,3 +121,13 @@ def human_api(distractor, command):
     :param command: text command
     """
     human.execute(distractor, command)
+
+
+def register_ansible_modules(paths):
+    """Registers ansible modules by provided paths
+
+    Allows to use custom ansible modules in NodeCollection.run_task method
+
+    :param path: list of paths to folders with ansible modules
+    """
+    executor.add_module_paths(paths)

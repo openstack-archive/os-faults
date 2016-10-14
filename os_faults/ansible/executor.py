@@ -23,6 +23,8 @@ from ansible.plugins import callback as callback_pkg
 from ansible.vars import VariableManager
 from oslo_log import log as logging
 
+from os_faults.api import error
+
 LOG = logging.getLogger(__name__)
 
 STATUS_OK = 'OK'
@@ -89,6 +91,26 @@ def resolve_relative_path(file_name):
         return path
 
 
+MODULE_PATHS = {
+    resolve_relative_path('os_faults/ansible/modules'),
+}
+
+
+def get_module_paths():
+    global MODULE_PATHS
+    return MODULE_PATHS
+
+
+def add_module_paths(paths):
+    global MODULE_PATHS
+    for path in paths:
+        if not os.path.exists(path):
+            raise error.OSFError('{!r} does not exist'.format(path))
+        # find all subfolders
+        dirs = [x[0] for x in os.walk(path)]
+        MODULE_PATHS.update(dirs)
+
+
 Options = namedtuple('Options',
                      ['connection', 'password', 'module_path', 'forks',
                       'remote_user', 'private_key_file',
@@ -102,8 +124,6 @@ class AnsibleRunner(object):
                  jump_host=None, private_key_file=None, become=None):
         super(AnsibleRunner, self).__init__()
 
-        module_path = resolve_relative_path('os_faults/ansible/modules')
-
         ssh_common_args = SSH_COMMON_ARGS
         if jump_host:
             ssh_common_args += (
@@ -112,7 +132,8 @@ class AnsibleRunner(object):
                 % dict(key=private_key_file, user=remote_user, host=jump_host))
 
         self.options = Options(
-            connection='smart', password=password, module_path=module_path,
+            connection='smart', password=password,
+            module_path=os.pathsep.join(get_module_paths()),
             forks=forks, remote_user=remote_user,
             private_key_file=private_key_file,
             ssh_common_args=ssh_common_args, ssh_extra_args=None,
