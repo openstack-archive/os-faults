@@ -27,7 +27,6 @@ class Service(object):
 
         :return: NodesCollection
         """
-        pass
 
     @public
     def restart(self, nodes=None):

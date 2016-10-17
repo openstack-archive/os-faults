@@ -16,6 +16,7 @@ import mock
 
 from os_faults.ansible import executor
 from os_faults.api import error
+from os_faults.api import node_collection
 from os_faults.drivers import fuel
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
@@ -66,9 +67,11 @@ class FuelManagementTestCase(test.TestCase):
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
         ])
 
-        self.assertEqual(nodes.hosts,
-                         [{'ip': '10.0.0.2', 'mac': '02', "fqdn": "node-2"},
-                          {'ip': '10.0.0.3', 'mac': '03', "fqdn": "node-3"}])
+        hosts = [
+            node_collection.Host(ip='10.0.0.2', mac='02', fqdn='node-2'),
+            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
+        ]
+        self.assertEqual(nodes.hosts, hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
@@ -105,11 +108,13 @@ class FuelManagementTestCase(test.TestCase):
         })
         nodes = fuel_managment.get_nodes(fqdns=['node-3'])
 
-        self.assertEqual(nodes.hosts,
-                         [{'ip': '10.0.0.3', 'mac': '03', 'fqdn': 'node-3'}])
+        hosts = [
+            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
+        ]
+        self.assertEqual(nodes.hosts, hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_get_service_nodes(self, service_name, service_cls,
                                mock_ansible_runner):
@@ -138,8 +143,11 @@ class FuelManagementTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': cmd}, []),
         ])
-        self.assertEqual(nodes.hosts,
-                         [{'ip': '10.0.0.3', 'mac': '03', "fqdn": "node-3"}])
+
+        hosts = [
+            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
+        ]
+        self.assertEqual(nodes.hosts, hosts)
 
     def test_get_unknown_service(self):
         fuel_managment = fuel.FuelManagement({

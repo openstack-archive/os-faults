@@ -16,10 +16,15 @@ import abc
 import six
 
 from os_faults.api import base_driver
+from os_faults.api import error
 
 
 @six.add_metaclass(abc.ABCMeta)
 class CloudManagement(base_driver.BaseDriver):
+    SERVICE_NAME_TO_CLASS = {}
+    SUPPORTED_SERVICES = []
+    SUPPORTED_NETWORKS = []
+
     def __init__(self):
         self.power_management = None
 
@@ -31,7 +36,6 @@ class CloudManagement(base_driver.BaseDriver):
         """Verify connection to the cloud.
 
         """
-        pass
 
     @abc.abstractmethod
     def get_nodes(self, fqdns=None):
@@ -42,16 +46,31 @@ class CloudManagement(base_driver.BaseDriver):
         :param fqdns list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """
-        pass
 
-    @abc.abstractmethod
     def get_service(self, name):
         """Get service with specified name
 
         :param name: name of the serives
         :return: Service
         """
-        pass
+        if name in self.SERVICE_NAME_TO_CLASS:
+            klazz = self.SERVICE_NAME_TO_CLASS[name]
+            return klazz(node_cls=self.NODE_CLS,
+                         cloud_management=self,
+                         power_management=self.power_management)
+        raise error.ServiceError(
+            '{} driver does not support {!r} service'.format(
+                self.NAME.title(), name))
+
+    @abc.abstractmethod
+    def execute_on_cloud(self, hosts, task, raise_on_error=True):
+        """Execute task on specified hosts within the cloud.
+
+        :param hosts: List of host FQDNs
+        :param task: Ansible task
+        :param raise_on_error: throw exception in case of error
+        :return: Ansible execution result (list of records)
+        """
 
     @classmethod
     def list_supported_services(cls):

@@ -11,79 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
 import json
 import logging
-import random
-import signal
-
-import six
 
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
-from os_faults.api import service
-from os_faults import utils
+from os_faults.common import service
 
 
 class FuelNodeCollection(node_collection.NodeCollection):
-    def __init__(self, cloud_management=None, power_management=None,
-                 hosts=None):
-        self.cloud_management = cloud_management
-        self.power_management = power_management
-        self.hosts = hosts
-
-    def __repr__(self):
-        return ('FuelNodeCollection(%s)' %
-                [dict(ip=h['ip'], mac=h['mac']) for h in self.hosts])
-
-    def __len__(self):
-        return len(self.hosts)
-
-    def get_ips(self):
-        return [n['ip'] for n in self.hosts]
-
-    def get_macs(self):
-        return [n['mac'] for n in self.hosts]
-
-    def iterate_hosts(self):
-        for host in self.hosts:
-            yield host
-
-    def pick(self, count=1):
-        if count > len(self.hosts):
-            msg = 'Cannot pick {} from {} node(s)'.format(
-                count, len(self.hosts))
-            raise error.NodeCollectionError(msg)
-        return FuelNodeCollection(cloud_management=self.cloud_management,
-                                  power_management=self.power_management,
-                                  hosts=random.sample(self.hosts, count))
-
-    def run_task(self, task, raise_on_error=True):
-        logging.info('Run task: %s on nodes: %s', task, self)
-        return self.cloud_management.execute_on_cloud(
-            self.get_ips(), task, raise_on_error=raise_on_error)
-
-    def reboot(self):
-        logging.info('Reboot nodes: %s', self)
-        task = {'command': 'reboot now'}
-        self.cloud_management.execute_on_cloud(self.get_ips(), task)
-
-    def oom(self):
-        raise NotImplementedError
-
-    def poweroff(self):
-        logging.info('Power off nodes: %s', self)
-        self.power_management.poweroff(self.get_macs())
-
-    def poweron(self):
-        logging.info('Power on nodes: %s', self)
-        self.power_management.poweron(self.get_macs())
-
-    def reset(self):
-        logging.info('Reset nodes: %s', self)
-        self.power_management.reset(self.get_macs())
 
     def connect(self, network_name):
         logging.info("Connect network '%s' on nodes: %s", network_name, self)
@@ -103,149 +41,55 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class FuelService(service.Service):
-
-    def __init__(self, cloud_management=None, power_management=None):
-        self.cloud_management = cloud_management
-        self.power_management = power_management
-
-    def __repr__(self):
-        return str(type(self))
-
-    def _run_task(self, task, nodes):
-        ips = nodes.get_ips()
-        if not ips:
-            raise error.ServiceError('Node collection is empty')
-
-        results = self.cloud_management.execute_on_cloud(ips, task)
-        err = False
-        for result in results:
-            if result.status != executor.STATUS_OK:
-                logging.error(
-                    'Task {} failed on node {}'.format(task, result.host))
-                err = True
-        if err:
-            raise error.ServiceError('Task failed on some nodes')
-        return results
-
-    def get_nodes(self):
-        nodes = self.cloud_management.get_nodes()
-        ips = nodes.get_ips()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
-        results = self.cloud_management.execute_on_cloud(
-            ips, {'command': cmd}, False)
-        success_ips = [r.host for r in results
-                       if r.status == executor.STATUS_OK]
-        hosts = [h for h in nodes.hosts if h['ip'] in success_ips]
-        return FuelNodeCollection(cloud_management=self.cloud_management,
-                                  power_management=self.power_management,
-                                  hosts=hosts)
-
-    @utils.require_variables('RESTART_CMD', 'SERVICE_NAME')
-    def restart(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
-        self._run_task({'command': self.RESTART_CMD}, nodes)
-
-    @utils.require_variables('GREP', 'SERVICE_NAME')
-    def kill(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
-        self._run_task(cmd, nodes)
-
-    @utils.require_variables('GREP', 'SERVICE_NAME')
-    def freeze(self, nodes=None, sec=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        if sec:
-            cmd = {'freeze': {'grep': self.GREP, 'sec': sec}}
-        else:
-            cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGSTOP}}
-        logging.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
-                     ('for %s sec ' % sec) if sec else '', nodes.get_ips())
-        self._run_task(cmd, nodes)
-
-    @utils.require_variables('GREP', 'SERVICE_NAME')
-    def unfreeze(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGCONT}}
-        self._run_task(cmd, nodes)
-
-    @utils.require_variables('PORT', 'SERVICE_NAME')
-    def plug(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Open port %d for '%s' service on nodes: %s",
-                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.PORT[0],
-                                     'port': self.PORT[1],
-                                     'action': 'unblock',
-                                     'service': self.SERVICE_NAME}}, nodes)
-
-    @utils.require_variables('PORT', 'SERVICE_NAME')
-    def unplug(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Close port %d for '%s' service on nodes: %s",
-                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.PORT[0],
-                                     'port': self.PORT[1],
-                                     'action': 'block',
-                                     'service': self.SERVICE_NAME}}, nodes)
-
-
-class KeystoneService(FuelService):
+class KeystoneService(service.ServiceAsProcess):
     SERVICE_NAME = 'keystone'
     GREP = '[k]eystone'
     RESTART_CMD = 'service apache2 restart'
 
 
-class MemcachedService(FuelService):
+class MemcachedService(service.ServiceAsProcess):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
     RESTART_CMD = 'service memcached restart'
 
 
-class MySQLService(FuelService):
+class MySQLService(service.ServiceAsProcess):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
     PORT = ('tcp', 3307)
 
 
-class RabbitMQService(FuelService):
+class RabbitMQService(service.ServiceAsProcess):
     SERVICE_NAME = 'rabbitmq'
     GREP = '[r]abbit tcp_listeners'
     RESTART_CMD = 'service rabbitmq-server restart'
 
 
-class NovaAPIService(FuelService):
+class NovaAPIService(service.ServiceAsProcess):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
     RESTART_CMD = 'service nova-api restart'
 
 
-class GlanceAPIService(FuelService):
+class GlanceAPIService(service.ServiceAsProcess):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
     RESTART_CMD = 'service glance-api restart'
 
 
-class NovaComputeService(FuelService):
+class NovaComputeService(service.ServiceAsProcess):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
     RESTART_CMD = 'service nova-compute restart'
 
 
-class NovaSchedulerService(FuelService):
+class NovaSchedulerService(service.ServiceAsProcess):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     RESTART_CMD = 'service nova-scheduler restart'
 
 
-class NeutronOpenvswitchAgentService(FuelService):
+class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-openvswitch-agent'
     GREP = '[n]eutron-openvswitch-agent'
     RESTART_CMD = ('bash -c "if pcs resource show neutron-openvswitch-agent; '
@@ -253,7 +97,7 @@ class NeutronOpenvswitchAgentService(FuelService):
                    'else service neutron-openvswitch-agent restart; fi"')
 
 
-class NeutronL3AgentService(FuelService):
+class NeutronL3AgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-l3-agent'
     GREP = '[n]eutron-l3-agent'
     RESTART_CMD = ('bash -c "if pcs resource show neutron-l3-agent; '
@@ -261,37 +105,36 @@ class NeutronL3AgentService(FuelService):
                    'else service neutron-l3-agent restart; fi"')
 
 
-class HeatAPIService(FuelService):
+class HeatAPIService(service.ServiceAsProcess):
     SERVICE_NAME = 'heat-api'
     GREP = '[h]eat-api'
     RESTART_CMD = 'service heat-api restart'
 
 
-class HeatEngineService(FuelService):
+class HeatEngineService(service.ServiceAsProcess):
     SERVICE_NAME = 'heat-engine'
     GREP = '[h]eat-engine'
     RESTART_CMD = 'pcs resource restart p_heat-engine'
 
 
-SERVICE_NAME_TO_CLASS = {
-    'keystone': KeystoneService,
-    'memcached': MemcachedService,
-    'mysql': MySQLService,
-    'rabbitmq': RabbitMQService,
-    'nova-api': NovaAPIService,
-    'glance-api': GlanceAPIService,
-    'nova-compute': NovaComputeService,
-    'nova-scheduler': NovaSchedulerService,
-    'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
-    'neutron-l3-agent': NeutronL3AgentService,
-    'heat-api': HeatAPIService,
-    'heat-engine': HeatEngineService,
-}
-
-
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
+    NODE_CLS = FuelNodeCollection
+    SERVICE_NAME_TO_CLASS = {
+        'keystone': KeystoneService,
+        'memcached': MemcachedService,
+        'mysql': MySQLService,
+        'rabbitmq': RabbitMQService,
+        'nova-api': NovaAPIService,
+        'glance-api': GlanceAPIService,
+        'nova-compute': NovaComputeService,
+        'nova-scheduler': NovaSchedulerService,
+        'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
+        'neutron-l3-agent': NeutronL3AgentService,
+        'heat-api': HeatAPIService,
+        'heat-engine': HeatEngineService,
+    }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
     CONFIG_SCHEMA = {
@@ -330,7 +173,7 @@ class FuelManagement(cloud_management.CloudManagement):
         logging.debug('Cloud nodes: %s', hosts)
 
         task = {'command': 'hostname'}
-        host_addrs = [n['ip'] for n in hosts]
+        host_addrs = [host.ip for host in hosts]
         task_result = self.execute_on_cloud(host_addrs, task)
         logging.debug('Hostnames of cloud nodes: %s',
                       [r.payload['stdout'] for r in task_result])
@@ -342,9 +185,10 @@ class FuelManagement(cloud_management.CloudManagement):
             task = {'command': 'fuel node --json'}
             result = self.execute_on_master_node(task)
             for r in json.loads(result[0].payload['stdout']):
-                host = {'ip': r['ip'], 'mac': r['mac'], 'fqdn': r['fqdn']}
+                host = node_collection.Host(ip=r['ip'], mac=r['mac'],
+                                            fqdn=r['fqdn'])
                 self.cached_cloud_hosts.append(host)
-                self.fqdn_to_hosts[host['fqdn']] = host
+                self.fqdn_to_hosts[host.fqdn] = host
 
         return self.cached_cloud_hosts
 
@@ -391,20 +235,6 @@ class FuelManagement(cloud_management.CloudManagement):
                         'Node with FQDN \'%s\' not found!' % fqdn)
             logging.debug('The following nodes were found: %s', hosts)
 
-        return FuelNodeCollection(cloud_management=self,
-                                  power_management=self.power_management,
-                                  hosts=hosts)
-
-    def get_service(self, name):
-        """Get service with specified name
-
-        :param name: name of the service
-        :return: Service
-        """
-        if name in SERVICE_NAME_TO_CLASS:
-            klazz = SERVICE_NAME_TO_CLASS[name]
-            return klazz(cloud_management=self,
-                         power_management=self.power_management)
-        raise error.ServiceError(
-            '{} driver does not support {!r} service'.format(
-                self.NAME.title(), name))
+        return self.NODE_CLS(cloud_management=self,
+                             power_management=self.power_management,
+                             hosts=hosts)

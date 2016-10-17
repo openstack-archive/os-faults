@@ -16,6 +16,7 @@ import copy
 import ddt
 import mock
 
+from os_faults.api import node_collection
 from os_faults.api import power_management
 from os_faults.drivers import devstack
 from os_faults.tests.unit import fakes
@@ -30,30 +31,33 @@ class DevStackNodeTestCase(test.TestCase):
             spec=devstack.DevStackManagement)
         self.mock_power_management = mock.Mock(
             spec=power_management.PowerManagement)
-        self.host = devstack.HostClass(ip='10.0.0.2', mac='09:7b:74:90:63:c1')
+        self.host = node_collection.Host(
+            ip='10.0.0.2', mac='09:7b:74:90:63:c1', fqdn='')
 
         self.node_collection = devstack.DevStackNode(
             cloud_management=self.mock_cloud_management,
             power_management=self.mock_power_management,
-            host=copy.deepcopy(self.host))
+            hosts=[copy.deepcopy(self.host)])
 
     def test_len(self):
         self.assertEqual(1, len(self.node_collection))
 
     def test_pick(self):
-        self.assertIs(self.node_collection, self.node_collection.pick())
+        self.assertEqual(self.node_collection.hosts,
+                         self.node_collection.pick().hosts)
 
     def test_run_task(self):
         result = self.node_collection.run_task({'foo': 'bar'})
-        mock_execute = self.mock_cloud_management.execute
-        expected_result = mock_execute.return_value
+        mock_execute_on_cloud = self.mock_cloud_management.execute_on_cloud
+        expected_result = mock_execute_on_cloud.return_value
         self.assertIs(result, expected_result)
-        mock_execute.assert_called_once_with('10.0.0.2', {'foo': 'bar'})
+        mock_execute_on_cloud.assert_called_once_with(
+            ['10.0.0.2'], {'foo': 'bar'}, raise_on_error=True)
 
     def test_reboot(self):
         self.node_collection.reboot()
-        self.mock_cloud_management.execute.assert_called_once_with(
-            '10.0.0.2', {'command': 'reboot'})
+        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
+            ['10.0.0.2'], {'command': 'reboot now'})
 
     def test_poweroff(self):
         self.node_collection.poweroff()
@@ -91,13 +95,14 @@ class DevStackManagementTestCase(test.TestCase):
             ['10.0.0.2'], {'command': 'hostname'})
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    def test_execute(self, mock_ansible_runner):
+    def test_execute_on_cloud(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '/root'})],
         ]
         devstack_management = devstack.DevStackManagement(self.conf)
-        result = devstack_management.execute({'command': 'pwd'})
+        result = devstack_management.execute_on_cloud(
+            ['10.0.0.2'], {'command': 'pwd'})
 
         ansible_runner_inst.execute.assert_called_once_with(
             ['10.0.0.2'], {'command': 'pwd'})
@@ -119,8 +124,9 @@ class DevStackManagementTestCase(test.TestCase):
 
         self.assertIsInstance(nodes, devstack.DevStackNode)
         self.assertEqual(
-            devstack.HostClass(ip='10.0.0.2', mac='09:7b:74:90:63:c1'),
-            nodes.host)
+            [node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
+                                  fqdn='')],
+            nodes.hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(('keystone', devstack.KeystoneService))
@@ -129,7 +135,8 @@ class DevStackManagementTestCase(test.TestCase):
                                mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
-            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})]
+            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
         devstack_management = devstack.DevStackManagement(self.conf)
@@ -138,11 +145,17 @@ class DevStackManagementTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         nodes = service.get_nodes()
-        ansible_runner_inst.execute.assert_called_once_with(
-            ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'})
+
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(
+                ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
+            mock.call(['10.0.0.2'], {'command': cmd}, [])
+        ])
         self.assertEqual(
-            devstack.HostClass(ip='10.0.0.2', mac='09:7b:74:90:63:c1'),
-            nodes.host)
+            [node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
+                                  fqdn='')],
+            nodes.hosts)
 
 
 @ddt.ddt
@@ -159,6 +172,7 @@ class DevStackServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'})],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')],
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
@@ -168,7 +182,11 @@ class DevStackServiceTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         service.restart()
+
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['10.0.0.2'],
-                      {'command': service_cls.RESTART_CMD}),
+            mock.call(
+                ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
+            mock.call(['10.0.0.2'], {'command': cmd}, []),
+            mock.call(['10.0.0.2'], {'command': service_cls.RESTART_CMD})
         ])

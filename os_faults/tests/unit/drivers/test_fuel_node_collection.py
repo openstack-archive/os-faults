@@ -16,6 +16,7 @@ import copy
 import mock
 
 from os_faults.api import error
+from os_faults.api import node_collection
 from os_faults.api import power_management
 from os_faults.drivers import fuel
 from os_faults.tests.unit import test
@@ -29,10 +30,14 @@ class FuelNodeCollectionTestCase(test.TestCase):
         self.mock_power_management = mock.Mock(
             spec=power_management.PowerManagement)
         self.hosts = [
-            dict(ip='10.0.0.2', mac='09:7b:74:90:63:c1', fqdn='node1.com'),
-            dict(ip='10.0.0.3', mac='09:7b:74:90:63:c2', fqdn='node2.com'),
-            dict(ip='10.0.0.4', mac='09:7b:74:90:63:c3', fqdn='node3.com'),
-            dict(ip='10.0.0.5', mac='09:7b:74:90:63:c4', fqdn='node4.com'),
+            node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
+                                 fqdn='node1.com'),
+            node_collection.Host(ip='10.0.0.3', mac='09:7b:74:90:63:c2',
+                                 fqdn='node2.com'),
+            node_collection.Host(ip='10.0.0.4', mac='09:7b:74:90:63:c3',
+                                 fqdn='node3.com'),
+            node_collection.Host(ip='10.0.0.5', mac='09:7b:74:90:63:c4',
+                                 fqdn='node4.com'),
         ]
 
         self.node_collection = fuel.FuelNodeCollection(

@@ -34,7 +34,7 @@ class FuelServiceTestCase(test.TestCase):
             })
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_kill(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -68,7 +68,7 @@ class FuelServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_freeze(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -102,7 +102,7 @@ class FuelServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_freeze_sec(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
@@ -138,7 +138,7 @@ class FuelServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.SERVICE_NAME_TO_CLASS.items())
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_unfreeze(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
