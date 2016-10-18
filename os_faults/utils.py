@@ -14,9 +14,10 @@
 import functools
 import logging
 import threading
-import traceback
 
 from os_faults.api import error
+
+LOG = logging.getLogger(__name__)
 
 
 def run(target, mac_addresses_list):
@@ -41,7 +42,7 @@ class ThreadsWrapper(object):
         try:
             self.target(**kwargs)
         except Exception as exc:
-            logging.error(traceback.format_exc())
+            LOG.error('Target raised exception: %s', exc)
             self.errors.append(exc)
 
     def start_thread(self, **kwargs):

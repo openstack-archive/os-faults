@@ -20,11 +20,13 @@ from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.common import service
 
+LOG = logging.getLogger(__name__)
+
 
 class FuelNodeCollection(node_collection.NodeCollection):
 
     def connect(self, network_name):
-        logging.info("Connect network '%s' on nodes: %s", network_name, self)
+        LOG.info("Connect network '%s' on nodes: %s", network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'up',
@@ -32,8 +34,8 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def disconnect(self, network_name):
-        logging.info("Disconnect network '%s' on nodes: %s",
-                     network_name, self)
+        LOG.info("Disconnect network '%s' on nodes: %s",
+                 network_name, self)
         task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'down',
@@ -170,15 +172,15 @@ class FuelManagement(cloud_management.CloudManagement):
     def verify(self):
         """Verify connection to the cloud."""
         hosts = self._get_cloud_hosts()
-        logging.debug('Cloud nodes: %s', hosts)
+        LOG.debug('Cloud nodes: %s', hosts)
 
         task = {'command': 'hostname'}
         host_addrs = [host.ip for host in hosts]
         task_result = self.execute_on_cloud(host_addrs, task)
-        logging.debug('Hostnames of cloud nodes: %s',
-                      [r.payload['stdout'] for r in task_result])
+        LOG.debug('Hostnames of cloud nodes: %s',
+                  [r.payload['stdout'] for r in task_result])
 
-        logging.info('Connected to cloud successfully!')
+        LOG.info('Connected to cloud successfully!')
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
@@ -225,7 +227,7 @@ class FuelManagement(cloud_management.CloudManagement):
         hosts = self._get_cloud_hosts()
 
         if fqdns:
-            logging.debug('Trying to find nodes with FQDNs: %s', fqdns)
+            LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
             hosts = list()
             for fqdn in fqdns:
                 if fqdn in self.fqdn_to_hosts:
@@ -233,7 +235,7 @@ class FuelManagement(cloud_management.CloudManagement):
                 else:
                     raise error.NodeCollectionError(
                         'Node with FQDN \'%s\' not found!' % fqdn)
-            logging.debug('The following nodes were found: %s', hosts)
+            LOG.debug('The following nodes were found: %s', hosts)
 
         return self.NODE_CLS(cloud_management=self,
                              power_management=self.power_management,

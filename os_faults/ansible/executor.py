@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import namedtuple
+import collections
 import copy
+import logging
 import os
 
 from ansible.executor import task_queue_manager
@@ -21,7 +22,6 @@ from ansible.parsing import dataloader
 from ansible.playbook import play
 from ansible.plugins import callback as callback_pkg
 from ansible.vars import VariableManager
-from oslo_log import log as logging
 
 from os_faults.api import error
 
@@ -47,8 +47,8 @@ class AnsibleExecutionUnreachable(AnsibleExecutionException):
     pass
 
 
-AnsibleExecutionRecord = namedtuple('AnsibleExecutionRecord',
-                                    ['host', 'status', 'task', 'payload'])
+AnsibleExecutionRecord = collections.namedtuple(
+    'AnsibleExecutionRecord', ['host', 'status', 'task', 'payload'])
 
 
 class MyCallback(callback_pkg.CallbackBase):
@@ -111,12 +111,13 @@ def add_module_paths(paths):
         MODULE_PATHS.update(dirs)
 
 
-Options = namedtuple('Options',
-                     ['connection', 'password', 'module_path', 'forks',
-                      'remote_user', 'private_key_file',
-                      'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
-                      'scp_extra_args', 'become', 'become_method',
-                      'become_user', 'verbosity', 'check'])
+Options = collections.namedtuple(
+    'Options',
+    ['connection', 'password', 'module_path', 'forks',
+     'remote_user', 'private_key_file',
+     'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
+     'scp_extra_args', 'become', 'become_method',
+     'become_user', 'verbosity', 'check'])
 
 
 class AnsibleRunner(object):
