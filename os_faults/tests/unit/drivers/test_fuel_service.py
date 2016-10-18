@@ -285,7 +285,7 @@ class FuelServiceTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service_cls.RESTART_CMD}),
+                      {'shell': service_cls.RESTART_CMD}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -317,7 +317,7 @@ class FuelServiceTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': service.RESTART_CMD}),
+                      {'shell': service.RESTART_CMD}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)

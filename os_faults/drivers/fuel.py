@@ -64,7 +64,7 @@ class MySQLService(service.ServiceAsProcess):
 class RabbitMQService(service.ServiceAsProcess):
     SERVICE_NAME = 'rabbitmq'
     GREP = '[r]abbit tcp_listeners'
-    RESTART_CMD = 'service rabbitmq-server restart'
+    RESTART_CMD = 'pcs resource restart p_rabbitmq-server $(hostname)'
 
 
 class NovaAPIService(service.ServiceAsProcess):
@@ -94,16 +94,17 @@ class NovaSchedulerService(service.ServiceAsProcess):
 class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-openvswitch-agent'
     GREP = '[n]eutron-openvswitch-agent'
-    RESTART_CMD = ('bash -c "if pcs resource show neutron-openvswitch-agent; '
-                   'then pcs resource restart neutron-openvswitch-agent; '
-                   'else service neutron-openvswitch-agent restart; fi"')
+    RESTART_CMD = (
+        'if pcs resource show neutron-openvswitch-agent; '
+        'then pcs resource restart neutron-openvswitch-agent $(hostname); '
+        'else service neutron-openvswitch-agent restart; fi')
 
 
 class NeutronL3AgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-l3-agent'
     GREP = '[n]eutron-l3-agent'
     RESTART_CMD = ('bash -c "if pcs resource show neutron-l3-agent; '
-                   'then pcs resource restart neutron-l3-agent; '
+                   'then pcs resource restart neutron-l3-agent $(hostname); '
                    'else service neutron-l3-agent restart; fi"')
 
 
@@ -116,7 +117,7 @@ class HeatAPIService(service.ServiceAsProcess):
 class HeatEngineService(service.ServiceAsProcess):
     SERVICE_NAME = 'heat-engine'
     GREP = '[h]eat-engine'
-    RESTART_CMD = 'pcs resource restart p_heat-engine'
+    RESTART_CMD = 'pcs resource restart p_heat-engine $(hostname)'
 
 
 class FuelManagement(cloud_management.CloudManagement):
