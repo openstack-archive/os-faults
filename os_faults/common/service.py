@@ -19,6 +19,8 @@ from os_faults.api import error
 from os_faults.api import service
 from os_faults import utils
 
+LOG = logging.getLogger(__name__)
+
 
 class ServiceAsProcess(service.Service):
 
@@ -36,7 +38,7 @@ class ServiceAsProcess(service.Service):
         err = False
         for result in results:
             if result.status != executor.STATUS_OK:
-                logging.error(
+                LOG.error(
                     'Task {} failed on node {}'.format(task, result.host))
                 err = True
         if err:
@@ -59,15 +61,15 @@ class ServiceAsProcess(service.Service):
     @utils.require_variables('RESTART_CMD', 'SERVICE_NAME')
     def restart(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
+        LOG.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
         self._run_task({'command': self.RESTART_CMD}, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
+        LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
         cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
@@ -78,23 +80,23 @@ class ServiceAsProcess(service.Service):
             cmd = {'freeze': {'grep': self.GREP, 'sec': sec}}
         else:
             cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGSTOP}}
-        logging.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
-                     ('for %s sec ' % sec) if sec else '', nodes.get_ips())
+        LOG.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
+                 ('for %s sec ' % sec) if sec else '', nodes.get_ips())
         self._run_task(cmd, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')
     def unfreeze(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
-                     nodes.get_ips())
+        LOG.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
         cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGCONT}}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('PORT', 'SERVICE_NAME')
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Open port %d for '%s' service on nodes: %s",
-                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
+        LOG.info("Open port %d for '%s' service on nodes: %s",
+                 self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
         self._run_task({'iptables': {'protocol': self.PORT[0],
                                      'port': self.PORT[1],
                                      'action': 'unblock',
@@ -103,8 +105,8 @@ class ServiceAsProcess(service.Service):
     @utils.require_variables('PORT', 'SERVICE_NAME')
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        logging.info("Close port %d for '%s' service on nodes: %s",
-                     self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
+        LOG.info("Close port %d for '%s' service on nodes: %s",
+                 self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
         self._run_task({'iptables': {'protocol': self.PORT[0],
                                      'port': self.PORT[1],
                                      'action': 'block',

@@ -14,6 +14,7 @@ import os
 
 import appdirs
 import jsonschema
+import logging
 import pbr.version
 import yaml
 
@@ -21,6 +22,18 @@ from os_faults.ansible import executor
 from os_faults.api import error
 from os_faults.api import human
 from os_faults import registry
+
+LOG = logging.getLogger(__name__)
+
+# Set default logging handler to avoid "No handler found" warnings.
+try:  # Python 2.7+
+    from logging import NullHandler
+except ImportError:
+    class NullHandler(logging.Handler):
+        def emit(self, record):
+            pass
+
+LOG.addHandler(NullHandler())
 
 
 def get_version():

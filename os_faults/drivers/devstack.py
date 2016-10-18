@@ -18,6 +18,8 @@ from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.common import service
 
+LOG = logging.getLogger(__name__)
+
 
 class DevStackNode(node_collection.NodeCollection):
 
@@ -73,8 +75,8 @@ class DevStackManagement(cloud_management.CloudManagement):
         task = {'command': 'hostname'}
         hostname = self.execute_on_cloud(
             [self.address], task)[0].payload['stdout']
-        logging.debug('DevStack hostname: %s', hostname)
-        logging.info('Connected to cloud successfully')
+        LOG.debug('DevStack hostname: %s', hostname)
+        LOG.info('Connected to cloud successfully')
 
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.

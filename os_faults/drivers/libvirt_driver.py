@@ -17,6 +17,8 @@ from os_faults.api import error
 from os_faults.api import power_management
 from os_faults import utils
 
+LOG = logging.getLogger(__name__)
+
 
 class LibvirtDriver(power_management.PowerManagement):
     NAME = 'libvirt'
@@ -60,22 +62,22 @@ class LibvirtDriver(power_management.PowerManagement):
             'Domain with MAC address %s not found!' % mac_address)
 
     def _poweroff(self, mac_address):
-        logging.info('Power off domain with MAC address: %s', mac_address)
+        LOG.info('Power off domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.destroy()
-        logging.info('Domain(%s) was powered off' % mac_address)
+        LOG.info('Domain(%s) was powered off' % mac_address)
 
     def _poweron(self, mac_address):
-        logging.info('Power on domain with MAC address: %s', mac_address)
+        LOG.info('Power on domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.create()
-        logging.info('Domain(%s) was powered on' % mac_address)
+        LOG.info('Domain(%s) was powered on' % mac_address)
 
     def _reset(self, mac_address):
-        logging.info('Reset domain with MAC address: %s', mac_address)
+        LOG.info('Reset domain with MAC address: %s', mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         domain.reset()
-        logging.info('Domain(%s) was reset' % mac_address)
+        LOG.info('Domain(%s) was reset' % mac_address)
 
     def poweroff(self, mac_addresses_list):
         utils.run(self._poweroff, mac_addresses_list)

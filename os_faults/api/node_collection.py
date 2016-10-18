@@ -18,6 +18,8 @@ import random
 from os_faults.api import error
 from os_faults.api.util import public
 
+LOG = logging.getLogger(__name__)
+
 Host = collections.namedtuple('Host', ['ip', 'mac', 'fqdn'])
 
 
@@ -65,7 +67,7 @@ class NodeCollection(object):
         :param raise_on_error: throw exception in case of error
         :return: AnsibleExecutionRecord with results of task
         """
-        logging.info('Run task: %s on nodes: %s', task, self)
+        LOG.info('Run task: %s on nodes: %s', task, self)
         return self.cloud_management.execute_on_cloud(
             self.get_ips(), task, raise_on_error=raise_on_error)
 
@@ -74,7 +76,7 @@ class NodeCollection(object):
         """Reboot all nodes gracefully
 
         """
-        logging.info('Reboot nodes: %s', self)
+        LOG.info('Reboot nodes: %s', self)
         task = {'command': 'reboot now'}
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
@@ -90,7 +92,7 @@ class NodeCollection(object):
         """Power off all nodes abruptly
 
         """
-        logging.info('Power off nodes: %s', self)
+        LOG.info('Power off nodes: %s', self)
         self.power_management.poweroff(self.get_macs())
 
     @public
@@ -98,7 +100,7 @@ class NodeCollection(object):
         """Power on all nodes abruptly
 
         """
-        logging.info('Power on nodes: %s', self)
+        LOG.info('Power on nodes: %s', self)
         self.power_management.poweron(self.get_macs())
 
     @public
@@ -106,7 +108,7 @@ class NodeCollection(object):
         """Reset (cold restart) all nodes
 
         """
-        logging.info('Reset nodes: %s', self)
+        LOG.info('Reset nodes: %s', self)
         self.power_management.reset(self.get_macs())
 
     @public
