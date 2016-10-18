@@ -188,5 +188,5 @@ class DevStackServiceTestCase(test.TestCase):
             mock.call(
                 ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call(['10.0.0.2'], {'command': cmd}, []),
-            mock.call(['10.0.0.2'], {'command': service_cls.RESTART_CMD})
+            mock.call(['10.0.0.2'], {'shell': service_cls.RESTART_CMD})
         ])

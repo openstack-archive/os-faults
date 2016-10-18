@@ -63,7 +63,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        self._run_task({'command': self.RESTART_CMD}, nodes)
+        self._run_task({'shell': self.RESTART_CMD}, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
