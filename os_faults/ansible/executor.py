@@ -205,6 +205,17 @@ class AnsibleRunner(object):
         task_play = {'hosts': hosts, 'tasks': [task]}
         result = self.run_playbook([task_play])
 
+        log_result = copy.deepcopy(result)
+        LOG.debug('Execution completed with %s result(s):' % len(log_result))
+        for lr in log_result:
+            if 'stdout' in lr.payload:
+                if len(lr.payload['stdout']) > STDOUT_LIMIT:
+                    lr.payload['stdout'] = (
+                        lr.payload['stdout'][:STDOUT_LIMIT] + '... <cut>')
+            if 'stdout_lines' in lr.payload:
+                del lr.payload['stdout_lines']
+            LOG.debug(lr)
+
         if raise_on_statuses:
             errors = []
             only_unreachable = True
@@ -222,16 +233,5 @@ class AnsibleRunner(object):
                 ek = (AnsibleExecutionUnreachable if only_unreachable
                       else AnsibleExecutionException)
                 raise ek(msg)
-
-        log_result = copy.deepcopy(result)
-        LOG.debug('Execution completed with %s result(s):' % len(log_result))
-        for lr in log_result:
-            if 'stdout' in lr.payload:
-                if len(lr.payload['stdout']) > STDOUT_LIMIT:
-                    lr.payload['stdout'] = (
-                        lr.payload['stdout'][:STDOUT_LIMIT] + '... <cut>')
-            if 'stdout_lines' in lr.payload:
-                del lr.payload['stdout_lines']
-            LOG.debug(lr)
 
         return result
