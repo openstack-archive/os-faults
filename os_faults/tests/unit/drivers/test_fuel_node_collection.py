@@ -59,6 +59,10 @@ class FuelNodeCollectionTestCase(test.TestCase):
                           '09:7b:74:90:63:c4'],
                          self.node_collection.get_macs())
 
+    def test_get_fqdns(self):
+        self.assertEqual(['node1.com', 'node2.com', 'node3.com', 'node4.com'],
+                         self.node_collection.get_fqdns())
+
     def test_iterate_hosts(self):
         self.assertEqual(self.hosts,
                          list(self.node_collection.iterate_hosts()))
