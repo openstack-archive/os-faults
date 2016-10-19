@@ -58,6 +58,7 @@ class MemcachedService(service.ServiceAsProcess):
 class MySQLService(service.ServiceAsProcess):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
+    RESTART_CMD = 'pcs resource restart p_mysqld $(hostname)'
     PORT = ('tcp', 3307)
 
 
