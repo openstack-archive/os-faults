@@ -43,6 +43,9 @@ class NodeCollection(object):
     def get_macs(self):
         return [host.mac for host in self.hosts]
 
+    def get_fqdns(self):
+        return [host.fqdn for host in self.hosts]
+
     def iterate_hosts(self):
         for host in self.hosts:
             yield host
