@@ -36,12 +36,59 @@ class KeystoneService(service.ServiceAsProcess):
     RESTART_CMD = 'service apache2 restart'
 
 
+class MySQLService(service.ServiceAsProcess):
+    SERVICE_NAME = 'mysql'
+    GREP = '[m]ysqld'
+    RESTART_CMD = 'service mysql restart'
+    PORT = ('tcp', 3307)
+
+
+class RabbitMQService(service.ServiceAsProcess):
+    SERVICE_NAME = 'rabbitmq'
+    GREP = '[r]abbitmq-server'
+    RESTART_CMD = 'service rabbitmq-server restart'
+
+
+class NovaAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-api'
+    GREP = '[n]ova-api'
+    RESTART_CMD = ("screen -S stack -p n-api -X "
+                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+
+
+class GlanceAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'glance-api'
+    GREP = '[g]lance-api'
+    RESTART_CMD = ("screen -S stack -p g-api -X "
+                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+
+
+class NovaComputeService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-compute'
+    GREP = '[n]ova-compute'
+    RESTART_CMD = ("screen -S stack -p n-cpu -X "
+                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+
+
+class NovaSchedulerService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-scheduler'
+    GREP = '[n]ova-scheduler'
+    RESTART_CMD = ("screen -S stack -p n-sch -X "
+                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+
+
 class DevStackManagement(cloud_management.CloudManagement):
     NAME = 'devstack'
     DESCRIPTION = 'Single node DevStack management driver'
     NODE_CLS = DevStackNode
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,
+        'mysql': MySQLService,
+        'rabbitmq': RabbitMQService,
+        'nova-api': NovaAPIService,
+        'glance-api': GlanceAPIService,
+        'nova-compute': NovaComputeService,
+        'nova-scheduler': NovaSchedulerService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['all-in-one']
@@ -72,7 +119,7 @@ class DevStackManagement(cloud_management.CloudManagement):
 
     def verify(self):
         """Verify connection to the cloud."""
-        task = {'command': 'hostname'}
+        task = {'shell': 'screen -ls | grep stack'}
         hostname = self.execute_on_cloud(
             [self.address], task)[0].payload['stdout']
         LOG.debug('DevStack hostname: %s', hostname)

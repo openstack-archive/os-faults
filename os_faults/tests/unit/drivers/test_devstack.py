@@ -63,7 +63,7 @@ class DevStackManagementTestCase(test.TestCase):
         devstack_management.verify()
 
         ansible_runner_inst.execute.assert_called_once_with(
-            ['10.0.0.2'], {'command': 'hostname'})
+            ['10.0.0.2'], {'shell': 'screen -ls | grep stack'})
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
@@ -100,7 +100,7 @@ class DevStackManagementTestCase(test.TestCase):
             nodes.hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', devstack.KeystoneService))
+    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_get_service_nodes(self, service_name, service_cls,
                                mock_ansible_runner):
@@ -137,7 +137,7 @@ class DevStackServiceTestCase(test.TestCase):
         self.conf = {'address': '10.0.0.2', 'username': 'root'}
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', devstack.KeystoneService))
+    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_restart(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
