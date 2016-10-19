@@ -246,16 +246,7 @@ class FuelServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('keystone', fuel.KeystoneService),
-              ('nova-api', fuel.NovaAPIService),
-              ('glance-api', fuel.GlanceAPIService),
-              ('nova-compute', fuel.NovaComputeService),
-              ('nova-scheduler', fuel.NovaSchedulerService),
-              ('neutron-openvswitch-agent',
-               fuel.NeutronOpenvswitchAgentService),
-              ('neutron-l3-agent', fuel.NeutronL3AgentService),
-              ('heat-api', fuel.HeatAPIService),
-              ('heat-engine', fuel.HeatEngineService))
+    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
     @ddt.unpack
     def test_restart(self, service_name, service_cls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
