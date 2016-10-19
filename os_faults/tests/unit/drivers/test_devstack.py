@@ -39,40 +39,11 @@ class DevStackNodeTestCase(test.TestCase):
             power_management=self.mock_power_management,
             hosts=[copy.deepcopy(self.host)])
 
-    def test_len(self):
-        self.assertEqual(1, len(self.node_collection))
+    def test_connect(self):
+        pass
 
-    def test_pick(self):
-        self.assertEqual(self.node_collection.hosts,
-                         self.node_collection.pick().hosts)
-
-    def test_run_task(self):
-        result = self.node_collection.run_task({'foo': 'bar'})
-        mock_execute_on_cloud = self.mock_cloud_management.execute_on_cloud
-        expected_result = mock_execute_on_cloud.return_value
-        self.assertIs(result, expected_result)
-        mock_execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2'], {'foo': 'bar'}, raise_on_error=True)
-
-    def test_reboot(self):
-        self.node_collection.reboot()
-        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2'], {'command': 'reboot now'})
-
-    def test_poweroff(self):
-        self.node_collection.poweroff()
-        self.mock_power_management.poweroff.assert_called_once_with(
-            ['09:7b:74:90:63:c1'])
-
-    def test_poweron(self):
-        self.node_collection.poweron()
-        self.mock_power_management.poweron.assert_called_once_with(
-            ['09:7b:74:90:63:c1'])
-
-    def test_reset(self):
-        self.node_collection.reset()
-        self.mock_power_management.reset.assert_called_once_with(
-            ['09:7b:74:90:63:c1'])
+    def test_disconnect(self):
+        pass
 
 
 @ddt.ddt

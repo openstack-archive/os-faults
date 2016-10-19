@@ -14,6 +14,7 @@
 import collections
 import logging
 import random
+import warnings
 
 from os_faults.api import error
 from os_faults.api.util import public
@@ -29,13 +30,64 @@ class NodeCollection(object):
                  hosts=None):
         self.cloud_management = cloud_management
         self.power_management = power_management
-        self.hosts = hosts
+        self._hosts = set(hosts)
+
+    @property
+    def hosts(self):
+        return sorted(self._hosts)
 
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, repr(self.hosts))
 
     def __len__(self):
-        return len(self.hosts)
+        return len(self._hosts)
+
+    def _check_nodes_types(self, other):
+        if type(self) is not type(other):
+            raise TypeError(
+                'Unsupported operand types: {} and {}'.format(
+                    type(self), type(other)))
+        if self.cloud_management is not other.cloud_management:
+            raise error.NodeCollectionError(
+                'NodeCollections have different cloud_managements: '
+                '{} and {}'.format(self.cloud_management,
+                                   other.cloud_management))
+        if self.power_management is not other.power_management:
+            raise error.NodeCollectionError(
+                'NodeCollections have different power_managements: '
+                '{} and {}'.format(self.power_management,
+                                   other.power_management))
+
+    def __add__(self, other):
+        return self.__or__(other)
+
+    def __sub__(self, other):
+        self._check_nodes_types(other)
+        return self._make_instance(self._hosts - other._hosts)
+
+    def __and__(self, other):
+        self._check_nodes_types(other)
+        return self._make_instance(self._hosts & other._hosts)
+
+    def __or__(self, other):
+        self._check_nodes_types(other)
+        return self._make_instance(self._hosts | other._hosts)
+
+    def __xor__(self, other):
+        self._check_nodes_types(other)
+        return self._make_instance(self._hosts ^ other._hosts)
+
+    def __contains__(self, host):
+        return host in self._hosts
+
+    def __iter__(self):
+        for host in self.hosts:
+            yield host
+
+    def _make_instance(self, hosts):
+        return self.__class__(cloud_management=self.cloud_management,
+                              power_management=self.power_management,
+                              hosts=hosts)
 
     def get_ips(self):
         return [host.ip for host in self.hosts]
@@ -47,21 +99,20 @@ class NodeCollection(object):
         return [host.fqdn for host in self.hosts]
 
     def iterate_hosts(self):
-        for host in self.hosts:
-            yield host
+        warnings.warn('iterate_hosts is deprecated, use __iter__ instead',
+                      DeprecationWarning, stacklevel=2)
+        return self.__iter__()
 
     def pick(self, count=1):
         """Pick one Node out of collection
 
         :return: NodeCollection consisting just one node
         """
-        if count > len(self.hosts):
+        if count > len(self._hosts):
             msg = 'Cannot pick {} from {} node(s)'.format(
-                count, len(self.hosts))
+                count, len(self._hosts))
             raise error.NodeCollectionError(msg)
-        return self.__class__(cloud_management=self.cloud_management,
-                              power_management=self.power_management,
-                              hosts=random.sample(self.hosts, count))
+        return self._make_instance(random.sample(self._hosts, count))
 
     def run_task(self, task, raise_on_error=True):
         """Run ansible task on node colection

@@ -15,7 +15,6 @@ import copy
 
 import mock
 
-from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import power_management
 from os_faults.drivers import fuel
@@ -45,71 +44,6 @@ class FuelNodeCollectionTestCase(test.TestCase):
             power_management=self.mock_power_management,
             hosts=copy.deepcopy(self.hosts))
 
-    def test_len(self):
-        self.assertEqual(4, len(self.node_collection))
-
-    def test_get_ips(self):
-        self.assertEqual(['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
-                         self.node_collection.get_ips())
-
-    def test_get_macs(self):
-        self.assertEqual(['09:7b:74:90:63:c1',
-                          '09:7b:74:90:63:c2',
-                          '09:7b:74:90:63:c3',
-                          '09:7b:74:90:63:c4'],
-                         self.node_collection.get_macs())
-
-    def test_get_fqdns(self):
-        self.assertEqual(['node1.com', 'node2.com', 'node3.com', 'node4.com'],
-                         self.node_collection.get_fqdns())
-
-    def test_iterate_hosts(self):
-        self.assertEqual(self.hosts,
-                         list(self.node_collection.iterate_hosts()))
-
-    def test_pick(self):
-        one = self.node_collection.pick()
-        self.assertEqual(1, len(one))
-        self.assertIn(one.hosts[0], self.hosts)
-
-    def test_run_task(self):
-        result = self.node_collection.run_task({'foo': 'bar'},
-                                               raise_on_error=False)
-        mock_execute_on_cloud = self.mock_cloud_management.execute_on_cloud
-        expected_result = mock_execute_on_cloud.return_value
-        self.assertIs(result, expected_result)
-        mock_execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'], {'foo': 'bar'},
-            raise_on_error=False)
-
-    def test_pick_count(self):
-        two = self.node_collection.pick(count=2)
-        self.assertEqual(2, len(two))
-        self.assertIn(two.hosts[0], self.hosts)
-        self.assertIn(two.hosts[1], self.hosts)
-
-    def test_pick_exception(self):
-        self.assertRaises(
-            error.NodeCollectionError, self.node_collection.pick, count=10)
-
-    def test_poweroff(self):
-        self.node_collection.poweroff()
-        self.mock_power_management.poweroff.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
-
-    def test_poweron(self):
-        self.node_collection.poweron()
-        self.mock_power_management.poweron.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
-
-    def test_reset(self):
-        self.node_collection.reset()
-        self.mock_power_management.reset.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
-
     def test_connect(self):
         self.node_collection.connect(network_name='storage')
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
@@ -123,9 +57,3 @@ class FuelNodeCollectionTestCase(test.TestCase):
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
             {'fuel_network_mgmt': {'operation': 'down',
                                    'network_name': 'storage'}})
-
-    def test_reboot(self):
-        self.node_collection.reboot()
-        self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
-            {'command': 'reboot now'})
