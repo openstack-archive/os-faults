@@ -19,6 +19,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
+from os_faults.common import service
 
 LOG = logging.getLogger(__name__)
 
@@ -32,11 +33,86 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
         raise NotImplementedError
 
 
+SALT_RESTART = ('salt-call --local --retcode-passthrough '
+                'service.restart {service}')
+
+
+class KeystoneService(service.ServiceAsProcess):
+    SERVICE_NAME = 'keystone'
+    GREP = '[k]eystone-all'
+    RESTART_CMD = SALT_RESTART.format(service='keystone')
+
+
+class MemcachedService(service.ServiceAsProcess):
+    SERVICE_NAME = 'memcached'
+    GREP = '[m]emcached'
+    RESTART_CMD = SALT_RESTART.format(service='memcached')
+
+
+class MySQLService(service.ServiceAsProcess):
+    SERVICE_NAME = 'mysql'
+    GREP = '[m]ysqld'
+    RESTART_CMD = SALT_RESTART.format(service='mysql')
+    PORT = ('tcp', 3307)
+
+
+class RabbitMQService(service.ServiceAsProcess):
+    SERVICE_NAME = 'rabbitmq'
+    GREP = 'beam\.smp .*rabbitmq_server'
+    RESTART_CMD = SALT_RESTART.format(service='rabbitmq-server')
+
+
+class NovaAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-api'
+    GREP = '[n]ova-api'
+    RESTART_CMD = SALT_RESTART.format(service='nova-api')
+
+
+class GlanceAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'glance-api'
+    GREP = '[g]lance-api'
+    RESTART_CMD = SALT_RESTART.format(service='glance-api')
+
+
+class NovaComputeService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-compute'
+    GREP = '[n]ova-compute'
+    RESTART_CMD = SALT_RESTART.format(service='nova-compute')
+
+
+class NovaSchedulerService(service.ServiceAsProcess):
+    SERVICE_NAME = 'nova-scheduler'
+    GREP = '[n]ova-scheduler'
+    RESTART_CMD = SALT_RESTART.format(service='nova-scheduler')
+
+
+class HeatAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'heat-api'
+    GREP = '[h]eat-api '
+    RESTART_CMD = SALT_RESTART.format(service='heat-api')
+
+
+class HeatEngineService(service.ServiceAsProcess):
+    SERVICE_NAME = 'heat-engine'
+    GREP = '[h]eat-engine'
+    RESTART_CMD = SALT_RESTART.format(service='heat-engine')
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
     NODE_CLS = TCPCloudNodeCollection
     SERVICE_NAME_TO_CLASS = {
+        'keystone': KeystoneService,
+        'memcached': MemcachedService,
+        'mysql': MySQLService,
+        'rabbitmq': RabbitMQService,
+        'nova-api': NovaAPIService,
+        'glance-api': GlanceAPIService,
+        'nova-compute': NovaComputeService,
+        'nova-scheduler': NovaSchedulerService,
+        'heat-api': HeatAPIService,
+        'heat-engine': HeatEngineService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []

@@ -14,6 +14,7 @@
 import ddt
 import mock
 
+from os_faults.ansible import executor
 from os_faults.api import node_collection
 from os_faults.drivers import tcpcloud
 from os_faults.tests.unit import fakes
@@ -108,6 +109,40 @@ class TCPCloudManagementTestCase(test.TestCase):
         ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
         tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes(fqdns=['cmp02.mk20.local'])
+
+        hosts = [
+            node_collection.Host(ip='10.0.0.3', mac='09:7b:74:90:63:c3',
+                                 fqdn='cmp02.mk20.local'),
+        ]
+        self.assertEqual(nodes.hosts, hosts)
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
+    @ddt.unpack
+    def test_get_service_nodes(self, service_name, service_cls,
+                               mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     status=executor.STATUS_FAILED,
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
+        ]
+
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+
+        service = tcp_managment.get_service(service_name)
+        self.assertIsInstance(service, service_cls)
+
+        nodes = service.get_nodes()
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': cmd}, []),
+        ])
 
         hosts = [
             node_collection.Host(ip='10.0.0.3', mac='09:7b:74:90:63:c3',
