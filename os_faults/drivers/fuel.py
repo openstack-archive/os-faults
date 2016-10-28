@@ -121,6 +121,18 @@ class HeatEngineService(service.ServiceAsProcess):
     RESTART_CMD = 'pcs resource restart p_heat-engine $(hostname)'
 
 
+class CinderAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-api'
+    GREP = '[c]inder-api'
+    RESTART_CMD = 'service cinder-api restart'
+
+
+class CinderSchedulerService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-scheduler'
+    GREP = '[c]inder-scheduler'
+    RESTART_CMD = 'service cinder-scheduler restart'
+
+
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
@@ -138,6 +150,8 @@ class FuelManagement(cloud_management.CloudManagement):
         'neutron-l3-agent': NeutronL3AgentService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
+        'cinder-api': CinderAPIService,
+        'cinder-scheduler': CinderSchedulerService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']

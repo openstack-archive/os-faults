@@ -98,6 +98,18 @@ class HeatEngineService(service.ServiceAsProcess):
     RESTART_CMD = SALT_RESTART.format(service='heat-engine')
 
 
+class CinderAPIService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-api'
+    GREP = '[c]inder-api'
+    RESTART_CMD = SALT_RESTART.format(service='cinder-api')
+
+
+class CinderSchedulerService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-scheduler'
+    GREP = '[c]inder-scheduler'
+    RESTART_CMD = SALT_RESTART.format(service='cinder-scheduler')
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
@@ -113,6 +125,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'nova-scheduler': NovaSchedulerService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
+        'cinder-api': CinderAPIService,
+        'cinder-scheduler': CinderSchedulerService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []
