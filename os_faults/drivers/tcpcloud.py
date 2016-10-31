@@ -43,6 +43,12 @@ class KeystoneService(service.ServiceAsProcess):
     RESTART_CMD = SALT_RESTART.format(service='keystone')
 
 
+class HorizonService(service.ServiceAsProcess):
+    SERVICE_NAME = 'horizon'
+    GREP = '[a]pache2'
+    RESTART_CMD = SALT_RESTART.format(service='apache2')
+
+
 class MemcachedService(service.ServiceAsProcess):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
@@ -116,6 +122,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
     NODE_CLS = TCPCloudNodeCollection
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,
+        'horizon': HorizonService,
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,

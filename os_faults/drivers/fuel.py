@@ -49,6 +49,12 @@ class KeystoneService(service.ServiceAsProcess):
     RESTART_CMD = 'service apache2 restart'
 
 
+class HorizonService(service.ServiceAsProcess):
+    SERVICE_NAME = 'horizon'
+    GREP = '[a]pache2'
+    RESTART_CMD = 'service apache2 restart'
+
+
 class MemcachedService(service.ServiceAsProcess):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
@@ -139,6 +145,7 @@ class FuelManagement(cloud_management.CloudManagement):
     NODE_CLS = FuelNodeCollection
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,
+        'horizon': HorizonService,
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
