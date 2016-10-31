@@ -43,6 +43,12 @@ class KeystoneService(service.ServiceAsProcess):
     RESTART_CMD = SALT_RESTART.format(service='keystone')
 
 
+class HorizonService(service.ServiceAsProcess):
+    SERVICE_NAME = 'horizon'
+    GREP = '[a]pache2'
+    RESTART_CMD = SALT_RESTART.format(service='apache2')
+
+
 class MemcachedService(service.ServiceAsProcess):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
@@ -110,12 +116,19 @@ class CinderSchedulerService(service.ServiceAsProcess):
     RESTART_CMD = SALT_RESTART.format(service='cinder-scheduler')
 
 
+class CinderVolumeService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-volume'
+    GREP = '[c]inder-volume'
+    RESTART_CMD = SALT_RESTART.format(service='cinder-volume')
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
     NODE_CLS = TCPCloudNodeCollection
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,
+        'horizon': HorizonService,
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
@@ -127,6 +140,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'heat-engine': HeatEngineService,
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
+        'cinder-volume': CinderVolumeService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []

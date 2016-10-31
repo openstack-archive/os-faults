@@ -49,6 +49,12 @@ class KeystoneService(service.ServiceAsProcess):
     RESTART_CMD = 'service apache2 restart'
 
 
+class HorizonService(service.ServiceAsProcess):
+    SERVICE_NAME = 'horizon'
+    GREP = '[a]pache2'
+    RESTART_CMD = 'service apache2 restart'
+
+
 class MemcachedService(service.ServiceAsProcess):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
@@ -133,12 +139,19 @@ class CinderSchedulerService(service.ServiceAsProcess):
     RESTART_CMD = 'service cinder-scheduler restart'
 
 
+class CinderVolumeService(service.ServiceAsProcess):
+    SERVICE_NAME = 'cinder-volume'
+    GREP = '[c]inder-volume'
+    RESTART_CMD = 'service cinder-volume restart'
+
+
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
     NODE_CLS = FuelNodeCollection
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,
+        'horizon': HorizonService,
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
@@ -152,6 +165,7 @@ class FuelManagement(cloud_management.CloudManagement):
         'heat-engine': HeatEngineService,
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
+        'cinder-volume': CinderVolumeService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
