@@ -145,6 +145,18 @@ class CinderVolumeService(service.ServiceAsProcess):
     RESTART_CMD = 'service cinder-volume restart'
 
 
+class IronicApiService(service.ServiceAsProcess):
+    SERVICE_NAME = 'ironic-api'
+    GREP = '[i]ronic-api'
+    RESTART_CMD = 'service ironic-api restart'
+
+
+class IronicConductorService(service.ServiceAsProcess):
+    SERVICE_NAME = 'ironic-conductor'
+    GREP = '[i]ronic-conductor'
+    RESTART_CMD = 'service ironic-conductor restart'
+
+
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
@@ -166,6 +178,8 @@ class FuelManagement(cloud_management.CloudManagement):
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
+        'ironic-api': IronicApiService,
+        'ironic-conductor': IronicConductorService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
