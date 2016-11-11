@@ -129,6 +129,8 @@ class AnsibleRunner(object):
         if jump_host:
             ssh_common_args += (
                 ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p '
+                '-o UserKnownHostsFile=/dev/null '
+                '-o StrictHostKeyChecking=no '
                 '%(user)s@%(host)s"'
                 % dict(key=private_key_file, user=remote_user, host=jump_host))
 
