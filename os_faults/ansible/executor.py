@@ -128,9 +128,10 @@ class AnsibleRunner(object):
         ssh_common_args = SSH_COMMON_ARGS
         if jump_host:
             ssh_common_args += (
-                ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p '
+                ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p %(ssh_args)s '
                 '%(user)s@%(host)s"'
-                % dict(key=private_key_file, user=remote_user, host=jump_host))
+                % dict(key=private_key_file, user=remote_user,
+                       host=jump_host, ssh_args=SSH_COMMON_ARGS))
 
         self.options = Options(
             connection='smart', password=password,
