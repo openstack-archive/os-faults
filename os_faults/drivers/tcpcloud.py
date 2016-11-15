@@ -151,7 +151,9 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             'address': {'type': 'string'},
             'username': {'type': 'string'},
             'private_key_file': {'type': 'string'},
-
+            'slave_username': {'type': 'string'},
+            'master_sudo': {'type': 'boolean'},
+            'slave_sudo': {'type': 'boolean'},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -162,14 +164,21 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
         self.master_node_address = cloud_management_params['address']
         self.username = cloud_management_params['username']
+        self.slave_username = cloud_management_params.get(
+            'slave_username', self.username)
         self.private_key_file = cloud_management_params.get('private_key_file')
 
         self.master_node_executor = executor.AnsibleRunner(
-            remote_user=self.username, private_key_file=self.private_key_file)
+            remote_user=self.username,
+            private_key_file=self.private_key_file,
+            become=cloud_management_params.get('master_sudo'))
 
         self.cloud_executor = executor.AnsibleRunner(
-            remote_user=self.username, private_key_file=self.private_key_file,
-            jump_host=self.master_node_address)
+            remote_user=self.slave_username,
+            private_key_file=self.private_key_file,
+            jump_host=self.master_node_address,
+            jump_user=self.username,
+            become=cloud_management_params.get('slave_sudo'))
 
         self.cached_cloud_hosts = list()
         self.fqdn_to_hosts = dict()
