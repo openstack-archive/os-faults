@@ -122,7 +122,8 @@ Options = collections.namedtuple(
 
 class AnsibleRunner(object):
     def __init__(self, remote_user='root', password=None, forks=100,
-                 jump_host=None, private_key_file=None, become=None):
+                 jump_host=None, jump_user=None, private_key_file=None,
+                 become=None):
         super(AnsibleRunner, self).__init__()
 
         ssh_common_args = SSH_COMMON_ARGS
@@ -130,7 +131,7 @@ class AnsibleRunner(object):
             ssh_common_args += (
                 ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p %(ssh_args)s '
                 '%(user)s@%(host)s"'
-                % dict(key=private_key_file, user=remote_user,
+                % dict(key=private_key_file, user=jump_user or remote_user,
                        host=jump_host, ssh_args=SSH_COMMON_ARGS))
 
         self.options = Options(

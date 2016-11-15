@@ -47,6 +47,39 @@ class TCPCloudManagementTestCase(test.TestCase):
             "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml")
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data((
+        dict(address='tcp.local', username='root'),
+        (mock.call(become=None, private_key_file=None, remote_user='root'),
+         mock.call(become=None, jump_host='tcp.local', jump_user='root',
+                   private_key_file=None, remote_user='root'))
+    ), (
+        dict(address='tcp.local', username='ubuntu',
+             slave_username='root', master_sudo=True,
+             private_key_file='/path/id_rsa'),
+        (mock.call(become=True, private_key_file='/path/id_rsa',
+                   remote_user='ubuntu'),
+         mock.call(become=None, jump_host='tcp.local', jump_user='ubuntu',
+                   private_key_file='/path/id_rsa', remote_user='root'))
+    ), (
+        dict(address='tcp.local', username='ubuntu',
+             slave_username='root', slave_sudo=True,
+             private_key_file='/path/id_rsa'),
+        (mock.call(become=None, private_key_file='/path/id_rsa',
+                   remote_user='ubuntu'),
+         mock.call(become=True, jump_host='tcp.local', jump_user='ubuntu',
+                   private_key_file='/path/id_rsa', remote_user='root'))
+    ))
+    @ddt.unpack
+    def test_init(self, config, expected_runner_calls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+
+        tcp_managment = tcpcloud.TCPCloudManagement(config)
+
+        mock_ansible_runner.assert_has_calls(expected_runner_calls)
+        self.assertIs(tcp_managment.master_node_executor, ansible_runner_inst)
+        self.assertIs(tcp_managment.cloud_executor, ansible_runner_inst)
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_verify(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
