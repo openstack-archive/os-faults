@@ -149,3 +149,128 @@ class TCPCloudManagementTestCase(test.TestCase):
                                  fqdn='cmp02.mk20.local'),
         ]
         self.assertEqual(nodes.hosts, hosts)
+
+
+@ddt.ddt
+class TcpServiceTestCase(test.TestCase):
+
+    def setUp(self):
+        super(TcpServiceTestCase, self).setUp()
+        self.fake_ansible_result = fakes.FakeAnsibleResult(
+            payload={
+                'stdout': 'cmp01.mk20.local:\n'
+                          '  eth0:\n'
+                          '    hwaddr: 09:7b:74:90:63:c2\n'
+                          '    inet:\n'
+                          '    - address: 10.0.0.2\n'
+                          'cmp02.mk20.local:\n'
+                          '  eth0:\n'
+                          '    hwaddr: 09:7b:74:90:63:c3\n'
+                          '    inet:\n'
+                          '    - address: 10.0.0.3\n'
+            })
+        self.tcp_conf = {
+            'address': 'tcp.local',
+            'username': 'root',
+        }
+        self.get_nodes_cmd = (
+            "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml")
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
+    @ddt.unpack
+    def test_restart(self, service_name, service_cls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     status=executor.STATUS_FAILED,
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
+        ]
+
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+
+        service = tcp_managment.get_service(service_name)
+        self.assertIsInstance(service, service_cls)
+
+        service.restart()
+
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': cmd}, []),
+            mock.call(['10.0.0.3'], {'shell': service.RESTART_CMD}),
+        ])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
+    @ddt.unpack
+    def test_terminate(self, service_name, service_cls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     status=executor.STATUS_FAILED,
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
+        ]
+
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+
+        service = tcp_managment.get_service(service_name)
+        self.assertIsInstance(service, service_cls)
+
+        service.terminate()
+
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': cmd}, []),
+            mock.call(['10.0.0.3'], {'shell': service.TERMINATE_CMD}),
+        ])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
+    @ddt.unpack
+    def test_start(self, service_name, service_cls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     status=executor.STATUS_FAILED,
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')],
+            [fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': ''},
+                                     host='10.0.0.3')]
+        ]
+
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+
+        service = tcp_managment.get_service(service_name)
+        self.assertIsInstance(service, service_cls)
+
+        service.start()
+
+        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['10.0.0.2', '10.0.0.3'],
+                      {'command': cmd}, []),
+            mock.call(['10.0.0.3'], {'shell': service.START_CMD}),
+        ])

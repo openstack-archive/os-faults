@@ -65,6 +65,20 @@ class ServiceAsProcess(service.Service):
                  nodes.get_ips())
         self._run_task({'shell': self.RESTART_CMD}, nodes)
 
+    @utils.require_variables('TERMINATE_CMD', 'SERVICE_NAME')
+    def terminate(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Terminate '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        self._run_task({'shell': self.TERMINATE_CMD}, nodes)
+
+    @utils.require_variables('START_CMD', 'SERVICE_NAME')
+    def start(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Start '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        self._run_task({'shell': self.START_CMD}, nodes)
+
     @utils.require_variables('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
@@ -111,3 +125,14 @@ class ServiceAsProcess(service.Service):
                                      'port': self.PORT[1],
                                      'action': 'block',
                                      'service': self.SERVICE_NAME}}, nodes)
+
+
+class LinuxService(ServiceAsProcess):
+
+    @utils.require_variables('LINUX_SERVICE')
+    def __init__(self, *args, **kwargs):
+        super(LinuxService, self).__init__(*args, **kwargs)
+
+        self.RESTART_CMD = 'service {} restart'.format(self.LINUX_SERVICE)
+        self.TERMINATE_CMD = 'service {} stop'.format(self.LINUX_SERVICE)
+        self.START_CMD = 'service {} start'.format(self.LINUX_SERVICE)

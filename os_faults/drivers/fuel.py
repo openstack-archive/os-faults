@@ -19,6 +19,7 @@ from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.common import service
+from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -43,59 +44,73 @@ class FuelNodeCollection(node_collection.NodeCollection):
         self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
 
-class KeystoneService(service.ServiceAsProcess):
+class PcsService(service.ServiceAsProcess):
+
+    @utils.require_variables('PCS_SERVICE')
+    def __init__(self, *args, **kwargs):
+        super(PcsService, self).__init__(*args, **kwargs)
+
+        self.RESTART_CMD = 'pcs resource restart {} $(hostname)'.format(
+            self.PCS_SERVICE)
+        self.TERMINATE_CMD = 'pcs resource ban {} $(hostname)'.format(
+            self.PCS_SERVICE)
+        self.START_CMD = 'pcs resource clear {} $(hostname)'.format(
+            self.PCS_SERVICE)
+
+
+class KeystoneService(service.LinuxService):
     SERVICE_NAME = 'keystone'
     GREP = '[k]eystone'
-    RESTART_CMD = 'service apache2 restart'
+    LINUX_SERVICE = 'apache2'
 
 
-class HorizonService(service.ServiceAsProcess):
+class HorizonService(service.LinuxService):
     SERVICE_NAME = 'horizon'
     GREP = '[a]pache2'
-    RESTART_CMD = 'service apache2 restart'
+    LINUX_SERVICE = 'apache2'
 
 
-class MemcachedService(service.ServiceAsProcess):
+class MemcachedService(service.LinuxService):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
-    RESTART_CMD = 'service memcached restart'
+    LINUX_SERVICE = 'memcached'
 
 
-class MySQLService(service.ServiceAsProcess):
+class MySQLService(PcsService):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
-    RESTART_CMD = 'pcs resource restart p_mysqld $(hostname)'
+    PCS_SERVICE = 'p_mysqld'
     PORT = ('tcp', 3307)
 
 
-class RabbitMQService(service.ServiceAsProcess):
+class RabbitMQService(PcsService):
     SERVICE_NAME = 'rabbitmq'
     GREP = '[r]abbit tcp_listeners'
-    RESTART_CMD = 'pcs resource restart p_rabbitmq-server $(hostname)'
+    PCS_SERVICE = 'p_rabbitmq-server'
 
 
-class NovaAPIService(service.ServiceAsProcess):
+class NovaAPIService(service.LinuxService):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
-    RESTART_CMD = 'service nova-api restart'
+    LINUX_SERVICE = 'nova-api'
 
 
-class GlanceAPIService(service.ServiceAsProcess):
+class GlanceAPIService(service.LinuxService):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
-    RESTART_CMD = 'service glance-api restart'
+    LINUX_SERVICE = 'glance-api'
 
 
-class NovaComputeService(service.ServiceAsProcess):
+class NovaComputeService(service.LinuxService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
-    RESTART_CMD = 'service nova-compute restart'
+    LINUX_SERVICE = 'nova-compute'
 
 
-class NovaSchedulerService(service.ServiceAsProcess):
+class NovaSchedulerService(service.LinuxService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
-    RESTART_CMD = 'service nova-scheduler restart'
+    LINUX_SERVICE = 'nova-scheduler'
 
 
 class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
@@ -105,56 +120,73 @@ class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
         'if pcs resource show neutron-openvswitch-agent; '
         'then pcs resource restart neutron-openvswitch-agent $(hostname); '
         'else service neutron-openvswitch-agent restart; fi')
+    TERMINATE_CMD = (
+        'if pcs resource show neutron-openvswitch-agent; '
+        'then pcs resource ban neutron-openvswitch-agent $(hostname); '
+        'else service neutron-openvswitch-agent stop; fi')
+    START_CMD = (
+        'if pcs resource show neutron-openvswitch-agent; '
+        'then pcs resource clear neutron-openvswitch-agent $(hostname); '
+        'else service neutron-openvswitch-agent start; fi')
 
 
 class NeutronL3AgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-l3-agent'
     GREP = '[n]eutron-l3-agent'
-    RESTART_CMD = ('bash -c "if pcs resource show neutron-l3-agent; '
-                   'then pcs resource restart neutron-l3-agent $(hostname); '
-                   'else service neutron-l3-agent restart; fi"')
+    RESTART_CMD = (
+        'if pcs resource show neutron-l3-agent; '
+        'then pcs resource restart neutron-l3-agent $(hostname); '
+        'else service neutron-l3-agent restart; fi')
+    TERMINATE_CMD = (
+        'if pcs resource show neutron-l3-agent; '
+        'then pcs resource ban neutron-l3-agent $(hostname); '
+        'else service neutron-l3-agent stop; fi')
+    START_CMD = (
+        'if pcs resource show neutron-l3-agent; '
+        'then pcs resource clear neutron-l3-agent $(hostname); '
+        'else service neutron-l3-agent start; fi')
 
 
-class HeatAPIService(service.ServiceAsProcess):
+class HeatAPIService(service.LinuxService):
     SERVICE_NAME = 'heat-api'
     GREP = '[h]eat-api'
-    RESTART_CMD = 'service heat-api restart'
+    LINUX_SERVICE = 'heat-api'
 
 
-class HeatEngineService(service.ServiceAsProcess):
+class HeatEngineService(PcsService):
     SERVICE_NAME = 'heat-engine'
     GREP = '[h]eat-engine'
-    RESTART_CMD = 'pcs resource restart p_heat-engine $(hostname)'
+    PCS_SERVICE = 'p_heat-engine'
 
 
-class CinderAPIService(service.ServiceAsProcess):
+class CinderAPIService(service.LinuxService):
     SERVICE_NAME = 'cinder-api'
     GREP = '[c]inder-api'
-    RESTART_CMD = 'service cinder-api restart'
+    LINUX_SERVICE = 'cinder-api'
 
 
-class CinderSchedulerService(service.ServiceAsProcess):
+class CinderSchedulerService(service.LinuxService):
     SERVICE_NAME = 'cinder-scheduler'
     GREP = '[c]inder-scheduler'
-    RESTART_CMD = 'service cinder-scheduler restart'
+    LINUX_SERVICE = 'cinder-scheduler'
 
 
-class CinderVolumeService(service.ServiceAsProcess):
+class CinderVolumeService(service.LinuxService):
     SERVICE_NAME = 'cinder-volume'
     GREP = '[c]inder-volume'
-    RESTART_CMD = 'service cinder-volume restart'
+    LINUX_SERVICE = 'cinder-volume'
 
 
-class IronicApiService(service.ServiceAsProcess):
+class IronicApiService(service.LinuxService):
     SERVICE_NAME = 'ironic-api'
     GREP = '[i]ronic-api'
-    RESTART_CMD = 'service ironic-api restart'
+    LINUX_SERVICE = 'ironic-api'
 
 
-class IronicConductorService(service.ServiceAsProcess):
+class IronicConductorService(service.LinuxService):
     SERVICE_NAME = 'ironic-conductor'
     GREP = '[i]ronic-conductor'
-    RESTART_CMD = 'service ironic-conductor restart'
+    LINUX_SERVICE = 'ironic-conductor'
 
 
 class FuelManagement(cloud_management.CloudManagement):

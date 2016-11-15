@@ -20,6 +20,7 @@ from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.common import service
+from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -33,93 +34,106 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
         raise NotImplementedError
 
 
-SALT_RESTART = ('salt-call --local --retcode-passthrough '
-                'service.restart {service}')
+SALT_CALL = 'salt-call --local --retcode-passthrough '
+SALT_RESTART = SALT_CALL + 'service.restart {service}'
+SALT_TERMINATE = SALT_CALL + 'service.stop {service}'
+SALT_START = SALT_CALL + 'service.start {service}'
 
 
-class KeystoneService(service.ServiceAsProcess):
+class SaltService(service.ServiceAsProcess):
+
+    @utils.require_variables('SALT_SERVICE')
+    def __init__(self, *args, **kwargs):
+        super(SaltService, self).__init__(*args, **kwargs)
+
+        self.RESTART_CMD = SALT_RESTART.format(service=self.SALT_SERVICE)
+        self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SALT_SERVICE)
+        self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
+
+
+class KeystoneService(SaltService):
     SERVICE_NAME = 'keystone'
     GREP = '[k]eystone-all'
-    RESTART_CMD = SALT_RESTART.format(service='keystone')
+    SALT_SERVICE = 'keystone'
 
 
-class HorizonService(service.ServiceAsProcess):
+class HorizonService(SaltService):
     SERVICE_NAME = 'horizon'
     GREP = '[a]pache2'
-    RESTART_CMD = SALT_RESTART.format(service='apache2')
+    SALT_SERVICE = 'apache2'
 
 
-class MemcachedService(service.ServiceAsProcess):
+class MemcachedService(SaltService):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
-    RESTART_CMD = SALT_RESTART.format(service='memcached')
+    SALT_SERVICE = 'memcached'
 
 
-class MySQLService(service.ServiceAsProcess):
+class MySQLService(SaltService):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
-    RESTART_CMD = SALT_RESTART.format(service='mysql')
+    SALT_SERVICE = 'mysql'
     PORT = ('tcp', 3307)
 
 
-class RabbitMQService(service.ServiceAsProcess):
+class RabbitMQService(SaltService):
     SERVICE_NAME = 'rabbitmq'
     GREP = 'beam\.smp .*rabbitmq_server'
-    RESTART_CMD = SALT_RESTART.format(service='rabbitmq-server')
+    SALT_SERVICE = 'rabbitmq-server'
 
 
-class NovaAPIService(service.ServiceAsProcess):
+class NovaAPIService(SaltService):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
-    RESTART_CMD = SALT_RESTART.format(service='nova-api')
+    SALT_SERVICE = 'nova-api'
 
 
-class GlanceAPIService(service.ServiceAsProcess):
+class GlanceAPIService(SaltService):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
-    RESTART_CMD = SALT_RESTART.format(service='glance-api')
+    SALT_SERVICE = 'glance-api'
 
 
-class NovaComputeService(service.ServiceAsProcess):
+class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
-    RESTART_CMD = SALT_RESTART.format(service='nova-compute')
+    SALT_SERVICE = 'nova-compute'
 
 
-class NovaSchedulerService(service.ServiceAsProcess):
+class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
-    RESTART_CMD = SALT_RESTART.format(service='nova-scheduler')
+    SALT_SERVICE = 'nova-scheduler'
 
 
-class HeatAPIService(service.ServiceAsProcess):
+class HeatAPIService(SaltService):
     SERVICE_NAME = 'heat-api'
     GREP = '[h]eat-api '
-    RESTART_CMD = SALT_RESTART.format(service='heat-api')
+    SALT_SERVICE = 'heat-api'
 
 
-class HeatEngineService(service.ServiceAsProcess):
+class HeatEngineService(SaltService):
     SERVICE_NAME = 'heat-engine'
     GREP = '[h]eat-engine'
-    RESTART_CMD = SALT_RESTART.format(service='heat-engine')
+    SALT_SERVICE = 'heat-engine'
 
 
-class CinderAPIService(service.ServiceAsProcess):
+class CinderAPIService(SaltService):
     SERVICE_NAME = 'cinder-api'
     GREP = '[c]inder-api'
-    RESTART_CMD = SALT_RESTART.format(service='cinder-api')
+    SALT_SERVICE = 'cinder-api'
 
 
-class CinderSchedulerService(service.ServiceAsProcess):
+class CinderSchedulerService(SaltService):
     SERVICE_NAME = 'cinder-scheduler'
     GREP = '[c]inder-scheduler'
-    RESTART_CMD = SALT_RESTART.format(service='cinder-scheduler')
+    SALT_SERVICE = 'cinder-scheduler'
 
 
-class CinderVolumeService(service.ServiceAsProcess):
+class CinderVolumeService(SaltService):
     SERVICE_NAME = 'cinder-volume'
     GREP = '[c]inder-volume'
-    RESTART_CMD = SALT_RESTART.format(service='cinder-volume')
+    SALT_SERVICE = 'cinder-volume'
 
 
 class TCPCloudManagement(cloud_management.CloudManagement):
