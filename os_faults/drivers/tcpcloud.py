@@ -57,6 +57,7 @@ class SaltService(service.ServiceAsProcess):
         self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
         self.FIND_CMD = self.SALT_FIND
 
+
 class KeystoneService(SaltService):
     SERVICE_NAME = 'apache2'
     GREP = ['[k]eystone','[a]pache2']
