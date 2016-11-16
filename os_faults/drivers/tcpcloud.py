@@ -57,6 +57,7 @@ class SaltService(service.ServiceAsProcess):
         self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
         self.FIND_CMD = self.SALT_FIND
 
+
 class KeystoneService(SaltService):
     SERVICE_NAME = 'apache2'
     GREP = ['[k]eystone','[a]pache2']
@@ -220,8 +221,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
                 host = node_collection.Host(
-                    ip=net_data['eth0']['inet'][0]['address'],
-                    mac=net_data['eth0']['hwaddr'],
+                    ip=net_data['eth1']['inet'][0]['address'],
+                    mac=net_data['eth1']['hwaddr'],
                     fqdn=fqdn)
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
