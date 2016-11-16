@@ -85,7 +85,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'kill': {'grep': self.SERVICE_NAME, 'sig': signal.SIGKILL}}
+        cmd = {'kill': {'grep': self.SALT_SERVICE, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')

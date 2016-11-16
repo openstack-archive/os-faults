@@ -39,7 +39,6 @@ SALT_RESTART = SALT_CALL + 'service.restart {service}'
 SALT_TERMINATE = SALT_CALL + 'service.stop {service}'
 SALT_START = SALT_CALL + 'service.start {service}'
 
-FIND = 'ps ax | grep -q {}'
 BASH = 'bash -c "{}"'
 FIND_Q = 'ps ax | grep -q {}'
 FIND_E = 'ps ax | grep -e {}'
@@ -71,9 +70,9 @@ class HorizonService(SaltService):
     GREP = '[a]pache2'
     IGNORE = '[k]eystone'
     SALT_SERVICE = 'apache2'
-    SALT_FIND = FIND_Q.format(GREP) + ' && ' + \
-                FIND_E.format(IGNORE) + ' | ' + \
-                EXCLUDE.format(IGNORE)
+    SALT_FIND = BASH.format(FIND_Q.format(GREP) + ' && ' +
+                            FIND_E.format(IGNORE) + ' | ' +
+                            EXCLUDE.format(IGNORE))
 
 
 class MemcachedService(SaltService):
@@ -91,8 +90,9 @@ class MySQLService(SaltService):
 
 class RabbitMQService(SaltService):
     SERVICE_NAME = 'rabbitmq'
-    GREP = 'beam\.smp .*rabbitmq_server'
+    GREP = '[r]abbitmq-server'
     SALT_SERVICE = 'rabbitmq-server'
+    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class NovaAPIService(SaltService):
