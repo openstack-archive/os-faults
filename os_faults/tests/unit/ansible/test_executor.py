@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ddt
 import mock
 
 from os_faults.ansible import executor
@@ -98,6 +99,7 @@ class MyCallbackTestCase(test.TestCase):
         mock_store.assert_called_once_with(result, executor.STATUS_UNREACHABLE)
 
 
+@ddt.ddt
 class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch('os_faults.ansible.executor.os.path.exists')
@@ -112,46 +114,57 @@ class AnsibleRunnerTestCase(test.TestCase):
         r = executor.resolve_relative_path('')
         self.assertIsNotNone(r)
 
-    def test___init__jump_host(self):
-        host = 'my_host'
-        ssh_common_args = executor.SSH_COMMON_ARGS
-        ar = executor.AnsibleRunner(jump_host=host)
-        self.assertLess(len(ssh_common_args), len(ar.options.ssh_common_args))
-
     @mock.patch.object(executor, 'Options')
-    def test___init__options(self, mock_options):
-        executor.AnsibleRunner()
+    @ddt.data((
+        {},
+        dict(become=None, become_method='sudo', become_user='root',
+             check=False, connection='smart', forks=100,
+             password=None, private_key_file=None,
+             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
+             ssh_common_args=executor.SSH_COMMON_ARGS,
+             ssh_extra_args=None, verbosity=100)
+    ), (
+        dict(remote_user='root', jump_host='jhost.com',
+             private_key_file='/path/my.key'),
+        dict(become=None, become_method='sudo', become_user='root',
+             check=False, connection='smart', forks=100,
+             password=None,
+             private_key_file='/path/my.key',
+             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
+             ssh_common_args=('-o UserKnownHostsFile=/dev/null '
+                              '-o StrictHostKeyChecking=no '
+                              '-o ProxyCommand='
+                              '"ssh -i /path/my.key '
+                              '-W %h:%p '
+                              '-o UserKnownHostsFile=/dev/null '
+                              '-o StrictHostKeyChecking=no '
+                              'root@jhost.com"'),
+             ssh_extra_args=None, verbosity=100)
+    ), (
+        dict(remote_user='root', jump_host='jhost.com', jump_user='juser',
+             private_key_file='/path/my.key'),
+        dict(become=None, become_method='sudo', become_user='root',
+             check=False, connection='smart', forks=100,
+             password=None,
+             private_key_file='/path/my.key',
+             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
+             ssh_common_args=('-o UserKnownHostsFile=/dev/null '
+                              '-o StrictHostKeyChecking=no '
+                              '-o ProxyCommand='
+                              '"ssh -i /path/my.key '
+                              '-W %h:%p '
+                              '-o UserKnownHostsFile=/dev/null '
+                              '-o StrictHostKeyChecking=no '
+                              'juser@jhost.com"'),
+             ssh_extra_args=None, verbosity=100)
+    ))
+    @ddt.unpack
+    def test___init__options(self, config, options_args, mock_options):
+        executor.AnsibleRunner(**config)
         module_path = executor.resolve_relative_path(
             'os_faults/ansible/modules')
-        mock_options.assert_called_once_with(
-            become=None, become_method='sudo', become_user='root',
-            check=False, connection='smart', forks=100,
-            module_path=module_path, password=None, private_key_file=None,
-            remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-            ssh_common_args=executor.SSH_COMMON_ARGS,
-            ssh_extra_args=None, verbosity=100)
-
-    @mock.patch.object(executor, 'Options')
-    def test___init__options_jump_host(self, mock_options):
-        executor.AnsibleRunner(remote_user='root', jump_host='jhost.com',
-                               private_key_file='/path/my.key', )
-        module_path = executor.resolve_relative_path(
-            'os_faults/ansible/modules')
-        mock_options.assert_called_once_with(
-            become=None, become_method='sudo', become_user='root',
-            check=False, connection='smart', forks=100,
-            module_path=module_path, password=None,
-            private_key_file='/path/my.key',
-            remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-            ssh_common_args=('-o UserKnownHostsFile=/dev/null '
-                             '-o StrictHostKeyChecking=no '
-                             '-o ProxyCommand='
-                             '"ssh -i /path/my.key '
-                             '-W %h:%p '
-                             '-o UserKnownHostsFile=/dev/null '
-                             '-o StrictHostKeyChecking=no '
-                             'root@jhost.com"'),
-            ssh_extra_args=None, verbosity=100)
+        mock_options.assert_called_once_with(module_path=module_path,
+                                             **options_args)
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
