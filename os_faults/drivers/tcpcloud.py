@@ -39,6 +39,11 @@ SALT_RESTART = SALT_CALL + 'service.restart {service}'
 SALT_TERMINATE = SALT_CALL + 'service.stop {service}'
 SALT_START = SALT_CALL + 'service.start {service}'
 
+FIND = 'ps ax | grep -q {}'
+BASH = 'bash -c "{}"'
+FIND_Q = 'ps ax | grep -q {}'
+FIND_E = 'ps ax | grep -e {}'
+EXCLUDE = 'ps ax | grep -qv {}'
 
 class SaltService(service.ServiceAsProcess):
 
@@ -49,18 +54,24 @@ class SaltService(service.ServiceAsProcess):
         self.RESTART_CMD = SALT_RESTART.format(service=self.SALT_SERVICE)
         self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SALT_SERVICE)
         self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
-
+        self.FIND_CMD = ''
 
 class KeystoneService(SaltService):
-    SERVICE_NAME = 'keystone'
-    GREP = '[k]eystone-all'
-    SALT_SERVICE = 'keystone'
+    SERVICE_NAME = 'apache2'
+    GREP = ['[k]eystone','[a]pache2']
+    SALT_SERVICE = 'apache2'
+    FIND_CMD = BASH.format(' && '.join([FIND_Q.format(g) for g in GREP[:-1]]) +
+                           ' && ' + FIND_E.format(GREP[-1]))
 
 
 class HorizonService(SaltService):
     SERVICE_NAME = 'horizon'
     GREP = '[a]pache2'
+    IGNORE = '[k]eystone'
     SALT_SERVICE = 'apache2'
+    FIND_CMD = FIND_Q.format(GREP) + ' && ' + \
+               FIND_E.format(IGNORE) + ' | ' + \
+               EXCLUDE.format(IGNORE)
 
 
 class MemcachedService(SaltService):
