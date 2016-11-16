@@ -28,6 +28,7 @@ class ServiceAsProcess(service.Service):
         self.node_cls = node_cls
         self.cloud_management = cloud_management
         self.power_management = power_management
+        self.FIND_CMD = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
 
     def _run_task(self, task, nodes):
         ips = nodes.get_ips()
@@ -48,7 +49,7 @@ class ServiceAsProcess(service.Service):
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
+        cmd = self.FIND_CMD
         results = self.cloud_management.execute_on_cloud(
             ips, {'command': cmd}, False)
         success_ips = [r.host for r in results
@@ -84,7 +85,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
+        cmd = {'kill': {'grep': self.SERVICE_NAME, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')
