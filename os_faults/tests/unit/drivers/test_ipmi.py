@@ -89,5 +89,7 @@ class IPMIDriverTestCase(test.TestCase):
     def test_driver_actions(self, action, mock_run):
         macs_list = ['00:00:00:00:00:00', '00:00:00:00:00:01']
         getattr(self.driver, action)(macs_list)
-        mock_run.assert_called_once_with(getattr(self.driver, '_%s' % action),
-                                         macs_list)
+        mock_run.assert_called_once_with(
+            getattr(self.driver, '_%s' % action),
+            [{'mac_address': '00:00:00:00:00:00'},
+             {'mac_address': '00:00:00:00:00:01'}])

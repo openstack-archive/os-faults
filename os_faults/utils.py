@@ -20,10 +20,10 @@ from os_faults.api import error
 LOG = logging.getLogger(__name__)
 
 
-def run(target, mac_addresses_list):
+def run(target, kwargs_list):
     tw = ThreadsWrapper(target)
-    for mac_address in mac_addresses_list:
-        tw.start_thread(mac_address=mac_address)
+    for kwargs in kwargs_list:
+        tw.start_thread(**kwargs)
     tw.join_threads()
 
     if tw.errors:

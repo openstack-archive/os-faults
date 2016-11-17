@@ -32,3 +32,9 @@ class PowerManagement(base_driver.BaseDriver):
     @abc.abstractmethod
     def reset(self, hosts):
         pass
+
+    def snapshot(self, hosts, snapshot_name):
+        raise NotImplementedError
+
+    def revert(self, hosts, snapshot_name, resume=True):
+        raise NotImplementedError

@@ -165,6 +165,20 @@ class NodeCollection(object):
         LOG.info('Reset nodes: %s', self)
         self.power_management.reset(self.get_macs())
 
+    def snapshot(self, snapshot_name):
+        """Create snapshot for all nodes
+
+        """
+        LOG.info('Create snapshot "%s" for nodes: %s', snapshot_name, self)
+        self.power_management.snapshot(self.get_macs(), snapshot_name)
+
+    def revert(self, snapshot_name, resume=True):
+        """Revert snapshot for all nodes
+
+        """
+        LOG.info('Revert snapshot "%s" for nodes: %s', snapshot_name, self)
+        self.power_management.revert(self.get_macs(), snapshot_name, resume)
+
     @public
     def disconnect(self, network_name):
         """Disconnect nodes from <network_name> network
