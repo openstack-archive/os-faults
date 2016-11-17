@@ -99,3 +99,34 @@ class Service(object):
         :param nodes: NodesCollection
         """
         raise NotImplementedError
+
+
+    @public
+    def stresscpu(self, nodes=None):
+        """Induce CPU stress
+
+        Call 'stress -c'
+
+        :param nodes: NodesCollection
+        """
+        raise NotImplementedError
+
+    @public
+    def stressmem(self, nodes=None):
+        """Induce Memory stress
+
+        Call 'stress -m'
+
+        :param nodes: NodesCollection
+        """
+        raise NotImplementedError
+
+    @public
+    def stressdisk(self, nodes=None):
+        """Induce Disk stress
+
+        Call 'stress -d'
+
+        :param nodes: NodesCollection
+        """
+        raise NotImplementedError
