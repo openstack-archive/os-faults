@@ -28,10 +28,21 @@ LOG = logging.getLogger(__name__)
 class TCPCloudNodeCollection(node_collection.NodeCollection):
 
     def connect(self, network_name):
-        raise NotImplementedError
+        LOG.info("Connect network '%s' on nodes: %s", network_name, self)
+        task = {'osa_network_mgmt': {
+            'network_name': network_name,
+            'operation': 'up',
+        }}
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
     def disconnect(self, network_name):
-        raise NotImplementedError
+        LOG.info("Disconnect network '%s' on nodes: %s",
+                 network_name, self)
+        task = {'osa_network_mgmt': {
+            'network_name': network_name,
+            'operation': 'down',
+        }}
+        self.cloud_management.execute_on_cloud(self.get_ips(), task)
 
 
 SALT_CALL = 'salt-call --local --retcode-passthrough '
@@ -117,6 +128,7 @@ class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     SALT_SERVICE = 'nova-scheduler'
+    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class HeatAPIService(SaltService):
