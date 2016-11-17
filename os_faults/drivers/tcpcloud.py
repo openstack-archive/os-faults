@@ -79,6 +79,7 @@ class MemcachedService(SaltService):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
     SALT_SERVICE = 'memcached'
+    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class MySQLService(SaltService):
