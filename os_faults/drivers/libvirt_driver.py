@@ -28,7 +28,6 @@ class LibvirtDriver(power_management.PowerManagement):
         '$schema': 'http://json-schema.org/draft-04/schema#',
         'properties': {
             'connection_uri': {'type': 'string'},
-
         },
         'required': ['connection_uri'],
         'additionalProperties': False,
@@ -79,11 +78,56 @@ class LibvirtDriver(power_management.PowerManagement):
         domain.reset()
         LOG.info('Domain reset: %s', mac_address)
 
+    def _snapshot(self, mac_address, snapshot_name, suspend):
+        LOG.debug('Create snapshot "%s" for domain with MAC address: %s',
+                  snapshot_name, mac_address)
+        domain = self._find_domain_by_mac_address(mac_address)
+        if suspend:
+            domain.suspend()
+        domain.snapshotCreateXML(
+            '<domainsnapshot><name>{}</name></domainsnapshot>'.format(
+                snapshot_name))
+        if suspend:
+            domain.resume()
+        LOG.debug('Created snapshot "%s" for domain with MAC address: %s',
+                  snapshot_name, mac_address)
+
+    def _revert(self, mac_address, snapshot_name, resume):
+        LOG.debug('Revert snapshot "%s" for domain with MAC address: %s',
+                  snapshot_name, mac_address)
+        domain = self._find_domain_by_mac_address(mac_address)
+        snapshot = domain.snapshotLookupByName(snapshot_name)
+        domain.revertToSnapshot(snapshot)
+        if resume:
+            domain.resume()
+        LOG.debug('Reverted snapshot "%s" for domain with MAC address: %s',
+                  snapshot_name, mac_address)
+
     def poweroff(self, mac_addresses_list):
-        utils.run(self._poweroff, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._poweroff, kwargs_list)
 
     def poweron(self, mac_addresses_list):
-        utils.run(self._poweron, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._poweron, kwargs_list)
 
     def reset(self, mac_addresses_list):
-        utils.run(self._reset, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._reset, kwargs_list)
+
+    def snapshot(self, mac_addresses_list, snapshot_name, suspend=True):
+        kwargs_list = [dict(mac_address=mac_address,
+                            snapshot_name=snapshot_name,
+                            suspend=suspend)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._snapshot, kwargs_list)
+
+    def revert(self, mac_addresses_list, snapshot_name, resume=True):
+        kwargs_list = [dict(mac_address=mac_address,
+                            snapshot_name=snapshot_name,
+                            resume=resume)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._revert, kwargs_list)

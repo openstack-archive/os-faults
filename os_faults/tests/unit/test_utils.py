@@ -27,7 +27,7 @@ class UtilsTestCase(test.TestCase):
 
     def test_run(self):
         target = mock.Mock()
-        utils.run(target, ['01', '02'])
+        utils.run(target, [{'mac_address': '01'}, {'mac_address': '02'}])
         target.assert_has_calls([mock.call(mac_address='01'),
                                 mock.call(mac_address='02')])
 
@@ -35,7 +35,8 @@ class UtilsTestCase(test.TestCase):
         target = mock.Mock()
         target.side_effect = MyException()
         self.assertRaises(error.PowerManagementError,
-                          utils.run, target, ['01', '02'])
+                          utils.run, target, [{'mac_address': '01'},
+                                              {'mac_address': '02'}])
 
     def test_start_thread(self):
         target = mock.Mock()

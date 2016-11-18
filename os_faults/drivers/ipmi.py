@@ -100,10 +100,16 @@ class IPMIDriver(power_management.PowerManagement):
         LOG.info('Node reset: %s', mac_address)
 
     def poweroff(self, mac_addresses_list):
-        utils.run(self._poweroff, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._poweroff, kwargs_list)
 
     def poweron(self, mac_addresses_list):
-        utils.run(self._poweron, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._poweron, kwargs_list)
 
     def reset(self, mac_addresses_list):
-        utils.run(self._reset, mac_addresses_list)
+        kwargs_list = [dict(mac_address=mac_address)
+                       for mac_address in mac_addresses_list]
+        utils.run(self._reset, kwargs_list)
