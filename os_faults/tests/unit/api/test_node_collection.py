@@ -198,3 +198,15 @@ class NodeCollectionTestCase(test.TestCase):
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
             ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
             {'command': 'reboot now'})
+
+    def test_snapshot(self):
+        self.node_collection.snapshot('foo')
+        self.mock_power_management.snapshot.assert_called_once_with(
+            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
+             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'], 'foo', True)
+
+    def test_revert(self):
+        self.node_collection.revert('foo')
+        self.mock_power_management.revert.assert_called_once_with(
+            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
+             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'], 'foo', True)
