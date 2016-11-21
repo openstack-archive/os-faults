@@ -95,9 +95,10 @@ class MemcachedService(SaltService):
 
 class MySQLService(SaltService):
     SERVICE_NAME = 'mysql'
-    GREP = '[m]ysqld'
-    SALT_SERVICE = 'mysql'
+    GREP = '\'[m]ysqld \''
+    SALT_SERVICE = '\'mysqld \''
     PORT = ('tcp', 3307)
+    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class RabbitMQService(SaltService):
@@ -123,7 +124,7 @@ class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
     SALT_SERVICE = 'nova-compute'
-
+    SALT_FIND = BASH.format('initctl list | grep -e {}'.format(GREP))
 
 class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
@@ -229,14 +230,36 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            cmd = "salt -E '(infra*)' network.interfaces --out=yaml"
+            cmd = "salt -E '(infra*|compute*)' network.interfaces --out=yaml"
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
-                host = node_collection.Host(
-                    ip=net_data['eth1']['inet'][0]['address'],
-                    mac=net_data['eth1']['hwaddr'],
-                    fqdn=fqdn)
+                try:
+                    host = node_collection.Host(
+                        ip=net_data['eth1']['inet'][0]['address'],
+                        mac=net_data['eth1']['hwaddr'],
+                        fqdn=fqdn)
+                except KeyError:
+                    regex_ipaddr = '([0-9]{1,3}\.){3}[0-9]{1,3}'
+                    regex_mac = '([0-9a-z]{2}\:){5}[0-9a-z]{2}'
+                    ip_cmd = BASH.format(
+                        'grep -w {} /etc/hosts | grep -oE \'{}\''.format(
+                            fqdn.split('.')[0], regex_ipaddr
+                        )
+                    )
+                    ip_res = self.execute_on_master_node({'command': ip_cmd})
+                    ip_out = ip_res[0].payload['stdout']
+                    mac_cmd = BASH.format(
+                        'arp -an {} | grep -oE \'{}\''.format(
+                            ip_out, regex_mac
+                        )
+                    )
+                    mac_res = self.execute_on_master_node({'command': mac_cmd})
+                    mac_out = mac_res[0].payload['stdout']
+                    host = node_collection.Host(
+                        ip=ip_out,
+                        mac=mac_out,
+                        fqdn=fqdn)
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
             self.cached_cloud_hosts = sorted(self.cached_cloud_hosts)
