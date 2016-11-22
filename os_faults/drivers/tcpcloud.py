@@ -106,6 +106,12 @@ class NovaSchedulerService(SaltService):
     SALT_SERVICE = 'nova-scheduler'
 
 
+class NeutronServerService(SaltService):
+    SERVICE_NAME = 'neutron-server'
+    GREP = '[n]eutron-server'
+    SALT_SERVICE = 'neutron-server'
+
+
 class HeatAPIService(SaltService):
     SERVICE_NAME = 'heat-api'
     GREP = '[h]eat-api '
@@ -150,6 +156,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'glance-api': GlanceAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
+        'neutron-server': NeutronServerService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
         'cinder-api': CinderAPIService,

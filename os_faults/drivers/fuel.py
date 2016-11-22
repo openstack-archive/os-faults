@@ -113,6 +113,12 @@ class NovaSchedulerService(service.LinuxService):
     LINUX_SERVICE = 'nova-scheduler'
 
 
+class NeutronServerService(service.LinuxService):
+    SERVICE_NAME = 'neutron-server'
+    GREP = '[n]eutron-server'
+    LINUX_SERVICE = 'neutron-server'
+
+
 class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-openvswitch-agent'
     GREP = '[n]eutron-openvswitch-agent'
@@ -203,6 +209,7 @@ class FuelManagement(cloud_management.CloudManagement):
         'glance-api': GlanceAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
+        'neutron-server': NeutronServerService,
         'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
         'neutron-l3-agent': NeutronL3AgentService,
         'heat-api': HeatAPIService,
