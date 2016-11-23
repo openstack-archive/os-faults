@@ -119,6 +119,18 @@ class NeutronServerService(service.LinuxService):
     LINUX_SERVICE = 'neutron-server'
 
 
+class NeutronDhcpAgentService(PcsService):
+    SERVICE_NAME = 'neutron-dhcp-agent'
+    GREP = '[n]eutron-dhcp-agent'
+    PCS_SERVICE = 'neutron-dhcp-agent'
+
+
+class NeutronMetadataAgentService(PcsService):
+    SERVICE_NAME = 'neutron-metadata-agent'
+    GREP = '[n]eutron-metadata-agent'
+    PCS_SERVICE = 'neutron-metadata-agent'
+
+
 class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
     SERVICE_NAME = 'neutron-openvswitch-agent'
     GREP = '[n]eutron-openvswitch-agent'
@@ -210,6 +222,8 @@ class FuelManagement(cloud_management.CloudManagement):
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
         'neutron-server': NeutronServerService,
+        'neutron-dhcp-agent': NeutronDhcpAgentService,
+        'neutron-metadata-agent': NeutronMetadataAgentService,
         'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
         'neutron-l3-agent': NeutronL3AgentService,
         'heat-api': HeatAPIService,
