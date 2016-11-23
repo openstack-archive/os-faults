@@ -58,6 +58,32 @@ class PcsService(service.ServiceAsProcess):
             self.PCS_SERVICE)
 
 
+class PcsOrLinuxService(service.ServiceAsProcess):
+
+    @utils.require_variables('PCS_SERVICE', 'LINUX_SERVICE')
+    def __init__(self, *args, **kwargs):
+        super(PcsOrLinuxService, self).__init__(*args, **kwargs)
+
+        self.RESTART_CMD = (
+            'if pcs resource show {pcs_service}; '
+            'then pcs resource restart {pcs_service} $(hostname); '
+            'else service {linux_service} restart; fi').format(
+                linux_service=self.LINUX_SERVICE,
+                pcs_service=self.PCS_SERVICE)
+        self.TERMINATE_CMD = (
+            'if pcs resource show {pcs_service}; '
+            'then pcs resource ban {pcs_service} $(hostname); '
+            'else service {linux_service} stop; fi').format(
+                linux_service=self.LINUX_SERVICE,
+                pcs_service=self.PCS_SERVICE)
+        self.START_CMD = (
+            'if pcs resource show {pcs_service}; '
+            'then pcs resource clear {pcs_service} $(hostname); '
+            'else service {linux_service} start; fi').format(
+                linux_service=self.LINUX_SERVICE,
+                pcs_service=self.PCS_SERVICE)
+
+
 class KeystoneService(service.LinuxService):
     SERVICE_NAME = 'keystone'
     GREP = '[k]eystone'
@@ -119,38 +145,31 @@ class NeutronServerService(service.LinuxService):
     LINUX_SERVICE = 'neutron-server'
 
 
-class NeutronOpenvswitchAgentService(service.ServiceAsProcess):
+class NeutronDhcpAgentService(PcsService):
+    SERVICE_NAME = 'neutron-dhcp-agent'
+    GREP = '[n]eutron-dhcp-agent'
+    PCS_SERVICE = 'neutron-dhcp-agent'
+
+
+class NeutronMetadataAgentService(PcsOrLinuxService):
+    SERVICE_NAME = 'neutron-metadata-agent'
+    GREP = '[n]eutron-metadata-agent'
+    PCS_SERVICE = 'neutron-metadata-agent'
+    LINUX_SERVICE = 'neutron-metadata-agent'
+
+
+class NeutronOpenvswitchAgentService(PcsOrLinuxService):
     SERVICE_NAME = 'neutron-openvswitch-agent'
     GREP = '[n]eutron-openvswitch-agent'
-    RESTART_CMD = (
-        'if pcs resource show neutron-openvswitch-agent; '
-        'then pcs resource restart neutron-openvswitch-agent $(hostname); '
-        'else service neutron-openvswitch-agent restart; fi')
-    TERMINATE_CMD = (
-        'if pcs resource show neutron-openvswitch-agent; '
-        'then pcs resource ban neutron-openvswitch-agent $(hostname); '
-        'else service neutron-openvswitch-agent stop; fi')
-    START_CMD = (
-        'if pcs resource show neutron-openvswitch-agent; '
-        'then pcs resource clear neutron-openvswitch-agent $(hostname); '
-        'else service neutron-openvswitch-agent start; fi')
+    PCS_SERVICE = 'neutron-openvswitch-agent'
+    LINUX_SERVICE = 'neutron-openvswitch-agent'
 
 
-class NeutronL3AgentService(service.ServiceAsProcess):
+class NeutronL3AgentService(PcsOrLinuxService):
     SERVICE_NAME = 'neutron-l3-agent'
     GREP = '[n]eutron-l3-agent'
-    RESTART_CMD = (
-        'if pcs resource show neutron-l3-agent; '
-        'then pcs resource restart neutron-l3-agent $(hostname); '
-        'else service neutron-l3-agent restart; fi')
-    TERMINATE_CMD = (
-        'if pcs resource show neutron-l3-agent; '
-        'then pcs resource ban neutron-l3-agent $(hostname); '
-        'else service neutron-l3-agent stop; fi')
-    START_CMD = (
-        'if pcs resource show neutron-l3-agent; '
-        'then pcs resource clear neutron-l3-agent $(hostname); '
-        'else service neutron-l3-agent start; fi')
+    PCS_SERVICE = 'neutron-l3-agent'
+    LINUX_SERVICE = 'neutron-l3-agent'
 
 
 class HeatAPIService(service.LinuxService):
@@ -210,6 +229,8 @@ class FuelManagement(cloud_management.CloudManagement):
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
         'neutron-server': NeutronServerService,
+        'neutron-dhcp-agent': NeutronDhcpAgentService,
+        'neutron-metadata-agent': NeutronMetadataAgentService,
         'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
         'neutron-l3-agent': NeutronL3AgentService,
         'heat-api': HeatAPIService,
