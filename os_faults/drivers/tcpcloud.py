@@ -29,7 +29,7 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
 
     def connect(self, network_name):
         LOG.info("Connect network '%s' on nodes: %s", network_name, self)
-        task = {'osa_network_mgmt': {
+        task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'up',
         }}
@@ -38,7 +38,7 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
     def disconnect(self, network_name):
         LOG.info("Disconnect network '%s' on nodes: %s",
                  network_name, self)
-        task = {'osa_network_mgmt': {
+        task = {'fuel_network_mgmt': {
             'network_name': network_name,
             'operation': 'down',
         }}
@@ -241,9 +241,10 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                 except KeyError:
                     regex_ipaddr = '([0-9]{1,3}\.){3}[0-9]{1,3}'
                     regex_mac = '([0-9a-z]{2}\:){5}[0-9a-z]{2}'
+                    fqdn_split = fqdn.split('.')[0]
                     ip_cmd = BASH.format(
                         'grep -w {} /etc/hosts | grep -oE \'{}\''.format(
-                            fqdn.split('.')[0], regex_ipaddr
+                            fqdn_split, regex_ipaddr
                         )
                     )
                     ip_res = self.execute_on_master_node({'command': ip_cmd})
@@ -258,7 +259,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                     host = node_collection.Host(
                         ip=ip_out,
                         mac=mac_out,
-                        fqdn=fqdn)
+                        fqdn=fqdn_split)
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
             self.cached_cloud_hosts = sorted(self.cached_cloud_hosts)
