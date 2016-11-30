@@ -97,6 +97,8 @@ class LibvirtDriver(power_management.PowerManagement):
                   snapshot_name, mac_address)
         domain = self._find_domain_by_mac_address(mac_address)
         snapshot = domain.snapshotLookupByName(snapshot_name)
+        if domain.isActive():
+            domain.destroy()
         domain.revertToSnapshot(snapshot)
         if resume:
             domain.resume()

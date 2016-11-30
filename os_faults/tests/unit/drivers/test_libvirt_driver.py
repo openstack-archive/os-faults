@@ -113,6 +113,20 @@ class LibvirtDriverTestCase(test.TestCase):
         domain.revertToSnapshot.assert_called_once_with(snapshot)
         domain.resume.assert_called_once_with()
 
+    @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
+    def test__revert_destroy(self, mock__find_domain_by_mac_address):
+        domain = mock__find_domain_by_mac_address.return_value
+        domain.isActive.return_value = True
+        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=True)
+        domain.destroy.assert_called_once_with()
+
+    @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
+    def test__revert_destroy_nonactive(self, mock__find_domain_by_mac_address):
+        domain = mock__find_domain_by_mac_address.return_value
+        domain.isActive.return_value = False
+        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=True)
+        self.assertFalse(domain.destroy.called)
+
     @mock.patch('os_faults.utils.run')
     @ddt.data('poweroff', 'poweron', 'reset')
     def test_driver_actions(self, action, mock_run):
