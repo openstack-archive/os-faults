@@ -95,9 +95,10 @@ class MemcachedService(SaltService):
 
 class MySQLService(SaltService):
     SERVICE_NAME = 'mysql'
-    GREP = '[m]ysqld'
-    SALT_SERVICE = 'mysql'
+    GREP = '\'[m]ysqld \''
+    SALT_SERVICE = '\'mysqld \''
     PORT = ('tcp', 3307)
+    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class RabbitMQService(SaltService):
