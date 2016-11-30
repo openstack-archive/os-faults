@@ -1,0 +1,27 @@
+---
+  NovaServers.boot_and_delete_server:
+    -
+      args:
+        flavor:
+            name: "m1.micro"
+        image:
+            name: "(^cirros.*uec$|TestVM)"
+        force_delete: false
+      runner:
+        type: "constant_for_duration"
+        duration: 300
+        concurrency: 4
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: disconnect storage network on one node with nova-compute service
+          trigger:
+            name: event
+            args:
+              unit: iteration
+              at: [50]
