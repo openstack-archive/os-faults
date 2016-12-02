@@ -132,7 +132,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("StressCpu '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'shell': 'stress -c 8 -t 10'}
+        cmd = {'shell': 'stress-ng -c 8 -t 60'}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('SERVICE_NAME')
@@ -140,7 +140,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("StressMem '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'shell': 'stress -m 8 -t 10'}
+        cmd = {'shell': 'stress-ng -m 8 -t 60'}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('SERVICE_NAME')
@@ -148,7 +148,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("StressDisk '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'shell': 'stress -d 8 -t 10 --hdd-bytes 100000000'}
+        cmd = {'shell': 'stress-ng -d 8 -t 60 --hdd-bytes 100000000'}
         self._run_task(cmd, nodes)
 
 class LinuxService(ServiceAsProcess):
