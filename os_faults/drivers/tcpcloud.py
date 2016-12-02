@@ -65,15 +65,17 @@ class SaltService(service.ServiceAsProcess):
         self.RESTART_CMD = SALT_RESTART.format(service=self.SALT_SERVICE)
         self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SALT_SERVICE)
         self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
-        self.FIND_CMD = self.SALT_FIND
+        self.FIND_CMD = BASH.format(FIND_E.format(self.GREP))
 
 
 class KeystoneService(SaltService):
     SERVICE_NAME = 'apache2'
     GREP = ['[k]eystone','[a]pache2']
     SALT_SERVICE = 'apache2'
-    SALT_FIND = BASH.format(' && '.join([FIND_Q.format(g) for g in GREP[:-1]]) +
-                            ' && ' + FIND_E.format(GREP[-1]))
+    def __init__(self, *args, **kwargs):
+        super(SaltService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format(' && '.join([FIND_Q.format(g) for g in GREP[:-1]]) +
+                                    ' && ' + FIND_E.format(GREP[-1]))
 
 
 class HorizonService(SaltService):
@@ -81,31 +83,35 @@ class HorizonService(SaltService):
     GREP = '[a]pache2'
     IGNORE = '[k]eystone'
     SALT_SERVICE = 'apache2'
-    SALT_FIND = BASH.format(FIND_Q.format(GREP) + ' && ' +
-                            FIND_E.format(IGNORE) + ' | ' +
-                            EXCLUDE.format(IGNORE))
+    def __init__(self, *args, **kwargs):
+        super(SaltService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format(FIND_Q.format(GREP) + ' && ' +
+                                    FIND_E.format(IGNORE) + ' | ' +
+                                    EXCLUDE.format(IGNORE))
 
 
 class MemcachedService(SaltService):
     SERVICE_NAME = 'memcached'
     GREP = '[m]emcached'
     SALT_SERVICE = 'memcached'
-    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class MySQLService(SaltService):
     SERVICE_NAME = 'mysql'
-    GREP = '\'[m]ysqld \''
-    SALT_SERVICE = '\'mysqld \''
+    GREP = '[m]ysqld '
+    SALT_SERVICE = '\'mysqld\''
     PORT = ('tcp', 3307)
-    SALT_FIND = BASH.format(FIND_E.format(GREP))
+    def __init__(self, *args, **kwargs):
+        super(SaltService, self).__init__(*args, **kwargs)
+        self.RESTART_CMD = SALT_RESTART.format(service=self.SERVICE_NAME)
+        self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SERVICE_NAME)
+        self.START_CMD = SALT_START.format(service=self.SERVICE_NAME)
 
 
 class RabbitMQService(SaltService):
     SERVICE_NAME = 'rabbitmq'
     GREP = '[r]abbitmq-server'
     SALT_SERVICE = 'rabbitmq-server'
-    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class NovaAPIService(SaltService):
@@ -124,13 +130,14 @@ class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
     SALT_SERVICE = 'nova-compute'
-    SALT_FIND = BASH.format('initctl list | grep -e {}'.format(GREP))
+    def __init__(self, *args, **kwargs):
+        super(SaltService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format('initctl list | grep -e {}'.format(GREP))
 
 class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     SALT_SERVICE = 'nova-scheduler'
-    SALT_FIND = BASH.format(FIND_E.format(GREP))
 
 
 class HeatAPIService(SaltService):
