@@ -28,6 +28,7 @@ class ServiceAsProcess(service.Service):
         self.node_cls = node_cls
         self.cloud_management = cloud_management
         self.power_management = power_management
+        self.FIND_CMD = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
 
     def _run_task(self, task, nodes):
         ips = nodes.get_ips()
@@ -48,7 +49,7 @@ class ServiceAsProcess(service.Service):
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
+        cmd = self.FIND_CMD
         results = self.cloud_management.execute_on_cloud(
             ips, {'command': cmd}, False)
         success_ips = [r.host for r in results
@@ -84,7 +85,7 @@ class ServiceAsProcess(service.Service):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
+        cmd = {'kill': {'grep': self.SALT_SERVICE, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
     @utils.require_variables('GREP', 'SERVICE_NAME')
@@ -126,6 +127,29 @@ class ServiceAsProcess(service.Service):
                                      'action': 'block',
                                      'service': self.SERVICE_NAME}}, nodes)
 
+    @utils.require_variables('SERVICE_NAME')
+    def stresscpu(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("StressCpu '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'shell': 'stress-ng -c 8 -t 60'}
+        self._run_task(cmd, nodes)
+
+    @utils.require_variables('SERVICE_NAME')
+    def stressmem(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("StressMem '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'shell': 'stress-ng -m 8 -t 60'}
+        self._run_task(cmd, nodes)
+
+    @utils.require_variables('SERVICE_NAME')
+    def stressdisk(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("StressDisk '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'shell': 'stress-ng -d 8 -t 60 --hdd-bytes 100000000'}
+        self._run_task(cmd, nodes)
 
 class LinuxService(ServiceAsProcess):
 
@@ -136,3 +160,4 @@ class LinuxService(ServiceAsProcess):
         self.RESTART_CMD = 'service {} restart'.format(self.LINUX_SERVICE)
         self.TERMINATE_CMD = 'service {} stop'.format(self.LINUX_SERVICE)
         self.START_CMD = 'service {} start'.format(self.LINUX_SERVICE)
+

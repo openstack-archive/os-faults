@@ -194,3 +194,25 @@ class NodeCollection(object):
         :param network_name: name of network
         """
         raise NotImplementedError
+
+    @public
+    def stresscpu(self):
+        """Induces CPU stress
+
+        """
+        raise NotImplementedError
+
+    @public
+    def stressmem(self):
+        """Induces Memory stress
+
+        """
+        raise NotImplementedError
+
+    @public
+    def stressdisk(self):
+        """Induces Disk stress
+
+        """
+        raise NotImplementedError
+
