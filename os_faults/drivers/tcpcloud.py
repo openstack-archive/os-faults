@@ -58,7 +58,7 @@ EXCLUDE = 'ps ax | grep -qv {}'
 
 class SaltService(service.ServiceAsProcess):
 
-    @utils.require_variables('SALT_SERVICE', 'SALT_FIND')
+    @utils.require_variables('SALT_SERVICE')
     def __init__(self, *args, **kwargs):
         super(SaltService, self).__init__(*args, **kwargs)
 
