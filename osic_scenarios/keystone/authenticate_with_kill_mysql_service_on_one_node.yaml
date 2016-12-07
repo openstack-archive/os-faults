@@ -3,7 +3,7 @@
     -
       runner:
         type: "constant_for_duration"
-        duration: 60
+        duration: 120
         concurrency: 5
       context:
         users:

@@ -73,9 +73,9 @@ class KeystoneService(SaltService):
     GREP = ['[k]eystone','[a]pache2']
     SALT_SERVICE = 'apache2'
     def __init__(self, *args, **kwargs):
-        super(SaltService, self).__init__(*args, **kwargs)
-        self.FIND_CMD = BASH.format(' && '.join([FIND_Q.format(g) for g in GREP[:-1]]) +
-                                    ' && ' + FIND_E.format(GREP[-1]))
+        super(KeystoneService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format(' && '.join([FIND_Q.format(g) for g in self.GREP[:-1]]) +
+                                    ' && ' + FIND_E.format(self.GREP[-1]))
 
 
 class HorizonService(SaltService):
@@ -84,10 +84,10 @@ class HorizonService(SaltService):
     IGNORE = '[k]eystone'
     SALT_SERVICE = 'apache2'
     def __init__(self, *args, **kwargs):
-        super(SaltService, self).__init__(*args, **kwargs)
-        self.FIND_CMD = BASH.format(FIND_Q.format(GREP) + ' && ' +
-                                    FIND_E.format(IGNORE) + ' | ' +
-                                    EXCLUDE.format(IGNORE))
+        super(HorizonService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format(FIND_Q.format(self.GREP) + ' && ' +
+                                    FIND_E.format(self.IGNORE) + ' | ' +
+                                    EXCLUDE.format(self.IGNORE))
 
 
 class MemcachedService(SaltService):
@@ -102,7 +102,7 @@ class MySQLService(SaltService):
     SALT_SERVICE = '\'mysqld\''
     PORT = ('tcp', 3307)
     def __init__(self, *args, **kwargs):
-        super(SaltService, self).__init__(*args, **kwargs)
+        super(MySQLService, self).__init__(*args, **kwargs)
         self.RESTART_CMD = SALT_RESTART.format(service=self.SERVICE_NAME)
         self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SERVICE_NAME)
         self.START_CMD = SALT_START.format(service=self.SERVICE_NAME)
@@ -131,8 +131,8 @@ class NovaComputeService(SaltService):
     GREP = '[n]ova-compute'
     SALT_SERVICE = 'nova-compute'
     def __init__(self, *args, **kwargs):
-        super(SaltService, self).__init__(*args, **kwargs)
-        self.FIND_CMD = BASH.format('initctl list | grep -e {}'.format(GREP))
+        super(NovaComputeService, self).__init__(*args, **kwargs)
+        self.FIND_CMD = BASH.format('initctl list | grep -e {}'.format(self.GREP))
 
 class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
@@ -237,7 +237,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            cmd = "salt -E '(infra*|compute*)' network.interfaces --out=yaml"
+            cmd = "salt -E '(infra-._.*|compute-.*)' network.interfaces --out=yaml"
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
@@ -249,7 +249,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                 except KeyError:
                     regex_ipaddr = '([0-9]{1,3}\.){3}[0-9]{1,3}'
                     regex_mac = '([0-9a-z]{2}\:){5}[0-9a-z]{2}'
-                    fqdn_split = fqdn.split('.')[0]
+                    fqdn_split = fqdn.split()[0]
                     ip_cmd = BASH.format(
                         'grep -w {} /etc/hosts | grep -oE \'{}\''.format(
                             fqdn_split, regex_ipaddr

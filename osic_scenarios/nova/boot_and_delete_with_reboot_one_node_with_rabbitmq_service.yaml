@@ -9,7 +9,7 @@
         force_delete: false
       runner:
         type: "constant_for_duration"
-        duration: 60
+        duration: 120
         concurrency: 4
       context:
         users:

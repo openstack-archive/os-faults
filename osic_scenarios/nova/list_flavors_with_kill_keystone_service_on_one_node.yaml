@@ -1,15 +1,11 @@
 ---
-  NovaServers.boot_and_delete_server:
+{% set repeat = repeat|default(3) %}
+  NovaFlavors.list_flavors:
+{% for iteration in range(repeat) %}
     -
-      args:
-        flavor:
-            name: "m1.micro"
-        image:
-            name: "(^cirros.*uec$|TestVM)"
-        force_delete: false
       runner:
         type: "constant_for_duration"
-        duration: 480
+        duration: 120
         concurrency: 4
       context:
         users:
@@ -19,9 +15,10 @@
         -
           name: fault_injection
           args:
-            action: kill rabbitmq service on one node
+            action: kill keystone service on one node
           trigger:
             name: event
             args:
               unit: iteration
-              at: [60]
+              at: [100]
+{% endfor %}
