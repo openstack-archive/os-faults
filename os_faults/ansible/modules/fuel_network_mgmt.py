@@ -15,7 +15,7 @@
 from ansible.module_utils.basic import *  # noqa
 
 NETWORK_NAME_TO_INTERFACE = {
-    'management': 'br-mgmt',
+    'management': 'br-mgmt', #eth1 for OSA deployment containers
     'public': 'br-ex',
     'private': 'br-prv',
     'storage': 'br-storage',

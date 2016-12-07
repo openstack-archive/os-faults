@@ -1,27 +1,29 @@
 ---
-  NovaServers.boot_and_delete_server:
+{% set repeat = repeat|default(3) %}
+  NeutronNetworks.create_and_list_networks:
+{% for iteration in range(repeat) %}
     -
       args:
-        flavor:
-            name: "m1.micro"
-        image:
-            name: "(^cirros.*uec$|TestVM)"
-        force_delete: false
+        network_create_args: {}
       runner:
         type: "constant_for_duration"
-        duration: 480
+        duration: 120
         concurrency: 4
       context:
         users:
           tenants: 1
           users_per_tenant: 1
+        quotas:
+          neutron:
+            network: -1
       hooks:
         -
           name: fault_injection
           args:
-            action: kill rabbitmq service on one node
+            action: restart mysql service on one node
           trigger:
             name: event
             args:
               unit: iteration
-              at: [60]
+              at: [100]
+{% endfor %}
