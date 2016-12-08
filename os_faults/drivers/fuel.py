@@ -115,16 +115,16 @@ class RabbitMQService(PcsService):
     PCS_SERVICE = 'p_rabbitmq-server'
 
 
-class NovaAPIService(service.LinuxService):
-    SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
-    LINUX_SERVICE = 'nova-api'
-
-
 class GlanceAPIService(service.LinuxService):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
     LINUX_SERVICE = 'glance-api'
+
+
+class NovaAPIService(service.LinuxService):
+    SERVICE_NAME = 'nova-api'
+    GREP = '[n]ova-api'
+    LINUX_SERVICE = 'nova-api'
 
 
 class NovaComputeService(service.LinuxService):
@@ -137,6 +137,30 @@ class NovaSchedulerService(service.LinuxService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     LINUX_SERVICE = 'nova-scheduler'
+
+
+class NovaCertService(service.LinuxService):
+    SERVICE_NAME = 'nova-cert'
+    GREP = '[n]ova-cert'
+    LINUX_SERVICE = 'nova-cert'
+
+
+class NovaConductorService(service.LinuxService):
+    SERVICE_NAME = 'nova-conductor'
+    GREP = '[n]ova-conductor'
+    LINUX_SERVICE = 'nova-conductor'
+
+
+class NovaConsoleAuthService(service.LinuxService):
+    SERVICE_NAME = 'nova-consoleauth'
+    GREP = '[n]ova-consoleauth'
+    LINUX_SERVICE = 'nova-consoleauth'
+
+
+class NovaNoVNCProxyService(service.LinuxService):
+    SERVICE_NAME = 'nova-novncproxy'
+    GREP = '[n]ova-novncproxy'
+    LINUX_SERVICE = 'nova-novncproxy'
 
 
 class NeutronServerService(service.LinuxService):
@@ -224,10 +248,14 @@ class FuelManagement(cloud_management.CloudManagement):
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
-        'nova-api': NovaAPIService,
         'glance-api': GlanceAPIService,
+        'nova-api': NovaAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
+        'nova-cert': NovaCertService,
+        'nova-conductor': NovaConductorService,
+        'nova-consoleauth': NovaConsoleAuthService,
+        'nova-novncproxy': NovaNoVNCProxyService,
         'neutron-server': NeutronServerService,
         'neutron-dhcp-agent': NeutronDhcpAgentService,
         'neutron-metadata-agent': NeutronMetadataAgentService,
