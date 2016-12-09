@@ -82,16 +82,16 @@ class RabbitMQService(SaltService):
     SALT_SERVICE = 'rabbitmq-server'
 
 
-class NovaAPIService(SaltService):
-    SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
-    SALT_SERVICE = 'nova-api'
-
-
 class GlanceAPIService(SaltService):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
     SALT_SERVICE = 'glance-api'
+
+
+class NovaAPIService(SaltService):
+    SERVICE_NAME = 'nova-api'
+    GREP = '[n]ova-api'
+    SALT_SERVICE = 'nova-api'
 
 
 class NovaComputeService(SaltService):
@@ -104,6 +104,30 @@ class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     SALT_SERVICE = 'nova-scheduler'
+
+
+class NovaCertService(SaltService):
+    SERVICE_NAME = 'nova-cert'
+    GREP = '[n]ova-cert'
+    SALT_SERVICE = 'nova-cert'
+
+
+class NovaConductorService(SaltService):
+    SERVICE_NAME = 'nova-conductor'
+    GREP = '[n]ova-conductor'
+    SALT_SERVICE = 'nova-conductor'
+
+
+class NovaConsoleAuthService(SaltService):
+    SERVICE_NAME = 'nova-consoleauth'
+    GREP = '[n]ova-consoleauth'
+    SALT_SERVICE = 'nova-consoleauth'
+
+
+class NovaNoVNCProxyService(SaltService):
+    SERVICE_NAME = 'nova-novncproxy'
+    GREP = '[n]ova-novncproxy'
+    SALT_SERVICE = 'nova-novncproxy'
 
 
 class NeutronServerService(SaltService):
@@ -152,10 +176,14 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
-        'nova-api': NovaAPIService,
         'glance-api': GlanceAPIService,
+        'nova-api': NovaAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
+        'nova-cert': NovaCertService,
+        'nova-conductor': NovaConductorService,
+        'nova-consoleauth': NovaConsoleAuthService,
+        'nova-novncproxy': NovaNoVNCProxyService,
         'neutron-server': NeutronServerService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
