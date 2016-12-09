@@ -121,6 +121,18 @@ class GlanceAPIService(service.LinuxService):
     LINUX_SERVICE = 'glance-api'
 
 
+class GlanceGlareService(service.LinuxService):
+    SERVICE_NAME = 'glance-glare'
+    GREP = '[g]lance-glare'
+    LINUX_SERVICE = 'glance-glare'
+
+
+class GlanceRegistryService(service.LinuxService):
+    SERVICE_NAME = 'glance-registry'
+    GREP = '[g]lance-registry'
+    LINUX_SERVICE = 'glance-registry'
+
+
 class NovaAPIService(service.LinuxService):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
@@ -226,6 +238,12 @@ class CinderVolumeService(service.LinuxService):
     LINUX_SERVICE = 'cinder-volume'
 
 
+class CinderBackupService(service.LinuxService):
+    SERVICE_NAME = 'cinder-backup'
+    GREP = '[c]inder-backup'
+    LINUX_SERVICE = 'cinder-backup'
+
+
 class IronicApiService(service.LinuxService):
     SERVICE_NAME = 'ironic-api'
     GREP = '[i]ronic-api'
@@ -249,6 +267,8 @@ class FuelManagement(cloud_management.CloudManagement):
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
         'glance-api': GlanceAPIService,
+        'glance-glare': GlanceGlareService,
+        'glance-registry': GlanceRegistryService,
         'nova-api': NovaAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
@@ -266,6 +286,7 @@ class FuelManagement(cloud_management.CloudManagement):
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
+        'cinder-backup': CinderBackupService,
         'ironic-api': IronicApiService,
         'ironic-conductor': IronicConductorService,
     }
