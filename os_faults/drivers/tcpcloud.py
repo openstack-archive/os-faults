@@ -88,6 +88,12 @@ class GlanceAPIService(SaltService):
     SALT_SERVICE = 'glance-api'
 
 
+class GlanceRegistryService(SaltService):
+    SERVICE_NAME = 'glance-registry'
+    GREP = '[g]lance-registry'
+    SALT_SERVICE = 'glance-registry'
+
+
 class NovaAPIService(SaltService):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
@@ -166,6 +172,12 @@ class CinderVolumeService(SaltService):
     SALT_SERVICE = 'cinder-volume'
 
 
+class CinderBackupService(SaltService):
+    SERVICE_NAME = 'cinder-backup'
+    GREP = '[c]inder-backup'
+    SALT_SERVICE = 'cinder-backup'
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
@@ -177,6 +189,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
         'glance-api': GlanceAPIService,
+        'glance-registry': GlanceRegistryService,
         'nova-api': NovaAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
@@ -190,6 +203,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
+        'cinder-backup': CinderBackupService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []
