@@ -219,7 +219,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            cmd = "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml"
+            # get all nodes except salt master (that has cfg* hostname)
+            cmd = "salt -E '^(?!cfg)' network.interfaces --out=yaml"
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
