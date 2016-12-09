@@ -256,6 +256,90 @@ class IronicConductorService(service.LinuxService):
     LINUX_SERVICE = 'ironic-conductor'
 
 
+class SwiftAccountService(service.LinuxService):
+    SERVICE_NAME = 'swift-account'
+    GREP = '[s]wift-account'
+    LINUX_SERVICE = 'swift-account'
+
+
+class SwiftAccountAuditorService(service.LinuxService):
+    SERVICE_NAME = 'swift-account-auditor'
+    GREP = '[s]wift-account-auditor'
+    LINUX_SERVICE = 'swift-account-auditor'
+
+
+class SwiftAccountReaperService(service.LinuxService):
+    SERVICE_NAME = 'swift-account-reaper'
+    GREP = '[s]wift-account-reaper'
+    LINUX_SERVICE = 'swift-account-reaper'
+
+
+class SwiftAccountReplicatorService(service.LinuxService):
+    SERVICE_NAME = 'swift-account-replicator'
+    GREP = '[s]wift-account-replicator'
+    LINUX_SERVICE = 'swift-account-replicator'
+
+
+class SwiftContainerService(service.LinuxService):
+    SERVICE_NAME = 'swift-container'
+    GREP = '[s]wift-container'
+    LINUX_SERVICE = 'swift-container'
+
+
+class SwiftContainerAuditorService(service.LinuxService):
+    SERVICE_NAME = 'swift-container-auditor'
+    GREP = '[s]wift-container-auditor'
+    LINUX_SERVICE = 'swift-container-auditor'
+
+
+class SwiftContainerReplicatorService(service.LinuxService):
+    SERVICE_NAME = 'swift-container-replicator'
+    GREP = '[s]wift-container-replicator'
+    LINUX_SERVICE = 'swift-container-replicator'
+
+
+class SwiftContainerSyncService(service.LinuxService):
+    SERVICE_NAME = 'swift-container-sync'
+    GREP = '[s]wift-container-sync'
+    LINUX_SERVICE = 'swift-container-sync'
+
+
+class SwiftContainerUpdaterService(service.LinuxService):
+    SERVICE_NAME = 'swift-container-updater'
+    GREP = '[s]wift-container-updater'
+    LINUX_SERVICE = 'swift-container-updater'
+
+
+class SwiftObjectService(service.LinuxService):
+    SERVICE_NAME = 'swift-object'
+    GREP = '[s]wift-object'
+    LINUX_SERVICE = 'swift-object'
+
+
+class SwiftObjectAuditorService(service.LinuxService):
+    SERVICE_NAME = 'swift-object-auditor'
+    GREP = '[s]wift-object-auditor'
+    LINUX_SERVICE = 'swift-object-auditor'
+
+
+class SwiftObjectReplicatorService(service.LinuxService):
+    SERVICE_NAME = 'swift-object-replicator'
+    GREP = '[s]wift-object-replicator'
+    LINUX_SERVICE = 'swift-object-replicator'
+
+
+class SwiftObjectUpdaterService(service.LinuxService):
+    SERVICE_NAME = 'swift-object-updater'
+    GREP = '[s]wift-object-updater'
+    LINUX_SERVICE = 'swift-object-updater'
+
+
+class SwiftProxyService(service.LinuxService):
+    SERVICE_NAME = 'swift-proxy'
+    GREP = '[s]wift-proxy'
+    LINUX_SERVICE = 'swift-proxy'
+
+
 class FuelManagement(cloud_management.CloudManagement):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
@@ -289,6 +373,20 @@ class FuelManagement(cloud_management.CloudManagement):
         'cinder-backup': CinderBackupService,
         'ironic-api': IronicApiService,
         'ironic-conductor': IronicConductorService,
+        'swift-account': SwiftAccountService,
+        'swift-account-auditor': SwiftAccountAuditorService,
+        'swift-account-reaper': SwiftAccountReaperService,
+        'swift-account-replicator': SwiftAccountReplicatorService,
+        'swift-container': SwiftContainerService,
+        'swift-container-auditor': SwiftContainerAuditorService,
+        'swift-container-replicator': SwiftContainerReplicatorService,
+        'swift-container-sync': SwiftContainerSyncService,
+        'swift-container-updater': SwiftContainerUpdaterService,
+        'swift-object': SwiftObjectService,
+        'swift-object-auditor': SwiftObjectAuditorService,
+        'swift-object-replicator': SwiftObjectReplicatorService,
+        'swift-object-updater': SwiftObjectUpdaterService,
+        'swift-proxy': SwiftProxyService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
