@@ -44,7 +44,7 @@ class TCPCloudManagementTestCase(test.TestCase):
             'username': 'root',
         }
         self.get_nodes_cmd = (
-            "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml")
+            "salt -E '^(?!cfg)' network.interfaces --out=yaml")
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data((
@@ -207,7 +207,7 @@ class TcpServiceTestCase(test.TestCase):
             'username': 'root',
         }
         self.get_nodes_cmd = (
-            "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml")
+            "salt -E '^(?!cfg)' network.interfaces --out=yaml")
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
