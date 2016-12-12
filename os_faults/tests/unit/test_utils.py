@@ -29,7 +29,7 @@ class UtilsTestCase(test.TestCase):
         target = mock.Mock()
         utils.run(target, [{'mac_address': '01'}, {'mac_address': '02'}])
         target.assert_has_calls([mock.call(mac_address='01'),
-                                mock.call(mac_address='02')])
+                                mock.call(mac_address='02')], any_order=True)
 
     def test_run_raise_exception(self):
         target = mock.Mock()

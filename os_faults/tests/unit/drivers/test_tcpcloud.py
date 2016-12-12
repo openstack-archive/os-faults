@@ -29,12 +29,12 @@ class TCPCloudManagementTestCase(test.TestCase):
         self.fake_ansible_result = fakes.FakeAnsibleResult(
             payload={
                 'stdout': 'cmp01.mk20.local:\n'
-                          '  eth0:\n'
+                          '  eth1:\n'
                           '    hwaddr: 09:7b:74:90:63:c2\n'
                           '    inet:\n'
                           '    - address: 10.0.0.2\n'
                           'cmp02.mk20.local:\n'
-                          '  eth0:\n'
+                          '  eth1:\n'
                           '    hwaddr: 09:7b:74:90:63:c3\n'
                           '    inet:\n'
                           '    - address: 10.0.0.3\n'
@@ -42,6 +42,7 @@ class TCPCloudManagementTestCase(test.TestCase):
         self.tcp_conf = {
             'address': 'tcp.local',
             'username': 'root',
+            'slave_iface': 'eth1',
         }
         self.get_nodes_cmd = (
             "salt -E '^(?!cfg)' network.interfaces --out=yaml")
@@ -87,11 +88,13 @@ class TCPCloudManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})],
         ]
+        self.tcp_conf['slave_name_regexp'] = '(ctl*|cmp*)'
         tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
         tcp_managment.verify()
 
+        get_nodes_cmd = "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml"
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': get_nodes_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'hostname'}),
         ])
 

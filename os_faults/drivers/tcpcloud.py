@@ -217,6 +217,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             'slave_username': {'type': 'string'},
             'master_sudo': {'type': 'boolean'},
             'slave_sudo': {'type': 'boolean'},
+            'slave_iface': {'type': 'string'},
+            'slave_name_regexp': {'type': 'string'},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -243,6 +245,12 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             jump_user=self.username,
             become=cloud_management_params.get('slave_sudo'))
 
+        self.slave_iface = cloud_management_params.get('slave_iface', 'eth0')
+
+        # get all nodes except salt master (that has cfg* hostname) by default
+        self.slave_name_regexp = cloud_management_params.get(
+            'slave_name_regexp', '^(?!cfg)')
+
         self.cached_cloud_hosts = list()
         self.fqdn_to_hosts = dict()
 
@@ -261,14 +269,14 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            # get all nodes except salt master (that has cfg* hostname)
-            cmd = "salt -E '^(?!cfg)' network.interfaces --out=yaml"
+            cmd = "salt -E '{}' network.interfaces --out=yaml".format(
+                self.slave_name_regexp)
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
                 host = node_collection.Host(
-                    ip=net_data['eth0']['inet'][0]['address'],
-                    mac=net_data['eth0']['hwaddr'],
+                    ip=net_data[self.slave_iface]['inet'][0]['address'],
+                    mac=net_data[self.slave_iface]['hwaddr'],
                     fqdn=fqdn)
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
