@@ -170,6 +170,120 @@ class CinderVolumeService(SaltService):
     SALT_SERVICE = 'cinder-volume'
 
 
+class SwiftProxyService(SaltService):
+    SERVICE_NAME = 'swift-proxy-server'
+    GREP = '[s]wift-proxy-server'
+    SALT_SERVICE = 'swift-proxy-server'
+
+
+class SwiftAccountAuditorService(SaltService):
+    SERVICE_NAME = 'swift-account-auditor'
+    GREP = '[s]wift-account-auditor'
+    SALT_SERVICE = 'swift-account-auditor'
+
+
+class SwiftAccountReaperService(SaltService):
+    SERVICE_NAME = 'swift-account-reaper'
+    GREP = '[s]wift-account-reaper'
+    SALT_SERVICE = 'swift-account-reaper'
+
+
+class SwiftAccountReplicatorService(SaltService):
+    SERVICE_NAME = 'swift-account-replicator'
+    GREP = '[s]wift-account-replicator'
+    SALT_SERVICE = 'swift-account-replicator'
+
+
+class SwiftAccountReplicatorServerService(SaltService):
+    SERVICE_NAME = 'swift-account-replicator-server'
+    GREP = '[s]wift-account-replicator-server'
+    SALT_SERVICE = 'swift-account-replicator-server'
+
+
+class SwiftAccountServerService(SaltService):
+    SERVICE_NAME = 'swift-account-server'
+    GREP = '[s]wift-account-server'
+    SALT_SERVICE = 'swift-account-server'
+
+
+class SwiftContainerAuditorService(SaltService):
+    SERVICE_NAME = 'swift-container-auditor'
+    GREP = '[s]wift-container-auditor'
+    SALT_SERVICE = 'swift-container-auditor'
+
+
+class SwiftContainerReconcilerService(SaltService):
+    SERVICE_NAME = 'swift-container-reconciler'
+    GREP = '[s]wift-container-reconciler'
+    SALT_SERVICE = 'swift-container-reconciler'
+
+
+class SwiftContainerReplicatorService(SaltService):
+    SERVICE_NAME = 'swift-container-replicator'
+    GREP = '[s]wift-container-replicator'
+    SALT_SERVICE = 'swift-container-replicator'
+
+
+class SwiftContainerReplicatorServerService(SaltService):
+    SERVICE_NAME = 'swift-container-replicator-server'
+    GREP = '[s]wift-container-replicator-server'
+    SALT_SERVICE = 'swift-container-replicator-server'
+
+
+class SwiftContainerServerService(SaltService):
+    SERVICE_NAME = 'swift-container-server'
+    GREP = '[s]wift-container-server'
+    SALT_SERVICE = 'swift-container-server'
+
+
+class SwiftContainerSyncService(SaltService):
+    SERVICE_NAME = 'swift-container-sync'
+    GREP = '[s]wift-container-sync'
+    SALT_SERVICE = 'swift-container-sync'
+
+
+class SwiftContainerUpdaterService(SaltService):
+    SERVICE_NAME = 'swift-container-updater'
+    GREP = '[s]wift-container-updater'
+    SALT_SERVICE = 'swift-container-updater'
+
+
+class SwiftObjectAuditorService(SaltService):
+    SERVICE_NAME = 'swift-object-auditor'
+    GREP = '[s]wift-object-auditor'
+    SALT_SERVICE = 'swift-object-auditor'
+
+
+class SwiftObjectExpirerService(SaltService):
+    SERVICE_NAME = 'swift-object-expirer'
+    GREP = '[s]wift-object-expirer'
+    SALT_SERVICE = 'swift-object-expirer'
+
+
+class SwiftObjectReplicatorService(SaltService):
+    SERVICE_NAME = 'swift-object-replicator'
+    GREP = '[s]wift-object-replicator'
+    SALT_SERVICE = 'swift-object-replicator'
+
+
+class SwiftObjectReplicatorServerService(SaltService):
+    SERVICE_NAME = 'swift-object-replicator-server'
+    GREP = '[s]wift-object-replicator-server'
+    SALT_SERVICE = 'swift-object-replicator-server'
+
+
+class SwiftObjectServerService(SaltService):
+    SERVICE_NAME = 'swift-object-server'
+    GREP = '[s]wift-object-server'
+    SALT_SERVICE = 'swift-object-server'
+
+
+class SwiftObjectUpdaterService(SaltService):
+    SERVICE_NAME = 'swift-object-updater'
+    GREP = '[s]wift-object-updater'
+    SALT_SERVICE = 'swift-object-updater'
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
