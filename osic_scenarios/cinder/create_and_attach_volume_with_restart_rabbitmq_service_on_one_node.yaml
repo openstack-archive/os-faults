@@ -1,0 +1,29 @@
+---
+  CinderVolumes.create_and_attach_volume:
+    -
+      args:
+        size: 10
+        flavor:
+            name: "m1.tiny"
+        image:
+            name: "(^cirros.*uec$|TestVM)"
+        create_volume_params:
+            availability_zone: "nova"
+      runner:
+        type: "constant_for_duration"
+        duration: 480
+        concurrency: 4
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: restart rabbitmq service on one node
+          trigger:
+            name: event
+            args:
+              unit: iteration
+              at: [60]
