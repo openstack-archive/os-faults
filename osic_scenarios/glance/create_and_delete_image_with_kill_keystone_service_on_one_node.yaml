@@ -1,6 +1,6 @@
 ---
 {% set repeat = repeat|default(3) %}
-  SwiftObjects.list_objects_in_containers:
+  GlanceImages.list_images:
 {% for iteration in range(repeat) %}
     -
       runner:
@@ -11,10 +11,11 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        swift_objects:
-          containers_per_tenant: 1
-          objects_per_container: 10
-          object_size: 1024
+        images:
+          image_url: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+          image_type: "qcow2"
+          image_container: "bare"
+          images_per_tenant: 4
       hooks:
         -
           name: fault_injection

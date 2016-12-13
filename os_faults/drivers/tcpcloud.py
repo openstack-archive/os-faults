@@ -126,6 +126,12 @@ class GlanceAPIService(SaltService):
     SALT_SERVICE = 'glance-api'
 
 
+class GlanceRegistryService(SaltService):
+    SERVICE_NAME = 'glance-registry'
+    GREP = '[g]lance-registry'
+    SALT_SERVICE = 'glance-registry'
+
+
 class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
