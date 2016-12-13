@@ -1,0 +1,24 @@
+---
+  SwiftObjects.create_container_and_object_then_delete_all:
+    -
+      args:
+        objects_per_container: 5
+        object_size: 102400
+      runner:
+        type: "constant_for_duration"
+        duration: 480
+        concurrency: 4
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: restart swift-object-replicator-server service on one node
+          trigger:
+            name: event
+            args:
+              unit: iteration
+              at: [60]
