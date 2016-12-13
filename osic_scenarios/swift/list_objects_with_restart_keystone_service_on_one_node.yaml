@@ -11,6 +11,10 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        swift_objects:
+          containers_per_tenant: 1
+          objects_per_container: 10
+          object_size: 1024
       hooks:
         -
           name: fault_injection

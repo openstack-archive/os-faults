@@ -1,8 +1,10 @@
 ---
-{% set repeat = repeat|default(3) %}
-  SwiftObjects.list_objects_in_containers:
-{% for iteration in range(repeat) %}
+  GlanceImages.create_and_delete_image:
     -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
       runner:
         type: "constant_for_duration"
         duration: 480
@@ -11,18 +13,13 @@
         users:
           tenants: 1
           users_per_tenant: 1
-        swift_objects:
-          containers_per_tenant: 1
-          objects_per_container: 10
-          object_size: 1024
       hooks:
         -
           name: fault_injection
           args:
-            action: kill keystone service on one node
+            action: kill glance-registry service on one node
           trigger:
             name: event
             args:
               unit: iteration
               at: [60]
-{% endfor %}
