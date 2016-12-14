@@ -313,6 +313,11 @@ class NeutronMeteringAgentService(SaltService):
     GREP = '[n]eutron-metering-agent'
     SALT_SERVICE = 'neutron-metering-agent'
 
+class NeutronServerService(SaltService):
+    SERVICE_NAME = 'neutron-server'
+    GREP = '[n]eutron-server'
+    SALT_SERVICE = 'neutron-server'
+
 
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
@@ -330,6 +335,12 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'nova-scheduler': NovaSchedulerService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
+		'neutron-dhcp-agent': NeutronDHCPAgentService,
+		'neutron-metadata-agent': NeutronMetadataAgentService,
+		'neutron-l3-agent': NeutronL3AgentService,
+		'neutron-linuxbridge-agent': NeutronLinuxbridgeAgentService,
+		'neutron-metering-agent': NeutronMeteringAgentService,
+		'neutron-server': NeutronServerService,
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
