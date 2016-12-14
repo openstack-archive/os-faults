@@ -284,6 +284,36 @@ class SwiftObjectUpdaterService(SaltService):
     SALT_SERVICE = 'swift-object-updater'
 
 
+class NeutronDHCPAgentService(SaltService):
+    SERVICE_NAME = 'neutron-dhcp-agent'
+    GREP = '[n]eutron-dhcp-agent'
+    SALT_SERVICE = 'neutron-dhcp-agent'
+
+
+class NeutronMetadataAgentService(SaltService):
+    SERVICE_NAME = 'neutron-metadata-agent'
+    GREP = '[n]eutron-metadata-agent'
+    SALT_SERVICE = 'neutron-metadata-agent'
+
+
+class NeutronL3AgentService(SaltService):
+    SERVICE_NAME = 'neutron-l3-agent'
+    GREP = '[n]eutron-l3-agent'
+    SALT_SERVICE = 'neutron-l3-agent'
+
+
+class NeutronLinuxbridgeAgentService(SaltService):
+    SERVICE_NAME = 'neutron-linuxbridge-agent'
+    GREP = '[n]eutron-linuxbridge-agent'
+    SALT_SERVICE = 'neutron-linuxbridge-agent'
+
+
+class NeutronMeteringAgentService(SaltService):
+    SERVICE_NAME = 'neutron-metering-agent'
+    GREP = '[n]eutron-metering-agent'
+    SALT_SERVICE = 'neutron-metering-agent'
+
+
 class TCPCloudManagement(cloud_management.CloudManagement):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
