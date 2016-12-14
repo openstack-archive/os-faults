@@ -249,7 +249,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
         # get all nodes except salt master (that has cfg* hostname) by default
         self.slave_name_regexp = cloud_management_params.get(
-            'slave_name_regexp', '^(?!cfg)')
+            'slave_name_regexp', '^(?!cfg|mon)')
 
         self.cached_cloud_hosts = list()
         self.fqdn_to_hosts = dict()
