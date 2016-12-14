@@ -114,12 +114,6 @@ class RabbitMQService(SaltService):
     SALT_SERVICE = 'rabbitmq-server'
 
 
-class NovaAPIService(SaltService):
-    SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
-    SALT_SERVICE = 'nova-api'
-
-
 class GlanceAPIService(SaltService):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
@@ -132,18 +126,56 @@ class GlanceRegistryService(SaltService):
     SALT_SERVICE = 'glance-registry'
 
 
+class NovaApiMetadataService(SaltService):
+    SERVICE_NAME = 'nova-api-metadata'
+    GREP = '[n]ova-api-metadata'
+    SALT_SERVICE = 'nova-api-metadata'
+
+
+class NovaApiOsComputeService(SaltService):
+    SERVICE_NAME = 'nova-api-os-compute'
+    GREP = '[n]ova-api-os-compute'
+    SALT_SERVICE = 'nova-api-os-compute'
+
+
+class NovaCertService(SaltService):
+    SERVICE_NAME = 'nova-cert'
+    GREP = '[n]ova-cert'
+    SALT_SERVICE = 'nova-cert'
+
+
 class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
     SALT_SERVICE = 'nova-compute'
+
     def __init__(self, *args, **kwargs):
         super(NovaComputeService, self).__init__(*args, **kwargs)
         self.FIND_CMD = BASH.format('initctl list | grep -e {}'.format(self.GREP))
+
+
+class NovaConductorService(SaltService):
+    SERVICE_NAME = 'nova-conductor'
+    GREP = '[n]ova-conductor'
+    SALT_SERVICE = 'nova-conductor'
+
+
+class NovaConsoleAuthService(SaltService):
+    SERVICE_NAME = 'nova-consoleauth'
+    GREP = '[n]ova-consoleauth'
+    SALT_SERVICE = 'nova-consoleauth'
+
 
 class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
     SALT_SERVICE = 'nova-scheduler'
+
+
+class NovaSpiceService(SaltService):
+    SERVICE_NAME = 'nova-spicehtml5proxy'
+    GREP = '[n]ova-spicehtml5proxy'
+    SALT_SERVICE = 'nova-spicehtml5proxy'
 
 
 class HeatAPIService(SaltService):
