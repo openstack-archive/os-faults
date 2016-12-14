@@ -232,12 +232,6 @@ class SwiftAccountReplicatorService(SaltService):
     SALT_SERVICE = 'swift-account-replicator'
 
 
-class SwiftAccountReplicatorServerService(SaltService):
-    SERVICE_NAME = 'swift-account-replicator-server'
-    GREP = '[s]wift-account-replicator-server'
-    SALT_SERVICE = 'swift-account-replicator-server'
-
-
 class SwiftAccountServerService(SaltService):
     SERVICE_NAME = 'swift-account-server'
     GREP = '[s]wift-account-server'
@@ -260,12 +254,6 @@ class SwiftContainerReplicatorService(SaltService):
     SERVICE_NAME = 'swift-container-replicator'
     GREP = '[s]wift-container-replicator'
     SALT_SERVICE = 'swift-container-replicator'
-
-
-class SwiftContainerReplicatorServerService(SaltService):
-    SERVICE_NAME = 'swift-container-replicator-server'
-    GREP = '[s]wift-container-replicator-server'
-    SALT_SERVICE = 'swift-container-replicator-server'
 
 
 class SwiftContainerServerService(SaltService):
@@ -304,12 +292,6 @@ class SwiftObjectReplicatorService(SaltService):
     SALT_SERVICE = 'swift-object-replicator'
 
 
-class SwiftObjectReplicatorServerService(SaltService):
-    SERVICE_NAME = 'swift-object-replicator-server'
-    GREP = '[s]wift-object-replicator-server'
-    SALT_SERVICE = 'swift-object-replicator-server'
-
-
 class SwiftObjectServerService(SaltService):
     SERVICE_NAME = 'swift-object-server'
     GREP = '[s]wift-object-server'
@@ -332,15 +314,37 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'memcached': MemcachedService,
         'mysql': MySQLService,
         'rabbitmq': RabbitMQService,
-        'nova-api': NovaAPIService,
         'glance-api': GlanceAPIService,
+        'glance-registry': GlanceRegistryService,
+        'nova-api-metadata': NovaApiMetadataService,
+        'nova-api-os-compute': NovaApiOsComputeService,
+        'nova-cert': NovaCertService,
         'nova-compute': NovaComputeService,
+        'nova-conductor': NovaConductorService,
+        'nova-consoleauth': NovaConsoleAuthService,
         'nova-scheduler': NovaSchedulerService,
+        'nova-spicehtml5proxy': NovaSpiceService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
         'cinder-api': CinderAPIService,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
+        'swift-account-auditor': SwiftAccountAuditorService,
+        'swift-account-reaper': SwiftAccountReaperService,
+        'swift-account-replicator': SwiftAccountReplicatorService,
+        'swift-account-server': SwiftAccountServerService,
+        'swift-container-auditor': SwiftContainerAuditorService,
+        'swift-container-reconciler': SwiftContainerReconcilerService,
+        'swift-container-replicator': SwiftContainerReplicatorService,
+        'swift-container-server': SwiftContainerServerService,
+        'swift-container-sync': SwiftContainerSyncService,
+        'swift-container-updater': SwiftContainerUpdaterService,
+        'swift-object-auditor': SwiftObjectAuditorService,
+        'swift-object-expirer': SwiftObjectExpirerService,
+        'swift-object-replicator': SwiftObjectReplicatorService,
+        'swift-object-server': SwiftObjectServerService,
+        'swift-object-updater': SwiftObjectUpdaterService,
+        'swift-proxy-server': SwiftProxyService
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []
