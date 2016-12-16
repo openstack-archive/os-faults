@@ -1,21 +1,21 @@
 ---
 {% set repeat = repeat|default(3) %}
-  GlanceImages.list_images:
+  NeutronNetworks.list_agents:
 {% for iteration in range(repeat) %}
     -
+      args:
+        agent_args: {}
       runner:
         type: "constant_for_duration"
-        duration: 480
+        duration: 120
         concurrency: 4
       context:
         users:
           tenants: 1
           users_per_tenant: 1
-        images:
-          image_url: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
-          image_type: "qcow2"
-          image_container: "bare"
-          images_per_tenant: 4
+      sla:
+        failure_rate:
+          max: 0
       hooks:
         -
           name: fault_injection
@@ -25,5 +25,5 @@
             name: event
             args:
               unit: iteration
-              at: [60]
+              at: [100]
 {% endfor %}
