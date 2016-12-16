@@ -12,6 +12,8 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        roles:
+          - "admin"
       hooks:
         -
           name: fault_injection
