@@ -18,7 +18,7 @@
         -
           name: fault_injection
           args:
-            action: restart neutron-linuxbridge-agent on one node
+            action: restart neutron-linuxbridge-agent service on one node
           trigger:
             name: event
             args:

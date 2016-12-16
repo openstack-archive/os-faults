@@ -18,7 +18,7 @@
         -
           name: fault_injection
           args:
-            action: kill neutron-server on one node
+            action: kill neutron-server service on one node
           trigger:
             name: event
             args:
