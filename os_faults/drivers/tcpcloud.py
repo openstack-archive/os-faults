@@ -434,7 +434,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def _get_cloud_hosts(self):
         if not self.cached_cloud_hosts:
-            cmd = "salt -E '(infra-._.*|compute-.*)' network.interfaces --out=yaml"
+            cmd = "salt -E '(infra(-|0)[0-9](_|-).*|compute(-|0).*|network(-|0)[0-9](_|-).*|cinder(-|0)[0-9].*|swift(-|0)[0-9].*)' network.interfaces --out=yaml"
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
