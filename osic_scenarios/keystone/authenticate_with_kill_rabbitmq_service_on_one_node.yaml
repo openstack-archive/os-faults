@@ -15,7 +15,7 @@
         -
           name: fault_injection
           args:
-            action: kill mysql service on one node
+            action: kill rabbitmq service on one node
           trigger:
             name: event
             args:
