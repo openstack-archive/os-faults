@@ -22,5 +22,5 @@
           trigger:
             name: event
             args:
-              unit: iteration
-              at: [100]
+              unit: time
+              at: [30]
