@@ -19,6 +19,6 @@
           trigger:
             name: event
             args:
-              unit: iteration
-              at: [5]
+              unit: time
+              at: [22]
 {% endfor %}
