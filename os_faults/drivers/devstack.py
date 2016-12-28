@@ -17,6 +17,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.common import service
+from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -30,16 +31,45 @@ class DevStackNode(node_collection.NodeCollection):
         raise NotImplementedError
 
 
+class ServiceInScreen(service.ServiceAsProcess):
+
+    @utils.require_variables('WINDOW_NAME')
+    def __init__(self, *args, **kwargs):
+        super(ServiceInScreen, self).__init__(*args, **kwargs)
+
+        # sends ctr+c, arrow up key, enter key
+        self.RESTART_CMD = (
+            "screen -S stack -p {window_name} -X "
+            "stuff $'\\003'$'\\033[A'$(printf \\\\r)").format(
+                window_name=self.WINDOW_NAME)
+
+        # sends ctr+c
+        self.TERMINATE_CMD = (
+            "screen -S stack -p {window_name} -X "
+            "stuff $'\\003'").format(
+                window_name=self.WINDOW_NAME)
+
+        # sends arrow up key, enter key
+        self.START_CMD = (
+            "screen -S stack -p {window_name} -X "
+            "stuff $'\\033[A'$(printf \\\\r)").format(
+                window_name=self.WINDOW_NAME)
+
+
 class KeystoneService(service.ServiceAsProcess):
     SERVICE_NAME = 'keystone'
     GREP = '[k]eystone-'
     RESTART_CMD = 'sudo service apache2 restart'
+    TERMINATE_CMD = 'sudo service apache2 stop'
+    START_CMD = 'sudo service apache2 start'
 
 
 class MySQLService(service.ServiceAsProcess):
     SERVICE_NAME = 'mysql'
     GREP = '[m]ysqld'
     RESTART_CMD = 'sudo service mysql restart'
+    TERMINATE_CMD = 'sudo service mysql stop'
+    START_CMD = 'sudo service mysql start'
     PORT = ('tcp', 3307)
 
 
@@ -47,34 +77,32 @@ class RabbitMQService(service.ServiceAsProcess):
     SERVICE_NAME = 'rabbitmq'
     GREP = '[r]abbitmq-server'
     RESTART_CMD = 'sudo service rabbitmq-server restart'
+    TERMINATE_CMD = 'sudo service rabbitmq-server stop'
+    START_CMD = 'sudo service rabbitmq-server start'
 
 
-class NovaAPIService(service.ServiceAsProcess):
+class NovaAPIService(ServiceInScreen):
     SERVICE_NAME = 'nova-api'
     GREP = '[n]ova-api'
-    RESTART_CMD = ("screen -S stack -p n-api -X "
-                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+    WINDOW_NAME = 'n-api'
 
 
-class GlanceAPIService(service.ServiceAsProcess):
+class GlanceAPIService(ServiceInScreen):
     SERVICE_NAME = 'glance-api'
     GREP = '[g]lance-api'
-    RESTART_CMD = ("screen -S stack -p g-api -X "
-                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+    WINDOW_NAME = 'g-api'
 
 
-class NovaComputeService(service.ServiceAsProcess):
+class NovaComputeService(ServiceInScreen):
     SERVICE_NAME = 'nova-compute'
     GREP = '[n]ova-compute'
-    RESTART_CMD = ("screen -S stack -p n-cpu -X "
-                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+    WINDOW_NAME = 'n-cpu'
 
 
-class NovaSchedulerService(service.ServiceAsProcess):
+class NovaSchedulerService(ServiceInScreen):
     SERVICE_NAME = 'nova-scheduler'
     GREP = '[n]ova-scheduler'
-    RESTART_CMD = ("screen -S stack -p n-sch -X "
-                   "stuff $'\\003'$'\\033[A'$(printf \\\\r)")
+    WINDOW_NAME = 'n-sch'
 
 
 class DevStackManagement(cloud_management.CloudManagement):
@@ -99,7 +127,11 @@ class DevStackManagement(cloud_management.CloudManagement):
             'address': {'type': 'string'},
             'username': {'type': 'string'},
             'private_key_file': {'type': 'string'},
-
+            'slaves': {
+                'type': 'array',
+                'items': {'type': 'string'},
+            },
+            'iface': {'type': 'string'},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -111,18 +143,24 @@ class DevStackManagement(cloud_management.CloudManagement):
         self.address = cloud_management_params['address']
         self.username = cloud_management_params['username']
         self.private_key_file = cloud_management_params.get('private_key_file')
+        self.slaves = cloud_management_params.get('slaves', [])
+        self.iface = cloud_management_params.get('iface', 'eth0')
 
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,
             become=False)
-        self.host = None
+
+        self.hosts = [self.address]
+        if self.slaves:
+            self.hosts.extend(self.slaves)
+        self.nodes = None
 
     def verify(self):
         """Verify connection to the cloud."""
-        task = {'shell': 'screen -ls | grep stack'}
-        hostname = self.execute_on_cloud(
-            [self.address], task)[0].payload['stdout']
-        LOG.debug('DevStack hostname: %s', hostname)
+        task = {'shell': 'screen -ls | grep -P "\\d+\\.stack"'}
+        results = self.execute_on_cloud(self.hosts, task)
+        hostnames = [result.host for result in results]
+        LOG.debug('DevStack hostnames: %s', hostnames)
         LOG.info('Connected to cloud successfully')
 
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
@@ -139,14 +177,17 @@ class DevStackManagement(cloud_management.CloudManagement):
             return self.cloud_executor.execute(hosts, task, [])
 
     def get_nodes(self, fqdns=None):
-        if self.host is None:
-            task = {'command': 'cat /sys/class/net/eth0/address'}
-            mac = self.execute_on_cloud(
-                [self.address], task)[0].payload['stdout']
+        if self.nodes is None:
+            get_mac_cmd = 'cat /sys/class/net/{}/address'.format(self.iface)
+            task = {'command': get_mac_cmd}
+            results = self.execute_on_cloud(self.hosts, task)
+
             # TODO(astudenov): support fqdn
-            self.host = node_collection.Host(ip=self.address, mac=mac,
-                                             fqdn='')
+            self.nodes = [node_collection.Host(ip=r.host,
+                                               mac=r.payload['stdout'],
+                                               fqdn='')
+                          for r in results]
 
         return self.NODE_CLS(cloud_management=self,
                              power_management=self.power_management,
-                             hosts=[self.host])
+                             hosts=self.nodes)
