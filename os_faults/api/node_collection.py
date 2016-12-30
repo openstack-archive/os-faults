@@ -114,6 +114,14 @@ class NodeCollection(object):
             raise error.NodeCollectionError(msg)
         return self._make_instance(random.sample(self._hosts, count))
 
+    def filter(self, criteria_fn):
+        hosts = list(filter(criteria_fn, self._hosts))
+        if hosts:
+            return self._make_instance(hosts)
+        else:
+            raise error.NodeCollectionError(
+                'No nodes found according to criterion')
+
     def run_task(self, task, raise_on_error=True):
         """Run ansible task on node colection
 
