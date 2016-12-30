@@ -1,6 +1,7 @@
-mkdir -p rallylogs
-mkdir -p rallyhtmls
-mkdir -p rallyjsons
+mkdir -p output
+mkdir -p output/logs
+mkdir -p output/html
+mkdir -p output/json
 while read -u 10 p; do
   echo running: $p
   echo "$p" >> rallylog.txt
@@ -8,9 +9,9 @@ while read -u 10 p; do
   RALLY_TASK_ID=$(rally task list | tail -n 2 | grep -E -o --color=never '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}')
   RALLY_TASK_ID_CLEAN="$(echo -e "${RALLY_TASK_ID}" | tr -d '[:space:]')"
   echo "Task ID: ${RALLY_TASK_ID}" >> rallylog.txt
-  mv task.log ./rallylogs/${RALLY_TASK_ID_CLEAN}
-  rally task report ${RALLY_TASK_ID_CLEAN} --out ./rallyhtmls/${RALLY_TASK_ID_CLEAN}.html
-  rally task results ${RALLY_TASK_ID_CLEAN} > ./rallyjsons/${RALLY_TASK_ID_CLEAN}.json
+  mv task.log ./output/logs/${RALLY_TASK_ID_CLEAN}
+  rally task report ${RALLY_TASK_ID_CLEAN} --out ./output/html/${RALLY_TASK_ID_CLEAN}.html
+  rally task results ${RALLY_TASK_ID_CLEAN} > ./output/json/${RALLY_TASK_ID_CLEAN}.json
   echo "Done with task.  Waiting..."
   sleep 500
 done 10<rallytasks.txt
