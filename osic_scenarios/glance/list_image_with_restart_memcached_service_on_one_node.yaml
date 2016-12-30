@@ -1,0 +1,25 @@
+---
+  GlanceImages.list_images:
+    -
+      args:
+        image_location: "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+        container_format: "bare"
+        disk_format: "qcow2"
+      runner:
+        type: "constant_for_duration"
+        duration: 480
+        concurrency: 4
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: restart memcached service on one node
+          trigger:
+            name: event
+            args:
+              unit: time
+              at: [120]
