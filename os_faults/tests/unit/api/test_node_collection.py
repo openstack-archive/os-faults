@@ -155,6 +155,16 @@ class NodeCollectionTestCase(test.TestCase):
         self.assertEqual(1, len(one))
         self.assertIn(next(iter(one.hosts)), self.hosts)
 
+    def test_filter(self):
+        one = self.node_collection.filter(lambda host: host.ip == '10.0.0.2')
+        self.assertEqual(1, len(one))
+        self.assertEqual(self.hosts[0], one.hosts[0])
+
+    def test_filter_error(self):
+        self.assertRaises(error.NodeCollectionError,
+                          self.node_collection.filter,
+                          lambda host: host.ip == 'foo')
+
     def test_run_task(self):
         result = self.node_collection.run_task({'foo': 'bar'},
                                                raise_on_error=False)
