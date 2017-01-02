@@ -83,6 +83,10 @@ class ServiceAsProcess(service.Service):
     @utils.require_variables('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
+        if (self.SALT_SERVICE[0] != '['):
+            tmp_service_name = '[' + self.SALT_SERVICE[0] + ']' + self.SALT_SERVICE[1:]
+            self.SALT_SERVICE = tmp_service_name
+            LOG.info ("Replaced service name with %s", self.SALT_SERVICE)
         LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
                  nodes.get_ips())
         cmd = {'kill': {'grep': self.SALT_SERVICE, 'sig': signal.SIGKILL}}
