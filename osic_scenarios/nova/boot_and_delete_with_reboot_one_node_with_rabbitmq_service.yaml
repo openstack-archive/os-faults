@@ -9,7 +9,7 @@
         force_delete: false
       runner:
         type: "constant_for_duration"
-        duration: 120
+        duration: 480
         concurrency: 4
       context:
         users:
@@ -24,4 +24,4 @@
             name: event
             args:
               unit: time
-              at: [30]
+              at: [120]

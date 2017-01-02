@@ -1,11 +1,11 @@
 ---
-{% set repeat = repeat|default(5) %}
+{% set repeat = repeat|default(3) %}
   Authenticate.keystone:
 {% for iteration in range(repeat) %}
     -
       runner:
         type: "constant_for_duration"
-        duration: 60
+        duration: 240
         concurrency: 5
       context:
         users:
@@ -20,5 +20,5 @@
             name: event
             args:
               unit: time
-              at: [15]
+              at: [60]
 {% endfor %}
