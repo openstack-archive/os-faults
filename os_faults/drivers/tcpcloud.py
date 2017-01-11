@@ -142,6 +142,30 @@ class NeutronServerService(SaltService):
     SALT_SERVICE = 'neutron-server'
 
 
+class NeutronDhcpAgentService(SaltService):
+    SERVICE_NAME = 'neutron-dhcp-agent'
+    GREP = '[n]eutron-dhcp-agent'
+    SALT_SERVICE = 'neutron-dhcp-agent'
+
+
+class NeutronMetadataAgentService(SaltService):
+    SERVICE_NAME = 'neutron-metadata-agent'
+    GREP = '[n]eutron-metadata-agent'
+    SALT_SERVICE = 'neutron-metadata-agent'
+
+
+class NeutronOpenvswitchAgentService(SaltService):
+    SERVICE_NAME = 'neutron-openvswitch-agent'
+    GREP = '[n]eutron-openvswitch-agent'
+    SALT_SERVICE = 'neutron-openvswitch-agent'
+
+
+class NeutronL3AgentService(SaltService):
+    SERVICE_NAME = 'neutron-l3-agent'
+    GREP = '[n]eutron-l3-agent'
+    SALT_SERVICE = 'neutron-l3-agent'
+
+
 class HeatAPIService(SaltService):
     SERVICE_NAME = 'heat-api'
     GREP = '[h]eat-api '
@@ -198,6 +222,10 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         'nova-consoleauth': NovaConsoleAuthService,
         'nova-novncproxy': NovaNoVNCProxyService,
         'neutron-server': NeutronServerService,
+        'neutron-dhcp-agent': NeutronDhcpAgentService,
+        'neutron-metadata-agent': NeutronMetadataAgentService,
+        'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
+        'neutron-l3-agent': NeutronL3AgentService,
         'heat-api': HeatAPIService,
         'heat-engine': HeatEngineService,
         'cinder-api': CinderAPIService,
