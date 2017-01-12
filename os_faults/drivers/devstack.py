@@ -105,6 +105,18 @@ class NovaSchedulerService(ServiceInScreen):
     WINDOW_NAME = 'n-sch'
 
 
+class IronicApiService(ServiceInScreen):
+    SERVICE_NAME = 'ironic-api'
+    GREP = '[i]ronic-api'
+    WINDOW_NAME = 'ir-api'
+
+
+class IronicConductorService(ServiceInScreen):
+    SERVICE_NAME = 'ironic-conductor'
+    GREP = '[i]ronic-conductor'
+    WINDOW_NAME = 'ir-cond'
+
+
 class DevStackManagement(cloud_management.CloudManagement):
     NAME = 'devstack'
     DESCRIPTION = 'Single node DevStack management driver'
@@ -117,6 +129,8 @@ class DevStackManagement(cloud_management.CloudManagement):
         'glance-api': GlanceAPIService,
         'nova-compute': NovaComputeService,
         'nova-scheduler': NovaSchedulerService,
+        'ironic-api': IronicApiService,
+        'ironic-conductor': IronicConductorService,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['all-in-one']
