@@ -24,6 +24,10 @@ class PowerManagementError(OSFError):
     """Base Error class for Power Management API"""
 
 
+class CloudManagementError(OSFError):
+    """Base Error class for Cloud Management API"""
+
+
 class ServiceError(OSFError):
     """Base Error class for Service API"""
 

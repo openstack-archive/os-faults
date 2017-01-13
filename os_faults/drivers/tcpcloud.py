@@ -246,7 +246,9 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             'master_sudo': {'type': 'boolean'},
             'slave_sudo': {'type': 'boolean'},
             'slave_iface': {'type': 'string'},
+            'slave_ifaces': {'type': 'array', 'items': {'type': 'string'}},
             'slave_name_regexp': {'type': 'string'},
+            'slave_direct_ssh': {'type': 'boolean'},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -260,6 +262,9 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         self.slave_username = cloud_management_params.get(
             'slave_username', self.username)
         self.private_key_file = cloud_management_params.get('private_key_file')
+        self.slave_direct_ssh = cloud_management_params.get(
+            'slave_direct_ssh', False)
+        use_jump = self.slave_direct_ssh
 
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username,
@@ -269,11 +274,13 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.slave_username,
             private_key_file=self.private_key_file,
-            jump_host=self.master_node_address,
-            jump_user=self.username,
+            jump_host=self.master_node_address if use_jump else None,
+            jump_user=self.username if use_jump else None,
             become=cloud_management_params.get('slave_sudo'))
 
         self.slave_iface = cloud_management_params.get('slave_iface', 'eth0')
+        self.slave_ifaces = cloud_management_params.get('slave_ifaces',
+                                                        [self.slave_iface])
 
         # get all nodes except salt master (that has cfg* hostname) by default
         self.slave_name_regexp = cloud_management_params.get(
@@ -302,9 +309,20 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             result = self.execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
+
+                iface = None
+                for iface_name in self.slave_ifaces:
+                    if iface_name in net_data:
+                        iface = net_data[iface_name]
+                        break
+                else:
+                    raise error.CloudManagementError(
+                        "Can't find interfaces on node {} with net_data:\n{}"
+                        "".format(fqdn, yaml.dump(net_data)))
+
                 host = node_collection.Host(
-                    ip=net_data[self.slave_iface]['inet'][0]['address'],
-                    mac=net_data[self.slave_iface]['hwaddr'],
+                    ip=iface['inet'][0]['address'],
+                    mac=iface['hwaddr'],
                     fqdn=fqdn)
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
