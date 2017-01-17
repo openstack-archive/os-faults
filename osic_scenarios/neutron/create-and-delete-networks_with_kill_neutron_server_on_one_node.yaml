@@ -1,0 +1,26 @@
+---
+  NeutronNetworks.create_and_delete_networks:
+    -
+      args:
+        network_create_args: {}
+      runner:
+        type: "constant_for_duration"
+        duration: 480
+        concurrency: 4
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        quotas:
+          neutron:
+            network: -1
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: kill neutron-server service on one node
+          trigger:
+            name: event
+            args:
+              unit: time
+              at: [120]
