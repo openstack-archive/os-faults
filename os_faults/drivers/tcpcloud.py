@@ -12,8 +12,9 @@
 # limitations under the License.
 
 import logging
-
+import commands
 import yaml
+import sys
 
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
@@ -24,6 +25,21 @@ from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
+class simpleObj(object):
+    foo = False
+
+def alt_execute_on_master_node(params):
+    cmd = str(params['command'])
+    call = cmd[:cmd.index(' ')]
+    args = cmd[cmd.index(' ') + 1:]
+    output  = commands.getstatusoutput(cmd)[1]
+    results = []
+    result = simpleObj()
+    payload = {}
+    payload['stdout'] = output
+    result.payload = payload
+    results.append(result)
+    return results
 
 class TCPCloudNodeCollection(node_collection.NodeCollection):
 
@@ -452,15 +468,26 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                             fqdn_split, regex_ipaddr
                         )
                     )
-                    ip_res = self.execute_on_master_node({'command': ip_cmd})
+                    ip_res = alt_execute_on_master_node({'command': ip_cmd})
                     ip_out = ip_res[0].payload['stdout']
-                    mac_cmd = BASH.format(
-                        'arp -an {} | grep -oE \'{}\''.format(
-                            ip_out, regex_mac
+                    try:
+                        mac_cmd = BASH.format(
+                            'arp -an {} | grep -oE \'{}\''.format(
+                                ip_out, regex_mac
+                            )
                         )
-                    )
-                    mac_res = self.execute_on_master_node({'command': mac_cmd})
-                    mac_out = mac_res[0].payload['stdout']
+                        mac_res = alt_execute_on_master_node({'command': mac_cmd})
+                        mac_out = mac_res[0].payload['stdout']
+#                        LOG.info('mac address is: ' + str(mac_out))
+                    except:
+                        sys.stdout.write('.')
+                        sys.stdout.flush()
+                        mac_cmd = BASH.format(
+                            'arping {} -i br-control -c1 -r'.format(ip_out)
+                        )
+                        mac_res = alt_execute_on_master_node({'command': mac_cmd})
+                        mac_out = mac_res[0].payload['stdout']
+ #                       LOG.info('mac address is: ' + str(mac_out))
                     host = node_collection.Host(
                         ip=ip_out,
                         mac=mac_out,
@@ -468,7 +495,6 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                 self.cached_cloud_hosts.append(host)
                 self.fqdn_to_hosts[host.fqdn] = host
             self.cached_cloud_hosts = sorted(self.cached_cloud_hosts)
-
         return self.cached_cloud_hosts
 
     def execute_on_master_node(self, task):
@@ -477,6 +503,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         :param task: Ansible task
         :return: Ansible execution result (list of records)
         """
+#	LOG.info('running on master node: ' + str(task))
         return self.master_node_executor.execute(
             [self.master_node_address], task)
 
@@ -488,6 +515,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         :param raise_on_error: throw exception in case of error
         :return: Ansible execution result (list of records)
         """
+#        LOG.info('executing on remote hosts %s: %s',str(hosts), str(task)) 
         if raise_on_error:
             return self.cloud_executor.execute(hosts, task)
         else:
