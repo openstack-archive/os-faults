@@ -16,7 +16,6 @@ import logging
 
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
-from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.common import service
 from os_faults import utils
@@ -418,7 +417,6 @@ class FuelManagement(cloud_management.CloudManagement):
             jump_host=self.master_node_address)
 
         self.cached_cloud_hosts = list()
-        self.fqdn_to_hosts = dict()
 
     def verify(self):
         """Verify connection to the cloud."""
@@ -441,7 +439,6 @@ class FuelManagement(cloud_management.CloudManagement):
                 host = node_collection.Host(ip=r['ip'], mac=r['mac'],
                                             fqdn=r['fqdn'])
                 self.cached_cloud_hosts.append(host)
-                self.fqdn_to_hosts[host.fqdn] = host
 
         return self.cached_cloud_hosts
 
@@ -475,19 +472,12 @@ class FuelManagement(cloud_management.CloudManagement):
         :param fqdns: list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """
-        hosts = self._get_cloud_hosts()
+        nodes = self.NODE_CLS(cloud_management=self,
+                              power_management=self.power_management,
+                              hosts=self._get_cloud_hosts())
 
         if fqdns:
             LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
-            hosts = list()
-            for fqdn in fqdns:
-                if fqdn in self.fqdn_to_hosts:
-                    hosts.append(self.fqdn_to_hosts[fqdn])
-                else:
-                    raise error.NodeCollectionError(
-                        'Node with FQDN \'%s\' not found!' % fqdn)
-            LOG.debug('The following nodes were found: %s', hosts)
-
-        return self.NODE_CLS(cloud_management=self,
-                             power_management=self.power_management,
-                             hosts=hosts)
+            nodes = nodes.filter(lambda node: node.fqdn in fqdns)
+            LOG.debug('The following nodes were found: %s', nodes.hosts)
+        return nodes
