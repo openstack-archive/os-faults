@@ -1,0 +1,31 @@
+#!/bin/bash
+mkdir -p killoutput
+mkdir -p killoutput/logs
+mkdir -p killoutput/html
+mkdir -p killoutput/json
+while read -u 11 p; do
+    echo "running: " ${p}
+    echo "$p" >> killoutput/rally_kill_log.txt
+    rally task start $p > killtask.log
+    RALLY_TASK_ID=$(rally task list | tail -n 2 | grep -E -o --color=never '[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}')
+    RALLY_TASK_ID_CLEAN="$(echo -e "${RALLY_TASK_ID}" | tr -d '[:space:]')"
+    echo "Task ID: ${RALLY_TASK_ID}" >> killoutput/rally_kill_log.txt
+    mv killtask.log ./killoutput/logs/${RALLY_TASK_ID_CLEAN}
+    rally task report ${RALLY_TASK_ID_CLEAN} --out ./killoutput/html/${RALLY_TASK_ID_CLEAN}.html
+    rally task results ${RALLY_TASK_ID_CLEAN} > ./killoutput/json/${RALLY_TASK_ID_CLEAN}.json
+    if [[ ${p} == *"rabbitmq_service"* ]]; then
+        salt '*rabbit_mq*' cmd.run "service rabbitmq-server start"
+    fi
+    if [[ ${p} == *"memcached"* ]]; then
+        salt '*memcached*' cmd.run "service memcached start"
+    fi
+    if [[ ${p} == *"mysql"* ]]; then
+        salt '*galera*' cmd.run "service mysql start"
+    fi
+    if [[ ${p} == *"keystone"* ]]; then
+        salt '*keystone*' cmd.run "service apache2 start"
+    fi
+    sleep 500 
+done 11<rallykillscenario.txt
+
+echo "Testing done"
