@@ -23,6 +23,7 @@ from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
 from os_faults.drivers import libvirt_driver
+from os_faults.drivers import node_list
 from os_faults.tests.unit import test
 
 
@@ -64,17 +65,31 @@ class OSFaultsTestCase(test.TestCase):
     def test_connect_fuel_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
+        self.assertIsInstance(destructor.node_discover, fuel.FuelManagement)
         self.assertIsInstance(destructor.power_management,
                               libvirt_driver.LibvirtDriver)
 
-    def test_connect_fuel_with_ipmi(self):
+    def test_connect_fuel_with_ipmi_and_node_list(self):
         cloud_config = {
+            'node_discover': {
+                'driver': 'node_list',
+                'args': [
+                    {
+                        'ip': '10.0.0.11',
+                        'mac': '01:ab:cd:01:ab:cd',
+                        'fqdn': 'node-1'
+                    }, {
+                        'ip': '10.0.0.12',
+                        'mac': '02:ab:cd:02:ab:cd',
+                        'fqdn': 'node-2'},
+                ]
+            },
             'cloud_management': {
                 'driver': 'fuel',
                 'args': {
                     'address': '10.30.00.5',
                     'username': 'root',
-                }
+                },
             },
             'power_management': {
                 'driver': 'ipmi',
@@ -91,6 +106,8 @@ class OSFaultsTestCase(test.TestCase):
         }
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
+        self.assertIsInstance(destructor.node_discover,
+                              node_list.NodeListDiscover)
         self.assertIsInstance(destructor.power_management, ipmi.IPMIDriver)
 
     def test_connect_driver_not_found(self):

@@ -54,6 +54,15 @@ CONFIG_SCHEMA = {
     'type': 'object',
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'properties': {
+        'node_discover': {
+            'type': 'object',
+            'properties': {
+                'driver': {'type': 'string'},
+                'args': {},
+            },
+            'required': ['driver', 'args'],
+            'additionalProperties': False,
+        },
         'cloud_management': {
             'type': 'object',
             'properties': {
@@ -111,6 +120,16 @@ def connect(cloud_config=None, config_filename=None):
 
     cloud_management_conf = cloud_config['cloud_management']
     cloud_management = _init_driver(cloud_management_conf)
+
+    node_discover_conf = cloud_config.get('node_discover')
+    if node_discover_conf:
+        node_discover = _init_driver(node_discover_conf)
+        cloud_management.set_node_discover(node_discover)
+
+    if cloud_management.node_discover is None:
+        raise error.OSFError('node_discover is not specified and "{}" '
+                             'driver does not support discovering'.format(
+                                 cloud_config['cloud_management']['driver']))
 
     power_management_conf = cloud_config.get('power_management')
     if power_management_conf:

@@ -18,6 +18,7 @@ import yaml
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
+from os_faults.api import node_discover
 from os_faults.common import service
 from os_faults import utils
 
@@ -201,7 +202,8 @@ class CinderBackupService(SaltService):
     SALT_SERVICE = 'cinder-backup'
 
 
-class TCPCloudManagement(cloud_management.CloudManagement):
+class TCPCloudManagement(cloud_management.CloudManagement,
+                         node_discover.NodeDiscover):
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
     NODE_CLS = TCPCloudNodeCollection
@@ -253,6 +255,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def __init__(self, cloud_management_params):
         super(TCPCloudManagement, self).__init__()
+        self.node_discover = self  # supports discovering
 
         self.master_node_address = cloud_management_params['address']
         self.username = cloud_management_params['username']
@@ -282,22 +285,21 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
     def verify(self):
         """Verify connection to the cloud."""
-        hosts = self._get_cloud_hosts()
-        LOG.debug('Cloud nodes: %s', hosts)
+        nodes = self.get_nodes()
+        LOG.debug('Cloud nodes: %s', nodes)
 
         task = {'command': 'hostname'}
-        host_addrs = [host.ip for host in hosts]
-        task_result = self.execute_on_cloud(host_addrs, task)
+        task_result = self.execute_on_cloud(nodes.get_ips(), task)
         LOG.debug('Hostnames of cloud nodes: %s',
                   [r.payload['stdout'] for r in task_result])
 
         LOG.info('Connected to cloud successfully!')
 
-    def _get_cloud_hosts(self):
+    def discover_hosts(self):
         if not self.cached_cloud_hosts:
             cmd = "salt -E '{}' network.interfaces --out=yaml".format(
                 self.slave_name_regexp)
-            result = self.execute_on_master_node({'command': cmd})
+            result = self._execute_on_master_node({'command': cmd})
             stdout = result[0].payload['stdout']
             for fqdn, net_data in yaml.load(stdout).items():
                 host = node_collection.Host(
@@ -309,7 +311,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
 
         return self.cached_cloud_hosts
 
-    def execute_on_master_node(self, task):
+    def _execute_on_master_node(self, task):
         """Execute task on salt master node.
 
         :param task: Ansible task
@@ -330,21 +332,3 @@ class TCPCloudManagement(cloud_management.CloudManagement):
             return self.cloud_executor.execute(hosts, task)
         else:
             return self.cloud_executor.execute(hosts, task, [])
-
-    def get_nodes(self, fqdns=None):
-        """Get nodes in the cloud
-
-        This function returns NodesCollection representing all nodes in the
-        cloud or only those that were specified by FQDNs.
-        :param fqdns: list of FQDNs or None to retrieve all nodes
-        :return: NodesCollection
-        """
-        nodes = self.NODE_CLS(cloud_management=self,
-                              power_management=self.power_management,
-                              hosts=self._get_cloud_hosts())
-
-        if fqdns:
-            LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
-            nodes = nodes.filter(lambda node: node.fqdn in fqdns)
-            LOG.debug('The following nodes were found: %s', nodes.hosts)
-        return nodes

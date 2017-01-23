@@ -33,7 +33,7 @@ class IPMIDriver(power_management.PowerManagement):
             'mac_to_bmc': {
                 'type': 'object',
                 'patternProperties': {
-                    '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$': {
+                    utils.MACADDR_REGEXP: {
                         'type': 'object',
                         'properties': {
                             'address': {'type': 'string'},
