@@ -118,6 +118,24 @@ class TCPCloudManagementTestCase(test.TestCase):
         self.assertEqual(nodes.hosts, hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    def test_get_nodes_from_discover_driver(self, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+        hosts = [
+            node_collection.Host(ip='10.0.2.2', mac='09:7b:74:90:63:c2',
+                                 fqdn='mynode1.local'),
+            node_collection.Host(ip='10.0.2.3', mac='09:7b:74:90:63:c3',
+                                 fqdn='mynode2.local'),
+        ]
+        node_discover_driver = mock.Mock()
+        node_discover_driver.discover_hosts.return_value = hosts
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+        tcp_managment.set_node_discover(node_discover_driver)
+        nodes = tcp_managment.get_nodes()
+
+        self.assertFalse(ansible_runner_inst.execute.called)
+        self.assertEqual(hosts, nodes.hosts)
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [

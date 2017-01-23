@@ -57,20 +57,32 @@ class DevStackManagementTestCase(test.TestCase):
     def test_verify(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
+            [fakes.FakeAnsibleResult(payload={'stdout': 'mac'},
+                                     host='10.0.0.2')],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      host='10.0.0.2')],
         ]
         devstack_management = devstack.DevStackManagement(self.conf)
         devstack_management.verify()
 
-        ansible_runner_inst.execute.assert_called_once_with(
-            ['10.0.0.2'], {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['10.0.0.2'],
+                      {'command': 'cat /sys/class/net/eth0/address'}),
+            mock.call(['10.0.0.2'],
+                      {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
+        ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_verify_slaves(self, mock_ansible_runner):
         self.conf['slaves'] = ['10.0.0.3', '10.0.0.4']
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
+            [fakes.FakeAnsibleResult(payload={'stdout': 'mac1'},
+                                     host='10.0.0.2'),
+             fakes.FakeAnsibleResult(payload={'stdout': 'mac2'},
+                                     host='10.0.0.3'),
+             fakes.FakeAnsibleResult(payload={'stdout': 'mac3'},
+                                     host='10.0.0.4')],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      host='10.0.0.2'),
              fakes.FakeAnsibleResult(payload={'stdout': ''},
@@ -81,9 +93,12 @@ class DevStackManagementTestCase(test.TestCase):
         devstack_management = devstack.DevStackManagement(self.conf)
         devstack_management.verify()
 
-        ansible_runner_inst.execute.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4'],
-            {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
+        ansible_runner_inst.execute.assert_has_calls([
+            mock.call(['10.0.0.2', '10.0.0.3', '10.0.0.4'],
+                      {'command': 'cat /sys/class/net/eth0/address'}),
+            mock.call(['10.0.0.2', '10.0.0.3', '10.0.0.4'],
+                      {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
+        ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):

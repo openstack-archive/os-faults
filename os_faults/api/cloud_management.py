@@ -12,11 +12,15 @@
 # limitations under the License.
 
 import abc
+import logging
 
 import six
 
 from os_faults.api import base_driver
 from os_faults.api import error
+from os_faults.api import node_collection
+
+LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -24,12 +28,17 @@ class CloudManagement(base_driver.BaseDriver):
     SERVICE_NAME_TO_CLASS = {}
     SUPPORTED_SERVICES = []
     SUPPORTED_NETWORKS = []
+    NODE_CLS = node_collection.NodeCollection
 
     def __init__(self):
         self.power_management = None
+        self.node_discover = None
 
     def set_power_management(self, power_management):
         self.power_management = power_management
+
+    def set_node_discover(self, node_discover):
+        self.node_discover = node_discover
 
     @abc.abstractmethod
     def verify(self):
@@ -37,7 +46,6 @@ class CloudManagement(base_driver.BaseDriver):
 
         """
 
-    @abc.abstractmethod
     def get_nodes(self, fqdns=None):
         """Get nodes in the cloud
 
@@ -46,6 +54,21 @@ class CloudManagement(base_driver.BaseDriver):
         :param fqdns list of FQDNs or None to retrieve all nodes
         :return: NodesCollection
         """
+
+        if self.node_discover is None:
+            raise error.OSFError(
+                'node_discover is not specified and "{}" '
+                'driver does not support discovering'.format(self.NAME))
+        hosts = self.node_discover.discover_hosts()
+        nodes = self.NODE_CLS(cloud_management=self,
+                              power_management=self.power_management,
+                              hosts=hosts)
+
+        if fqdns:
+            LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
+            nodes = nodes.filter(lambda node: node.fqdn in fqdns)
+            LOG.debug('The following nodes were found: %s', nodes.hosts)
+        return nodes
 
     def get_service(self, name):
         """Get service with specified name

@@ -16,6 +16,7 @@ import logging
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
+from os_faults.api import node_discover
 from os_faults.common import service
 from os_faults import utils
 
@@ -117,7 +118,8 @@ class IronicConductorService(ServiceInScreen):
     WINDOW_NAME = 'ir-cond'
 
 
-class DevStackManagement(cloud_management.CloudManagement):
+class DevStackManagement(cloud_management.CloudManagement,
+                         node_discover.NodeDiscover):
     NAME = 'devstack'
     DESCRIPTION = 'Single node DevStack management driver'
     NODE_CLS = DevStackNode
@@ -153,6 +155,7 @@ class DevStackManagement(cloud_management.CloudManagement):
 
     def __init__(self, cloud_management_params):
         super(DevStackManagement, self).__init__()
+        self.node_discover = self  # supports discovering
 
         self.address = cloud_management_params['address']
         self.username = cloud_management_params['username']
@@ -171,8 +174,9 @@ class DevStackManagement(cloud_management.CloudManagement):
 
     def verify(self):
         """Verify connection to the cloud."""
+        nodes = self.get_nodes()
         task = {'shell': 'screen -ls | grep -P "\\d+\\.stack"'}
-        results = self.execute_on_cloud(self.hosts, task)
+        results = self.execute_on_cloud(nodes.get_ips(), task)
         hostnames = [result.host for result in results]
         LOG.debug('DevStack hostnames: %s', hostnames)
         LOG.info('Connected to cloud successfully')
@@ -190,7 +194,7 @@ class DevStackManagement(cloud_management.CloudManagement):
         else:
             return self.cloud_executor.execute(hosts, task, [])
 
-    def get_nodes(self, fqdns=None):
+    def discover_hosts(self):
         if self.nodes is None:
             get_mac_cmd = 'cat /sys/class/net/{}/address'.format(self.iface)
             task = {'command': get_mac_cmd}
@@ -202,6 +206,4 @@ class DevStackManagement(cloud_management.CloudManagement):
                                                fqdn='')
                           for r in results]
 
-        return self.NODE_CLS(cloud_management=self,
-                             power_management=self.power_management,
-                             hosts=self.nodes)
+        return self.nodes

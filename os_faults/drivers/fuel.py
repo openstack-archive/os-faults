@@ -17,6 +17,7 @@ import logging
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
+from os_faults.api import node_discover
 from os_faults.common import service
 from os_faults import utils
 
@@ -339,7 +340,8 @@ class SwiftProxyService(service.LinuxService):
     LINUX_SERVICE = 'swift-proxy'
 
 
-class FuelManagement(cloud_management.CloudManagement):
+class FuelManagement(cloud_management.CloudManagement,
+                     node_discover.NodeDiscover):
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
     NODE_CLS = FuelNodeCollection
@@ -404,6 +406,7 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def __init__(self, cloud_management_params):
         super(FuelManagement, self).__init__()
+        self.node_discover = self  # supports discovering
 
         self.master_node_address = cloud_management_params['address']
         self.username = cloud_management_params['username']
@@ -420,21 +423,20 @@ class FuelManagement(cloud_management.CloudManagement):
 
     def verify(self):
         """Verify connection to the cloud."""
-        hosts = self._get_cloud_hosts()
-        LOG.debug('Cloud nodes: %s', hosts)
+        nodes = self.get_nodes()
+        LOG.debug('Cloud nodes: %s', nodes)
 
         task = {'command': 'hostname'}
-        host_addrs = [host.ip for host in hosts]
-        task_result = self.execute_on_cloud(host_addrs, task)
+        task_result = self.execute_on_cloud(nodes.get_ips(), task)
         LOG.debug('Hostnames of cloud nodes: %s',
                   [r.payload['stdout'] for r in task_result])
 
         LOG.info('Connected to cloud successfully!')
 
-    def _get_cloud_hosts(self):
+    def discover_hosts(self):
         if not self.cached_cloud_hosts:
             task = {'command': 'fuel node --json'}
-            result = self.execute_on_master_node(task)
+            result = self._execute_on_master_node(task)
             for r in json.loads(result[0].payload['stdout']):
                 host = node_collection.Host(ip=r['ip'], mac=r['mac'],
                                             fqdn=r['fqdn'])
@@ -442,7 +444,7 @@ class FuelManagement(cloud_management.CloudManagement):
 
         return self.cached_cloud_hosts
 
-    def execute_on_master_node(self, task):
+    def _execute_on_master_node(self, task):
         """Execute task on Fuel master node.
 
         :param task: Ansible task
@@ -463,21 +465,3 @@ class FuelManagement(cloud_management.CloudManagement):
             return self.cloud_executor.execute(hosts, task)
         else:
             return self.cloud_executor.execute(hosts, task, [])
-
-    def get_nodes(self, fqdns=None):
-        """Get nodes in the cloud
-
-        This function returns NodesCollection representing all nodes in the
-        cloud or only those that were specified by FQDNs.
-        :param fqdns: list of FQDNs or None to retrieve all nodes
-        :return: NodesCollection
-        """
-        nodes = self.NODE_CLS(cloud_management=self,
-                              power_management=self.power_management,
-                              hosts=self._get_cloud_hosts())
-
-        if fqdns:
-            LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
-            nodes = nodes.filter(lambda node: node.fqdn in fqdns)
-            LOG.debug('The following nodes were found: %s', nodes.hosts)
-        return nodes
