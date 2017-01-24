@@ -1,7 +1,5 @@
 ---
-{% set repeat = repeat|default(3) %}
   NovaFlavors.list_flavors:
-{% for iteration in range(repeat) %}
     -
       runner:
         type: "constant_for_duration"
@@ -20,5 +18,4 @@
             name: event
             args:
               unit: time
-              at: [30]
-{% endfor %}
+              at: [120]
