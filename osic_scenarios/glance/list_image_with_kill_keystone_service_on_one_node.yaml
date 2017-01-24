@@ -1,11 +1,9 @@
 ---
-{% set repeat = repeat|default(3) %}
   GlanceImages.list_images:
-{% for iteration in range(repeat) %}
     -
       runner:
         type: "constant_for_duration"
-        duration: 240
+        duration: 480
         concurrency: 4
       context:
         users:
@@ -25,5 +23,4 @@
             name: event
             args:
               unit: time
-              at: [30]
-{% endfor %}
+              at: [120]
