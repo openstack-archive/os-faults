@@ -1,11 +1,9 @@
 ---
-{% set repeat = repeat|default(3) %}
   SwiftObjects.list_objects_in_containers:
-{% for iteration in range(repeat) %}
     -
       runner:
         type: "constant_for_duration"
-        duration: 120
+        duration: 480
         concurrency: 4
       context:
         users:
@@ -26,5 +24,4 @@
             name: event
             args:
               unit: time
-              at: [30]
-{% endfor %}
+              at: [120]
