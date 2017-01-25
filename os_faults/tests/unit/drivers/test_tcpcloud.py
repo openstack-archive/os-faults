@@ -33,19 +33,36 @@ class TCPCloudManagementTestCase(test.TestCase):
                           '    hwaddr: 09:7b:74:90:63:c2\n'
                           '    inet:\n'
                           '    - address: 10.0.0.2\n'
+                          '  eth2:\n'
+                          '    hwaddr: 00:00:00:00:00:02\n'
+                          '    inet:\n'
+                          '    - address: 192.168.1.2\n'
                           'cmp02.mk20.local:\n'
                           '  eth1:\n'
+                          '    hwaddr: 00:00:00:00:00:03\n'
+                          '    inet:\n'
+                          '    - address: 192.168.1.3\n'
+                          '  eth2:\n'
                           '    hwaddr: 09:7b:74:90:63:c3\n'
                           '    inet:\n'
                           '    - address: 10.0.0.3\n'
             })
+        self.fake_node_ip_result = fakes.FakeAnsibleResult(
+            payload={
+                'stdout': 'cmp01.mk20.local:\n'
+                          '  10.0.0.2\n'
+                          'cmp02.mk20.local:\n'
+                          '  10.0.0.3\n'
+            })
+
         self.tcp_conf = {
             'address': 'tcp.local',
             'username': 'root',
-            'slave_iface': 'eth1',
         }
         self.get_nodes_cmd = (
             "salt -E '^(?!cfg|mon)' network.interfaces --out=yaml")
+        self.get_ips_cmd = ("salt -E '^(?!cfg|mon)' "
+                            "pillar.get _param:single_address --out=yaml")
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data((
@@ -69,6 +86,15 @@ class TCPCloudManagementTestCase(test.TestCase):
                    remote_user='ubuntu'),
          mock.call(become=True, jump_host='tcp.local', jump_user='ubuntu',
                    private_key_file='/path/id_rsa', remote_user='root'))
+    ), (
+        dict(address='tcp.local', username='ubuntu',
+             slave_username='root', slave_sudo=True,
+             private_key_file='/path/id_rsa',
+             slave_direct_ssh=True),
+        (mock.call(become=None, private_key_file='/path/id_rsa',
+                   remote_user='ubuntu'),
+         mock.call(become=True, jump_host=None, jump_user=None,
+                   private_key_file='/path/id_rsa', remote_user='root'))
     ))
     @ddt.unpack
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):
@@ -85,6 +111,7 @@ class TCPCloudManagementTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})],
         ]
@@ -93,20 +120,27 @@ class TCPCloudManagementTestCase(test.TestCase):
         tcp_managment.verify()
 
         get_nodes_cmd = "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml"
+        get_ips_cmd = ("salt -E '(ctl*|cmp*)' "
+                       "pillar.get _param:single_address --out=yaml")
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'hostname'}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [self.fake_node_ip_result],
+        ]
         tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes()
 
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
         ])
 
         hosts = [
@@ -140,6 +174,7 @@ class TCPCloudManagementTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})]
         ]
@@ -150,6 +185,7 @@ class TCPCloudManagementTestCase(test.TestCase):
 
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'mycmd'}, []),
         ])
 
@@ -160,7 +196,10 @@ class TCPCloudManagementTestCase(test.TestCase):
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes_fqdns(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
+        ansible_runner_inst.execute.side_effect = [
+            [self.fake_ansible_result],
+            [self.fake_node_ip_result],
+        ]
         tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes(fqdns=['cmp02.mk20.local'])
 
@@ -178,6 +217,7 @@ class TCPCloudManagementTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      status=executor.STATUS_FAILED,
                                      host='10.0.0.2'),
@@ -194,6 +234,7 @@ class TCPCloudManagementTestCase(test.TestCase):
         cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': cmd}, []),
         ])
@@ -223,12 +264,22 @@ class TcpServiceTestCase(test.TestCase):
                           '    inet:\n'
                           '    - address: 10.0.0.3\n'
             })
+        self.fake_node_ip_result = fakes.FakeAnsibleResult(
+            payload={
+                'stdout': 'cmp01.mk20.local:\n'
+                          '  10.0.0.2\n'
+                          'cmp02.mk20.local:\n'
+                          '  10.0.0.3\n'
+            })
+
         self.tcp_conf = {
             'address': 'tcp.local',
             'username': 'root',
         }
         self.get_nodes_cmd = (
             "salt -E '^(?!cfg|mon)' network.interfaces --out=yaml")
+        self.get_ips_cmd = ("salt -E '^(?!cfg|mon)' "
+                            "pillar.get _param:single_address --out=yaml")
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(*tcpcloud.TCPCloudManagement.SERVICE_NAME_TO_CLASS.items())
@@ -237,6 +288,7 @@ class TcpServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      status=executor.STATUS_FAILED,
                                      host='10.0.0.2'),
@@ -258,6 +310,7 @@ class TcpServiceTestCase(test.TestCase):
         cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': cmd}, []),
             mock.call(['10.0.0.3'], {'shell': service.RESTART_CMD}),
@@ -270,6 +323,7 @@ class TcpServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      status=executor.STATUS_FAILED,
                                      host='10.0.0.2'),
@@ -291,6 +345,7 @@ class TcpServiceTestCase(test.TestCase):
         cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': cmd}, []),
             mock.call(['10.0.0.3'], {'shell': service.TERMINATE_CMD}),
@@ -303,6 +358,7 @@ class TcpServiceTestCase(test.TestCase):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
+            [self.fake_node_ip_result],
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      status=executor.STATUS_FAILED,
                                      host='10.0.0.2'),
@@ -324,6 +380,7 @@ class TcpServiceTestCase(test.TestCase):
         cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
+            mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': cmd}, []),
             mock.call(['10.0.0.3'], {'shell': service.START_CMD}),
