@@ -25,12 +25,14 @@ def main():
                 'username': 'root',
             }
         },
-        'power_management': {
-            'driver': 'libvirt',
-            'args': {
-                'connection_uri': "qemu+ssh://ubuntu@host.local/system"
+        'power_managements': [
+            {
+                'driver': 'libvirt',
+                'args': {
+                    'connection_uri': "qemu+ssh://ubuntu@host.local/system"
+                }
             }
-        }
+        ]
     }
 
     logging.info('Create connection to the cluster')

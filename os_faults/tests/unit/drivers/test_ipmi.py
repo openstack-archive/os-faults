@@ -15,6 +15,7 @@ import ddt
 import mock
 from pyghmi import exceptions as pyghmi_exc
 
+from os_faults.api import node_collection
 from os_faults.drivers import ipmi
 from os_faults import error
 from os_faults.tests.unit import test
@@ -36,10 +37,20 @@ class IPMIDriverTestCase(test.TestCase):
             }
         }
         self.driver = ipmi.IPMIDriver(self.params)
+        self.host = node_collection.Host(
+            ip='10.0.0.2', mac='00:00:00:00:00:00', fqdn='node1.com')
 
     def test__find_bmc_by_mac_address(self):
         bmc = self.driver._find_bmc_by_mac_address('00:00:00:00:00:00')
         self.assertEqual(bmc, self.params['mac_to_bmc']['00:00:00:00:00:00'])
+
+    def test_supports(self):
+        self.assertTrue(self.driver.supports(self.host))
+
+    def test_supports_false(self):
+        host = node_collection.Host(
+            ip='10.0.0.2', mac='00:00:00:00:00:01', fqdn='node1.com')
+        self.assertFalse(self.driver.supports(host))
 
     def test__find_bmc_by_mac_address_mac_address_not_found(self):
         self.assertRaises(error.PowerManagementError,
@@ -74,22 +85,12 @@ class IPMIDriverTestCase(test.TestCase):
                           '00:00:00:00:00:00', 'off', expected_state='off')
 
     @mock.patch('os_faults.drivers.ipmi.IPMIDriver._run_set_power_cmd')
-    @ddt.data(('_poweroff', 'off'), ('_poweron', 'on'), ('_reset', 'boot'))
-    def test__driver_actions(self, actions, mock__run_set_power_cmd):
-        getattr(self.driver, actions[0])('00:00:00:00:00:00')
-        if actions[0] in ('_poweroff', '_poweron'):
+    @ddt.data(('poweroff', 'off'), ('poweron', 'on'), ('reset', 'boot'))
+    def test_driver_actions(self, actions, mock__run_set_power_cmd):
+        getattr(self.driver, actions[0])(self.host)
+        if actions[0] in ('poweroff', 'poweron'):
             mock__run_set_power_cmd.assert_called_once_with(
                 '00:00:00:00:00:00', cmd=actions[1], expected_state=actions[1])
         else:
             mock__run_set_power_cmd.assert_called_once_with(
                 '00:00:00:00:00:00', cmd=actions[1])
-
-    @mock.patch('os_faults.utils.run')
-    @ddt.data('poweroff', 'poweron', 'reset')
-    def test_driver_actions(self, action, mock_run):
-        macs_list = ['00:00:00:00:00:00', '00:00:00:00:00:01']
-        getattr(self.driver, action)(macs_list)
-        mock_run.assert_called_once_with(
-            getattr(self.driver, '_%s' % action),
-            [{'mac_address': '00:00:00:00:00:00'},
-             {'mac_address': '00:00:00:00:00:01'}])

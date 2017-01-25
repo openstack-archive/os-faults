@@ -14,6 +14,7 @@
 import ddt
 import mock
 
+from os_faults.api import node_collection
 from os_faults.drivers import libvirt_driver
 from os_faults import error
 from os_faults.tests.unit import test
@@ -30,6 +31,8 @@ class LibvirtDriverTestCase(test.TestCase):
 
         self.params = {'connection_uri': 'fake_connection_uri'}
         self.driver = libvirt_driver.LibvirtDriver(self.params)
+        self.host = node_collection.Host(
+            ip='10.0.0.2', mac='00:00:00:00:00:00', fqdn='node1.com')
 
     @mock.patch('libvirt.open')
     def test__get_connection_no_cached_connection(self, mock_libvirt_open):
@@ -69,24 +72,40 @@ class LibvirtDriverTestCase(test.TestCase):
                           self.driver._find_domain_by_mac_address,
                           '00:00:00:00:00:01')
 
+    @mock.patch(DRIVER_PATH + '.LibvirtDriver._get_connection')
+    def test_supports(self, mock__get_connection):
+        domain1 = mock.MagicMock()
+        domain1.XMLDesc.return_value = '52:54:00:ab:64:42'
+        domain2 = mock.MagicMock()
+        domain2.XMLDesc.return_value = '00:00:00:00:00:00'
+        self.driver.conn.listAllDomains.return_value = [domain1, domain2]
+
+        self.assertTrue(self.driver.supports(self.host))
+
+    @mock.patch(DRIVER_PATH + '.LibvirtDriver._get_connection')
+    def test_supports_false(self, mock__get_connection):
+        self.driver.conn.listAllDomains.return_value = []
+
+        self.assertFalse(self.driver.supports(self.host))
+
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    @ddt.data(('_poweroff', 'destroy'), ('_poweron', 'create'),
-              ('_reset', 'reset'))
-    def test__driver_actions(self, actions, mock__find_domain_by_mac_address):
-        getattr(self.driver, actions[0])('52:54:00:f9:b8:f9')
+    @ddt.data(('poweroff', 'destroy'), ('poweron', 'create'),
+              ('reset', 'reset'))
+    def test_driver_actions(self, actions, mock__find_domain_by_mac_address):
+        getattr(self.driver, actions[0])(self.host)
         domain = mock__find_domain_by_mac_address.return_value
         getattr(domain, actions[1]).assert_called_once_with()
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__snapshot(self, mock__find_domain_by_mac_address):
-        self.driver._snapshot('52:54:00:f9:b8:f9', 'foo', suspend=False)
+    def test_snapshot(self, mock__find_domain_by_mac_address):
+        self.driver.snapshot(self.host, 'foo', suspend=False)
         domain = mock__find_domain_by_mac_address.return_value
         domain.snapshotCreateXML.assert_called_once_with(
             '<domainsnapshot><name>foo</name></domainsnapshot>')
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__snapshot_suspend(self, mock__find_domain_by_mac_address):
-        self.driver._snapshot('52:54:00:f9:b8:f9', 'foo', suspend=True)
+    def test_snapshot_suspend(self, mock__find_domain_by_mac_address):
+        self.driver.snapshot(self.host, 'foo', suspend=True)
         domain = mock__find_domain_by_mac_address.return_value
         domain.assert_has_calls((
             mock.call.suspend(),
@@ -96,8 +115,8 @@ class LibvirtDriverTestCase(test.TestCase):
         ))
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__revert(self, mock__find_domain_by_mac_address):
-        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=False)
+    def test_revert(self, mock__find_domain_by_mac_address):
+        self.driver.revert(self.host, 'foo', resume=False)
         domain = mock__find_domain_by_mac_address.return_value
         snapshot = domain.snapshotLookupByName.return_value
         domain.snapshotLookupByName.assert_called_once_with('foo')
@@ -105,8 +124,8 @@ class LibvirtDriverTestCase(test.TestCase):
         self.assertFalse(domain.resume.called)
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__revert_resume(self, mock__find_domain_by_mac_address):
-        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=True)
+    def test_revert_resume(self, mock__find_domain_by_mac_address):
+        self.driver.revert(self.host, 'foo', resume=True)
         domain = mock__find_domain_by_mac_address.return_value
         snapshot = domain.snapshotLookupByName.return_value
         domain.snapshotLookupByName.assert_called_once_with('foo')
@@ -114,51 +133,15 @@ class LibvirtDriverTestCase(test.TestCase):
         domain.resume.assert_called_once_with()
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__revert_destroy(self, mock__find_domain_by_mac_address):
+    def test_revert_destroy(self, mock__find_domain_by_mac_address):
         domain = mock__find_domain_by_mac_address.return_value
         domain.isActive.return_value = True
-        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=True)
+        self.driver.revert(self.host, 'foo', resume=True)
         domain.destroy.assert_called_once_with()
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
-    def test__revert_destroy_nonactive(self, mock__find_domain_by_mac_address):
+    def test_revert_destroy_nonactive(self, mock__find_domain_by_mac_address):
         domain = mock__find_domain_by_mac_address.return_value
         domain.isActive.return_value = False
-        self.driver._revert('52:54:00:f9:b8:f9', 'foo', resume=True)
+        self.driver.revert(self.host, 'foo', resume=True)
         self.assertFalse(domain.destroy.called)
-
-    @mock.patch('os_faults.utils.run')
-    @ddt.data('poweroff', 'poweron', 'reset')
-    def test_driver_actions(self, action, mock_run):
-        macs_list = ['52:54:00:f9:b8:f9', '52:54:00:ab:64:42']
-        getattr(self.driver, action)(macs_list)
-        mock_run.assert_called_once_with(
-            getattr(self.driver, '_%s' % action),
-            [{'mac_address': '52:54:00:f9:b8:f9'},
-             {'mac_address': '52:54:00:ab:64:42'}])
-
-    @mock.patch('os_faults.utils.run')
-    def test_driver_snapshot(self, mock_run):
-        macs_list = ['52:54:00:f9:b8:f9', '52:54:00:ab:64:42']
-        self.driver.snapshot(macs_list, 'foo_snap')
-        mock_run.assert_called_once_with(
-            self.driver._snapshot,
-            [{'mac_address': '52:54:00:f9:b8:f9',
-              'snapshot_name': 'foo_snap',
-              'suspend': True},
-             {'mac_address': '52:54:00:ab:64:42',
-              'snapshot_name': 'foo_snap',
-              'suspend': True}])
-
-    @mock.patch('os_faults.utils.run')
-    def test_driver_revert(self, mock_run):
-        macs_list = ['52:54:00:f9:b8:f9', '52:54:00:ab:64:42']
-        self.driver.revert(macs_list, 'foo_snap', resume=False)
-        mock_run.assert_called_once_with(
-            self.driver._revert,
-            [{'mac_address': '52:54:00:f9:b8:f9',
-              'snapshot_name': 'foo_snap',
-              'resume': False},
-             {'mac_address': '52:54:00:ab:64:42',
-              'snapshot_name': 'foo_snap',
-              'resume': False}])

@@ -26,12 +26,14 @@ def main():
                 'private_key_file': '~/.ssh/os_faults',
             }
         },
-        'power_management': {
-            'driver': 'libvirt',
-            'args': {
-                'connection_uri': 'qemu+ssh://ubuntu@host.local/system'
+        'power_managements': [
+            {
+                'driver': 'libvirt',
+                'args': {
+                    'connection_uri': 'qemu+ssh://ubuntu@host.local/system'
+                }
             }
-        }
+        ]
     }
 
     logging.info('# Create connection to the cloud')

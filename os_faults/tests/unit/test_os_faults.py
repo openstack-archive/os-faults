@@ -66,10 +66,11 @@ class OSFaultsTestCase(test.TestCase):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
         self.assertIsInstance(destructor.node_discover, fuel.FuelManagement)
-        self.assertIsInstance(destructor.power_management,
+        self.assertEqual(1, len(destructor.power_manager.power_drivers))
+        self.assertIsInstance(destructor.power_manager.power_drivers[0],
                               libvirt_driver.LibvirtDriver)
 
-    def test_connect_fuel_with_ipmi_and_node_list(self):
+    def test_connect_fuel_with_ipmi_libvirt_and_node_list(self):
         cloud_config = {
             'node_discover': {
                 'driver': 'node_list',
@@ -91,24 +92,35 @@ class OSFaultsTestCase(test.TestCase):
                     'username': 'root',
                 },
             },
-            'power_management': {
-                'driver': 'ipmi',
-                'args': {
-                    'mac_to_bmc': {
-                        '00:00:00:00:00:00': {
-                            'address': '55.55.55.55',
-                            'username': 'foo',
-                            'password': 'bar',
+            'power_managements': [
+                {
+                    'driver': 'ipmi',
+                    'args': {
+                        'mac_to_bmc': {
+                            '00:00:00:00:00:00': {
+                                'address': '55.55.55.55',
+                                'username': 'foo',
+                                'password': 'bar',
+                            }
                         }
                     }
+                }, {
+                    'driver': 'libvirt',
+                    'args': {
+                        'connection_uri': "qemu+ssh://user@10.30.20.21/system"
+                    }
                 }
-            }
+            ]
         }
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
         self.assertIsInstance(destructor.node_discover,
                               node_list.NodeListDiscover)
-        self.assertIsInstance(destructor.power_management, ipmi.IPMIDriver)
+        self.assertEqual(2, len(destructor.power_manager.power_drivers))
+        self.assertIsInstance(destructor.power_manager.power_drivers[0],
+                              ipmi.IPMIDriver)
+        self.assertIsInstance(destructor.power_manager.power_drivers[1],
+                              libvirt_driver.LibvirtDriver)
 
     def test_connect_driver_not_found(self):
         cloud_config = {
@@ -132,7 +144,8 @@ class OSFaultsTestCase(test.TestCase):
         with mock.patch('os_faults.open', mock_os_faults_open, create=True):
             destructor = os_faults.connect()
             self.assertIsInstance(destructor, fuel.FuelManagement)
-            self.assertIsInstance(destructor.power_management,
+            self.assertEqual(1, len(destructor.power_manager.power_drivers))
+            self.assertIsInstance(destructor.power_manager.power_drivers[0],
                                   libvirt_driver.LibvirtDriver)
 
     @mock.patch.dict(os.environ, {'OS_FAULTS_CONFIG': '/my/conf.yaml'})
@@ -143,7 +156,8 @@ class OSFaultsTestCase(test.TestCase):
         with mock.patch('os_faults.open', mock_os_faults_open, create=True):
             destructor = os_faults.connect()
             self.assertIsInstance(destructor, fuel.FuelManagement)
-            self.assertIsInstance(destructor.power_management,
+            self.assertEqual(1, len(destructor.power_manager.power_drivers))
+            self.assertIsInstance(destructor.power_manager.power_drivers[0],
                                   libvirt_driver.LibvirtDriver)
             mock_os_faults_open.assert_called_once_with('/my/conf.yaml')
 

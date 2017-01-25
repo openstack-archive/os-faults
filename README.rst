@@ -45,12 +45,26 @@ library:
                 'username': 'root',
             }
         },
-        'power_management': {
-            'driver': 'libvirt',
-            'args': {
-                'connection_uri': 'qemu+unix:///system',
+        'power_managements': [
+            {
+                'driver': 'libvirt',
+                'args': {
+                    'connection_uri': 'qemu+unix:///system',
+                }
+            },
+            {
+                'driver': 'ipmi',
+                'args': {
+                    'mac_to_bmc': {
+                        'aa:bb:cc:dd:ee:01': {
+                            'address': '55.55.55.55',
+                            'username': 'foo',
+                            'password': 'bar',
+                        }
+                    }
+                }
             }
-        }
+        ]
     }
 
 Establish a connection to the cloud and verify it:

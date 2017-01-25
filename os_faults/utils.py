@@ -15,40 +15,26 @@ import functools
 import logging
 import threading
 
-from os_faults.api import error
-
 LOG = logging.getLogger(__name__)
 
 MACADDR_REGEXP = '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$'
 
 
-def run(target, kwargs_list):
-    tw = ThreadsWrapper(target)
-    for kwargs in kwargs_list:
-        tw.start_thread(**kwargs)
-    tw.join_threads()
-
-    if tw.errors:
-        raise error.PowerManagementError(
-            'There are some errors when working the driver. '
-            'Please, check logs for more details.')
-
-
 class ThreadsWrapper(object):
-    def __init__(self, target):
-        self.target = target
+    def __init__(self):
         self.threads = []
         self.errors = []
 
-    def _target(self, **kwargs):
+    def _target(self, fn, **kwargs):
         try:
-            self.target(**kwargs)
+            fn(**kwargs)
         except Exception as exc:
-            LOG.error('Target raised exception: %s', exc)
+            LOG.error('%s raised exception: %s', fn, exc)
             self.errors.append(exc)
 
-    def start_thread(self, **kwargs):
-        thread = threading.Thread(target=self._target, kwargs=kwargs)
+    def start_thread(self, fn, **kwargs):
+        thread = threading.Thread(target=self._target,
+                                  args=(fn, ), kwargs=kwargs)
         thread.start()
         self.threads.append(thread)
 

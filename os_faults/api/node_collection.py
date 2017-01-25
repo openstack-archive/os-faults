@@ -26,10 +26,8 @@ Host = collections.namedtuple('Host', ['ip', 'mac', 'fqdn'])
 
 class NodeCollection(object):
 
-    def __init__(self, cloud_management=None, power_management=None,
-                 hosts=None):
+    def __init__(self, cloud_management=None, hosts=None):
         self.cloud_management = cloud_management
-        self.power_management = power_management
         self._hosts = set(hosts)
 
     @property
@@ -52,11 +50,6 @@ class NodeCollection(object):
                 'NodeCollections have different cloud_managements: '
                 '{} and {}'.format(self.cloud_management,
                                    other.cloud_management))
-        if self.power_management is not other.power_management:
-            raise error.NodeCollectionError(
-                'NodeCollections have different power_managements: '
-                '{} and {}'.format(self.power_management,
-                                   other.power_management))
 
     def __add__(self, other):
         return self.__or__(other)
@@ -86,7 +79,6 @@ class NodeCollection(object):
 
     def _make_instance(self, hosts):
         return self.__class__(cloud_management=self.cloud_management,
-                              power_management=self.power_management,
                               hosts=hosts)
 
     def get_ips(self):
@@ -155,7 +147,7 @@ class NodeCollection(object):
 
         """
         LOG.info('Power off nodes: %s', self)
-        self.power_management.poweroff(self.get_macs())
+        self.cloud_management.power_manager.poweroff(self.hosts)
 
     @public
     def poweron(self):
@@ -163,7 +155,7 @@ class NodeCollection(object):
 
         """
         LOG.info('Power on nodes: %s', self)
-        self.power_management.poweron(self.get_macs())
+        self.cloud_management.power_manager.poweron(self.hosts)
 
     @public
     def reset(self):
@@ -171,21 +163,23 @@ class NodeCollection(object):
 
         """
         LOG.info('Reset nodes: %s', self)
-        self.power_management.reset(self.get_macs())
+        self.cloud_management.power_manager.reset(self.hosts)
 
     def snapshot(self, snapshot_name, suspend=True):
         """Create snapshot for all nodes
 
         """
         LOG.info('Create snapshot "%s" for nodes: %s', snapshot_name, self)
-        self.power_management.snapshot(self.get_macs(), snapshot_name, suspend)
+        self.cloud_management.power_manager.snapshot(
+            self.hosts, snapshot_name, suspend)
 
     def revert(self, snapshot_name, resume=True):
         """Revert snapshot for all nodes
 
         """
         LOG.info('Revert snapshot "%s" for nodes: %s', snapshot_name, self)
-        self.power_management.revert(self.get_macs(), snapshot_name, resume)
+        self.cloud_management.power_manager.revert(
+            self.hosts, snapshot_name, resume)
 
     @public
     def disconnect(self, network_name):

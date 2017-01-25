@@ -19,6 +19,7 @@ import six
 from os_faults.api import base_driver
 from os_faults.api import error
 from os_faults.api import node_collection
+from os_faults.api import power_management
 
 LOG = logging.getLogger(__name__)
 
@@ -31,11 +32,11 @@ class CloudManagement(base_driver.BaseDriver):
     NODE_CLS = node_collection.NodeCollection
 
     def __init__(self):
-        self.power_management = None
+        self.power_manager = power_management.PowerManager()
         self.node_discover = None
 
-    def set_power_management(self, power_management):
-        self.power_management = power_management
+    def add_power_management(self, driver):
+        self.power_manager.add_driver(driver)
 
     def set_node_discover(self, node_discover):
         self.node_discover = node_discover
@@ -60,9 +61,7 @@ class CloudManagement(base_driver.BaseDriver):
                 'node_discover is not specified and "{}" '
                 'driver does not support discovering'.format(self.NAME))
         hosts = self.node_discover.discover_hosts()
-        nodes = self.NODE_CLS(cloud_management=self,
-                              power_management=self.power_management,
-                              hosts=hosts)
+        nodes = self.NODE_CLS(cloud_management=self, hosts=hosts)
 
         if fqdns:
             LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
@@ -78,9 +77,7 @@ class CloudManagement(base_driver.BaseDriver):
         """
         if name in self.SERVICE_NAME_TO_CLASS:
             klazz = self.SERVICE_NAME_TO_CLASS[name]
-            return klazz(node_cls=self.NODE_CLS,
-                         cloud_management=self,
-                         power_management=self.power_management)
+            return klazz(node_cls=self.NODE_CLS, cloud_management=self)
         raise error.ServiceError(
             '{} driver does not support {!r} service'.format(
                 self.NAME.title(), name))

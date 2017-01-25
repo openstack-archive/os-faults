@@ -19,12 +19,14 @@ library:
                 'username': 'root',
             }
         },
-        'power_management': {
-            'driver': 'libvirt',
-            'args': {
-                'connection_uri': 'qemu+unix:///system',
+        'power_managements': [
+            {
+                'driver': 'libvirt',
+                'args': {
+                    'connection_uri': 'qemu+unix:///system',
+                }
             }
-        }
+        ]
     }
 
 Establish a connection to the cloud and verify it:

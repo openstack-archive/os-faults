@@ -16,25 +16,82 @@ import abc
 import six
 
 from os_faults.api import base_driver
+from os_faults.api import error
+from os_faults import utils
 
 
 @six.add_metaclass(abc.ABCMeta)
-class PowerManagement(base_driver.BaseDriver):
+class PowerDriver(base_driver.BaseDriver):
 
     @abc.abstractmethod
+    def supports(host):
+        pass
+
+    @abc.abstractmethod
+    def poweroff(self, host):
+        pass
+
+    @abc.abstractmethod
+    def poweron(self, host):
+        pass
+
+    @abc.abstractmethod
+    def reset(self, host):
+        pass
+
+    def snapshot(self, host, snapshot_name, suspend=True):
+        raise NotImplementedError
+
+    def revert(self, host, snapshot_name, resume=True):
+        raise NotImplementedError
+
+
+class PowerManager(object):
+
+    def __init__(self):
+        self.power_drivers = []
+
+    def add_driver(self, driver):
+        self.power_drivers.append(driver)
+
+    def _map_hosts_to_driver(self, hosts):
+        driver_host_pairs = []
+        for host in hosts:
+            for power_driver in self.power_drivers:
+                if power_driver.supports(host):
+                    driver_host_pairs.append((power_driver, host))
+                    break
+            else:
+                raise error.PowerManagementError(
+                    "No supported driver found for host {}".format(host))
+        return driver_host_pairs
+
+    def _run_command(self, cmd, hosts, **kwargs):
+        driver_host_pairs = self._map_hosts_to_driver(hosts)
+        tw = utils.ThreadsWrapper()
+        for driver, host in driver_host_pairs:
+            kwargs['host'] = host
+            fn = getattr(driver, cmd)
+            tw.start_thread(fn, **kwargs)
+        tw.join_threads()
+        if tw.errors:
+            raise error.PowerManagementError(
+                'There are some errors when working the driver. '
+                'Please, check logs for more details.')
+
     def poweroff(self, hosts):
-        pass
+        self._run_command('poweroff', hosts)
 
-    @abc.abstractmethod
     def poweron(self, hosts):
-        pass
+        self._run_command('poweron', hosts)
 
-    @abc.abstractmethod
     def reset(self, hosts):
-        pass
+        self._run_command('reset', hosts)
 
     def snapshot(self, hosts, snapshot_name, suspend=True):
-        raise NotImplementedError
+        self._run_command('snapshot', hosts,
+                          snapshot_name=snapshot_name, suspend=suspend)
 
     def revert(self, hosts, snapshot_name, resume=True):
-        raise NotImplementedError
+        self._run_command('revert', hosts,
+                          snapshot_name=snapshot_name, resume=resume)

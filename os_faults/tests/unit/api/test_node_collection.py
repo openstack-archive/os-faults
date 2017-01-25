@@ -33,8 +33,9 @@ class NodeCollectionTestCase(test.TestCase):
         super(NodeCollectionTestCase, self).setUp()
         self.mock_cloud_management = mock.Mock(
             spec=cloud_management.CloudManagement)
-        self.mock_power_management = mock.Mock(
-            spec=power_management.PowerManagement)
+        self.mock_power_manager = mock.Mock(
+            spec=power_management.PowerManager)
+        self.mock_cloud_management.power_manager = self.mock_power_manager
         self.hosts = [
             node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
                                  fqdn='node1.com'),
@@ -48,7 +49,6 @@ class NodeCollectionTestCase(test.TestCase):
 
         self.node_collection = node_collection.NodeCollection(
             cloud_management=self.mock_cloud_management,
-            power_management=self.mock_power_management,
             hosts=copy.deepcopy(self.hosts))
 
         self.hosts2 = [
@@ -64,26 +64,17 @@ class NodeCollectionTestCase(test.TestCase):
 
         self.node_collection2 = node_collection.NodeCollection(
             cloud_management=self.mock_cloud_management,
-            power_management=self.mock_power_management,
             hosts=copy.deepcopy(self.hosts2))
 
     def test_check_types_wrong_type(self):
-        collection = MyNodeCollection(None, None, [])
+        collection = MyNodeCollection(None, [])
         self.assertRaises(TypeError, self.node_collection._check_nodes_types,
                           collection)
         self.assertRaises(TypeError, collection._check_nodes_types,
                           self.node_collection)
 
     def test_check_types_wrong_cloud_management(self):
-        collection = node_collection.NodeCollection(None, None, [])
-        self.assertRaises(error.NodeCollectionError,
-                          self.node_collection._check_nodes_types, collection)
-        self.assertRaises(error.NodeCollectionError,
-                          collection._check_nodes_types, self.node_collection)
-
-    def test_check_types_wrong_power_management(self):
-        collection = node_collection.NodeCollection(
-            self.mock_cloud_management, None, [])
+        collection = node_collection.NodeCollection(None, [])
         self.assertRaises(error.NodeCollectionError,
                           self.node_collection._check_nodes_types, collection)
         self.assertRaises(error.NodeCollectionError,
@@ -187,21 +178,15 @@ class NodeCollectionTestCase(test.TestCase):
 
     def test_poweroff(self):
         self.node_collection.poweroff()
-        self.mock_power_management.poweroff.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
+        self.mock_power_manager.poweroff.assert_called_once_with(self.hosts)
 
     def test_poweron(self):
         self.node_collection.poweron()
-        self.mock_power_management.poweron.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
+        self.mock_power_manager.poweron.assert_called_once_with(self.hosts)
 
     def test_reset(self):
         self.node_collection.reset()
-        self.mock_power_management.reset.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'])
+        self.mock_power_manager.reset.assert_called_once_with(self.hosts)
 
     def test_reboot(self):
         self.node_collection.reboot()
@@ -211,12 +196,10 @@ class NodeCollectionTestCase(test.TestCase):
 
     def test_snapshot(self):
         self.node_collection.snapshot('foo')
-        self.mock_power_management.snapshot.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'], 'foo', True)
+        self.mock_power_manager.snapshot.assert_called_once_with(
+            self.hosts, 'foo', True)
 
     def test_revert(self):
         self.node_collection.revert('foo')
-        self.mock_power_management.revert.assert_called_once_with(
-            ['09:7b:74:90:63:c1', '09:7b:74:90:63:c2',
-             '09:7b:74:90:63:c3', '09:7b:74:90:63:c4'], 'foo', True)
+        self.mock_power_manager.revert.assert_called_once_with(
+            self.hosts, 'foo', True)

@@ -17,7 +17,6 @@ import ddt
 import mock
 
 from os_faults.api import node_collection
-from os_faults.api import power_management
 from os_faults.drivers import devstack
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
@@ -29,14 +28,11 @@ class DevStackNodeTestCase(test.TestCase):
         super(DevStackNodeTestCase, self).setUp()
         self.mock_cloud_management = mock.Mock(
             spec=devstack.DevStackManagement)
-        self.mock_power_management = mock.Mock(
-            spec=power_management.PowerManagement)
         self.host = node_collection.Host(
             ip='10.0.0.2', mac='09:7b:74:90:63:c1', fqdn='')
 
         self.node_collection = devstack.DevStackNode(
             cloud_management=self.mock_cloud_management,
-            power_management=self.mock_power_management,
             hosts=[copy.deepcopy(self.host)])
 
     def test_connect(self):

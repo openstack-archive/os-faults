@@ -15,12 +15,11 @@ import logging
 
 from os_faults.api import error
 from os_faults.api import power_management
-from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
 
-class LibvirtDriver(power_management.PowerManagement):
+class LibvirtDriver(power_management.PowerDriver):
     NAME = 'libvirt'
     DESCRIPTION = 'Libvirt power management driver'
     CONFIG_SCHEMA = {
@@ -60,28 +59,35 @@ class LibvirtDriver(power_management.PowerManagement):
         raise error.PowerManagementError(
             'Domain with MAC address %s not found!' % mac_address)
 
-    def _poweroff(self, mac_address):
-        LOG.debug('Power off domain with MAC address: %s', mac_address)
-        domain = self._find_domain_by_mac_address(mac_address)
+    def supports(self, host):
+        try:
+            self._find_domain_by_mac_address(host.mac)
+        except error.PowerManagementError:
+            return False
+        return True
+
+    def poweroff(self, host):
+        LOG.debug('Power off domain with MAC address: %s', host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
         domain.destroy()
-        LOG.info('Domain powered off: %s', mac_address)
+        LOG.info('Domain powered off: %s', host.mac)
 
-    def _poweron(self, mac_address):
-        LOG.debug('Power on domain with MAC address: %s', mac_address)
-        domain = self._find_domain_by_mac_address(mac_address)
+    def poweron(self, host):
+        LOG.debug('Power on domain with MAC address: %s', host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
         domain.create()
-        LOG.info('Domain powered on: %s', mac_address)
+        LOG.info('Domain powered on: %s', host.mac)
 
-    def _reset(self, mac_address):
-        LOG.debug('Reset domain with MAC address: %s', mac_address)
-        domain = self._find_domain_by_mac_address(mac_address)
+    def reset(self, host):
+        LOG.debug('Reset domain with MAC address: %s', host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
         domain.reset()
-        LOG.info('Domain reset: %s', mac_address)
+        LOG.info('Domain reset: %s', host.mac)
 
-    def _snapshot(self, mac_address, snapshot_name, suspend):
+    def snapshot(self, host, snapshot_name, suspend):
         LOG.debug('Create snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, mac_address)
-        domain = self._find_domain_by_mac_address(mac_address)
+                  snapshot_name, host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
         if suspend:
             domain.suspend()
         domain.snapshotCreateXML(
@@ -90,12 +96,12 @@ class LibvirtDriver(power_management.PowerManagement):
         if suspend:
             domain.resume()
         LOG.debug('Created snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, mac_address)
+                  snapshot_name, host.mac)
 
-    def _revert(self, mac_address, snapshot_name, resume):
+    def revert(self, host, snapshot_name, resume):
         LOG.debug('Revert snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, mac_address)
-        domain = self._find_domain_by_mac_address(mac_address)
+                  snapshot_name, host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
         snapshot = domain.snapshotLookupByName(snapshot_name)
         if domain.isActive():
             domain.destroy()
@@ -103,33 +109,4 @@ class LibvirtDriver(power_management.PowerManagement):
         if resume:
             domain.resume()
         LOG.debug('Reverted snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, mac_address)
-
-    def poweroff(self, mac_addresses_list):
-        kwargs_list = [dict(mac_address=mac_address)
-                       for mac_address in mac_addresses_list]
-        utils.run(self._poweroff, kwargs_list)
-
-    def poweron(self, mac_addresses_list):
-        kwargs_list = [dict(mac_address=mac_address)
-                       for mac_address in mac_addresses_list]
-        utils.run(self._poweron, kwargs_list)
-
-    def reset(self, mac_addresses_list):
-        kwargs_list = [dict(mac_address=mac_address)
-                       for mac_address in mac_addresses_list]
-        utils.run(self._reset, kwargs_list)
-
-    def snapshot(self, mac_addresses_list, snapshot_name, suspend=True):
-        kwargs_list = [dict(mac_address=mac_address,
-                            snapshot_name=snapshot_name,
-                            suspend=suspend)
-                       for mac_address in mac_addresses_list]
-        utils.run(self._snapshot, kwargs_list)
-
-    def revert(self, mac_addresses_list, snapshot_name, resume=True):
-        kwargs_list = [dict(mac_address=mac_address,
-                            snapshot_name=snapshot_name,
-                            resume=resume)
-                       for mac_address in mac_addresses_list]
-        utils.run(self._revert, kwargs_list)
+                  snapshot_name, host.mac)

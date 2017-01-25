@@ -14,7 +14,6 @@ import threading
 
 import mock
 
-from os_faults.api import error
 from os_faults.tests.unit import test
 from os_faults import utils
 
@@ -25,25 +24,12 @@ class MyException(Exception):
 
 class UtilsTestCase(test.TestCase):
 
-    def test_run(self):
-        target = mock.Mock()
-        utils.run(target, [{'mac_address': '01'}, {'mac_address': '02'}])
-        target.assert_has_calls([mock.call(mac_address='01'),
-                                mock.call(mac_address='02')], any_order=True)
-
-    def test_run_raise_exception(self):
-        target = mock.Mock()
-        target.side_effect = MyException()
-        self.assertRaises(error.PowerManagementError,
-                          utils.run, target, [{'mac_address': '01'},
-                                              {'mac_address': '02'}])
-
     def test_start_thread(self):
         target = mock.Mock()
         target_params = {'param1': 'val1', 'param2': 'val2'}
 
-        tw = utils.ThreadsWrapper(target)
-        tw.start_thread(**target_params)
+        tw = utils.ThreadsWrapper()
+        tw.start_thread(target, **target_params)
         tw.join_threads()
 
         target.assert_has_calls([mock.call(param1='val1', param2='val2')])
@@ -54,18 +40,17 @@ class UtilsTestCase(test.TestCase):
         target = mock.Mock()
         target.side_effect = MyException()
 
-        tw = utils.ThreadsWrapper(target)
-        tw.start_thread()
+        tw = utils.ThreadsWrapper()
+        tw.start_thread(target)
         tw.join_threads()
 
         self.assertEqual(type(tw.errors[0]), MyException)
 
     def test_join_threads(self):
-        target = mock.Mock()
         thread_1 = mock.Mock()
         thread_2 = mock.Mock()
 
-        tw = utils.ThreadsWrapper(target)
+        tw = utils.ThreadsWrapper()
         tw.threads = [thread_1, thread_2]
         tw.join_threads()
 

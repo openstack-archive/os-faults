@@ -25,18 +25,20 @@ def main():
                 'username': 'root',
             }
         },
-        'power_management': {
-            'driver': 'ipmi',
-            'args': {
-                'mac_to_bmc': {
-                    '00:00:00:00:00:00': {
-                        'address': '55.55.55.55',
-                        'username': 'foo',
-                        'password': 'bar',
+        'power_managements': [
+            {
+                'driver': 'ipmi',
+                'args': {
+                    'mac_to_bmc': {
+                        '00:00:00:00:00:00': {
+                            'address': '55.55.55.55',
+                            'username': 'foo',
+                            'password': 'bar',
+                        }
                     }
                 }
             }
-        }
+        ]
     }
 
     logging.info('Create connection to the cluster')

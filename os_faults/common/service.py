@@ -24,10 +24,9 @@ LOG = logging.getLogger(__name__)
 
 class ServiceAsProcess(service.Service):
 
-    def __init__(self, node_cls, cloud_management=None, power_management=None):
+    def __init__(self, node_cls, cloud_management=None):
         self.node_cls = node_cls
         self.cloud_management = cloud_management
-        self.power_management = power_management
 
     def _run_task(self, task, nodes):
         ips = nodes.get_ips()
@@ -55,7 +54,6 @@ class ServiceAsProcess(service.Service):
                        if r.status == executor.STATUS_OK]
         hosts = [h for h in nodes.hosts if h.ip in success_ips]
         return self.node_cls(cloud_management=self.cloud_management,
-                             power_management=self.power_management,
                              hosts=hosts)
 
     @utils.require_variables('RESTART_CMD', 'SERVICE_NAME')
