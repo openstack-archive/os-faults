@@ -342,6 +342,28 @@ class SwiftProxyService(service.LinuxService):
 
 class FuelManagement(cloud_management.CloudManagement,
                      node_discover.NodeDiscover):
+    """Fuel driver.
+
+    Cloud deployed by fuel. Supports discovering of slave nodes.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        cloud_management:
+          driver: fuel
+          args:
+            address: 192.168.1.10
+            username: root
+            private_key_file: ~/.ssh/id_rsa_fuel
+
+    parameters:
+
+    - **address** - ip address of fuel master node
+    - **username** - username for fuel master and slave nodes
+    - **private_key_file** - path to key file (optional)
+    """
+
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
     NODE_CLS = FuelNodeCollection

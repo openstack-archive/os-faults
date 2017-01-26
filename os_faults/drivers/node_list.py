@@ -18,6 +18,28 @@ from os_faults import utils
 
 
 class NodeListDiscover(node_discover.NodeDiscover):
+    """Node list.
+
+    Allows specifying list of nodes in configuration.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        node_discover:
+          driver: node_list
+          args:
+          - ip: 10.0.0.51
+            mac: aa:bb:cc:dd:ee:01
+            fqdn: node1.local
+          - ip: 10.0.0.52
+            mac: aa:bb:cc:dd:ee:02
+            fqdn: node2.local
+          - ip: 10.0.0.53
+            mac: aa:bb:cc:dd:ee:03
+            fqdn: node3.local
+    """
+
     NAME = 'node_list'
     DESCRIPTION = 'Reads hosts from configuration file'
     CONFIG_SCHEMA = {

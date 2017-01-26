@@ -17,6 +17,7 @@ import sys
 
 import os_faults
 
+sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -26,7 +27,8 @@ extensions = [
     'sphinx.ext.autodoc',
     #'sphinx.ext.intersphinx',
     'sphinxcontrib.programoutput',
-    'oslosphinx'
+    'oslosphinx',
+    'ext.driver_doc',
 ]
 
 version = os_faults.get_version()

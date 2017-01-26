@@ -24,6 +24,36 @@ LOG = logging.getLogger(__name__)
 
 
 class IPMIDriver(power_management.PowerDriver):
+    """IPMI driver.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        power_managements:
+        - driver: ipmi
+          args:
+            mac_to_bmc:
+              aa:bb:cc:dd:ee:01:
+                address: 170.0.10.50
+                username: admin1
+                password: Admin_123
+              aa:bb:cc:dd:ee:02:
+                address: 170.0.10.51
+                username: admin2
+                password: Admin_123
+
+    parameters:
+
+    - **mac_to_bmc** - list of dicts where keys are the node MACs and
+      values are the corresponding BMC configurations with the folowing
+      fields:
+
+      - **address** - ip address of IPMI server
+      - **username** - IPMI user
+      - **password** - IPMI password
+    """
+
     NAME = 'ipmi'
     DESCRIPTION = 'IPMI power management driver'
     CONFIG_SCHEMA = {

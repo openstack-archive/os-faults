@@ -20,6 +20,23 @@ LOG = logging.getLogger(__name__)
 
 
 class LibvirtDriver(power_management.PowerDriver):
+    """Libvirt driver.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        power_managements:
+        - driver: libvirt
+          args:
+            connection_uri: qemu+unix:///system
+
+    parameters:
+
+    - **connection_uri** - libvirt uri
+
+    """
+
     NAME = 'libvirt'
     DESCRIPTION = 'Libvirt power management driver'
     CONFIG_SCHEMA = {

@@ -120,8 +120,37 @@ class IronicConductorService(ServiceInScreen):
 
 class DevStackManagement(cloud_management.CloudManagement,
                          node_discover.NodeDiscover):
+    """Devstack driver.
+
+    This driver requires devstack installed in screen mode (USE_SCREEN=True).
+    Supports discovering of node MAC addreses.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        cloud_management:
+          driver: devstack
+          args:
+            address: 192.168.1.10
+            username: ubuntu
+            private_key_file: ~/.ssh/id_rsa_devstack
+            slaves:
+            - 192.168.1.11
+            - 192.168.1.12
+            iface: eth1
+
+    parameters:
+
+    - **address** - ip address of any devstack node
+    - **username** - username for all nodes
+    - **private_key_file** - path to key file (optional)
+    - **slaves** - list of ips for additional nodes (optional)
+    - **iface** - network interface name to retrive mac address (optional)
+    """
+
     NAME = 'devstack'
-    DESCRIPTION = 'Single node DevStack management driver'
+    DESCRIPTION = 'DevStack management driver'
     NODE_CLS = DevStackNode
     SERVICE_NAME_TO_CLASS = {
         'keystone': KeystoneService,

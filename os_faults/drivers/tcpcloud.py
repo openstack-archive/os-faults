@@ -205,6 +205,41 @@ class CinderBackupService(SaltService):
 
 class TCPCloudManagement(cloud_management.CloudManagement,
                          node_discover.NodeDiscover):
+    """TCPCloud driver.
+
+    Supports discovering of slave nodes.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        cloud_management:
+          driver: tcpcloud
+          args:
+            address: 192.168.1.10
+            username: root
+            private_key_file: ~/.ssh/id_rsa_fuel
+            slave_username: ubuntu
+            master_sudo: False
+            slave_sudo: True
+            slave_name_regexp: ^(?!cfg|mon)
+            slave_direct_ssh: True
+            get_ips_cmd: pillar.get _param:single_address
+
+    parameters:
+
+    - **address** - ip address of salt config node
+    - **username** - username for salt config node
+    - **private_key_file** - path to key file (optional)
+    - **slave_username** - username for salt minions (optional) *username*
+      will be used if *slave_username* not specified
+    - **master_sudo** - Use sudo on salt config node (optional)
+    - **slave_sudo** - Use sudi on salt minion nodes (optional)
+    - **slave_name_regexp** - regexp for minion FQDNs (optional)
+    - **slave_direct_ssh** - if *False* then salt master is used as ssh proxy
+    - **get_ips_cmd** - salt command to get IPs of minions (optional)
+    """
+
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
     NODE_CLS = TCPCloudNodeCollection

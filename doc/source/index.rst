@@ -19,6 +19,7 @@ Contents
    usage
    cli
    api
+   drivers
    contributing
 
 Release Notes
