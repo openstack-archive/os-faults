@@ -119,16 +119,25 @@ class AnsibleRunnerTestCase(test.TestCase):
         {},
         dict(become=None, become_method='sudo', become_user='root',
              check=False, connection='smart', forks=100,
-             password=None, private_key_file=None,
+             private_key_file=None,
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=executor.SSH_COMMON_ARGS,
-             ssh_extra_args=None, verbosity=100)
+             ssh_extra_args=None, verbosity=100),
+        dict(conn_pass=None, become_pass=None),
+    ), (
+        dict(remote_user='root', password='foobar'),
+        dict(become=None, become_method='sudo', become_user='root',
+             check=False, connection='smart', forks=100,
+             private_key_file=None,
+             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
+             ssh_common_args=executor.SSH_COMMON_ARGS,
+             ssh_extra_args=None, verbosity=100),
+        dict(conn_pass='foobar', become_pass='foobar'),
     ), (
         dict(remote_user='root', jump_host='jhost.com',
              private_key_file='/path/my.key'),
         dict(become=None, become_method='sudo', become_user='root',
              check=False, connection='smart', forks=100,
-             password=None,
              private_key_file='/path/my.key',
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
@@ -139,13 +148,13 @@ class AnsibleRunnerTestCase(test.TestCase):
                               '-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
                               'root@jhost.com"'),
-             ssh_extra_args=None, verbosity=100)
+             ssh_extra_args=None, verbosity=100),
+        dict(conn_pass=None, become_pass=None),
     ), (
         dict(remote_user='root', jump_host='jhost.com', jump_user='juser',
              private_key_file='/path/my.key'),
         dict(become=None, become_method='sudo', become_user='root',
              check=False, connection='smart', forks=100,
-             password=None,
              private_key_file='/path/my.key',
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
@@ -156,15 +165,18 @@ class AnsibleRunnerTestCase(test.TestCase):
                               '-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
                               'juser@jhost.com"'),
-             ssh_extra_args=None, verbosity=100)
+             ssh_extra_args=None, verbosity=100),
+        dict(conn_pass=None, become_pass=None),
     ))
     @ddt.unpack
-    def test___init__options(self, config, options_args, mock_options):
-        executor.AnsibleRunner(**config)
+    def test___init__options(self, config, options_args, passwords,
+                             mock_options):
+        runner = executor.AnsibleRunner(**config)
         module_path = executor.resolve_relative_path(
             'os_faults/ansible/modules')
         mock_options.assert_called_once_with(module_path=module_path,
                                              **options_args)
+        self.assertEqual(passwords, runner.passwords)
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')

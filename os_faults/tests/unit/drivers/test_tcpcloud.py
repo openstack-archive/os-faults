@@ -67,34 +67,54 @@ class TCPCloudManagementTestCase(test.TestCase):
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data((
         dict(address='tcp.local', username='root'),
-        (mock.call(become=None, private_key_file=None, remote_user='root'),
+        (mock.call(become=None, private_key_file=None, remote_user='root',
+                   password=None),
          mock.call(become=None, jump_host='tcp.local', jump_user='root',
-                   private_key_file=None, remote_user='root'))
+                   private_key_file=None, remote_user='root',
+                   password=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', master_sudo=True,
              private_key_file='/path/id_rsa'),
         (mock.call(become=True, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu'),
+                   remote_user='ubuntu', password=None),
          mock.call(become=None, jump_host='tcp.local', jump_user='ubuntu',
-                   private_key_file='/path/id_rsa', remote_user='root'))
+                   private_key_file='/path/id_rsa', remote_user='root',
+                   password=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', slave_sudo=True,
              private_key_file='/path/id_rsa'),
         (mock.call(become=None, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu'),
+                   remote_user='ubuntu', password=None),
          mock.call(become=True, jump_host='tcp.local', jump_user='ubuntu',
-                   private_key_file='/path/id_rsa', remote_user='root'))
+                   private_key_file='/path/id_rsa', remote_user='root',
+                   password=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', slave_sudo=True,
              private_key_file='/path/id_rsa',
              slave_direct_ssh=True),
         (mock.call(become=None, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu'),
+                   remote_user='ubuntu', password=None),
          mock.call(become=True, jump_host=None, jump_user=None,
-                   private_key_file='/path/id_rsa', remote_user='root'))
+                   private_key_file='/path/id_rsa', remote_user='root',
+                   password=None))
+    ), (
+        dict(address='tcp.local', username='root', password='root_pass'),
+        (mock.call(become=None, private_key_file=None, remote_user='root',
+                   password='root_pass'),
+         mock.call(become=None, jump_host='tcp.local', jump_user='root',
+                   private_key_file=None, remote_user='root',
+                   password='root_pass'))
+    ), (
+        dict(address='tcp.local', username='root',
+             slave_password='slave_pass'),
+        (mock.call(become=None, private_key_file=None, remote_user='root',
+                   password=None),
+         mock.call(become=None, jump_host='tcp.local', jump_user='root',
+                   private_key_file=None, remote_user='root',
+                   password='slave_pass'))
     ))
     @ddt.unpack
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):

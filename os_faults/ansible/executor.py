@@ -113,7 +113,7 @@ def add_module_paths(paths):
 
 Options = collections.namedtuple(
     'Options',
-    ['connection', 'password', 'module_path', 'forks',
+    ['connection', 'module_path', 'forks',
      'remote_user', 'private_key_file',
      'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
      'scp_extra_args', 'become', 'become_method',
@@ -134,8 +134,9 @@ class AnsibleRunner(object):
                 % dict(key=private_key_file, user=jump_user or remote_user,
                        host=jump_host, ssh_args=SSH_COMMON_ARGS))
 
+        self.passwords = dict(conn_pass=password, become_pass=password)
         self.options = Options(
-            connection='smart', password=password,
+            connection='smart',
             module_path=os.pathsep.join(get_module_paths()),
             forks=forks, remote_user=remote_user,
             private_key_file=private_key_file,
@@ -153,7 +154,6 @@ class AnsibleRunner(object):
                                              variable_manager=variable_manager,
                                              host_list=host_list)
         variable_manager.set_inventory(inventory_inst)
-        passwords = dict(vault_pass='secret')
 
         # create play
         play_inst = play.Play().load(play_source,
@@ -171,7 +171,7 @@ class AnsibleRunner(object):
                 variable_manager=variable_manager,
                 loader=loader,
                 options=self.options,
-                passwords=passwords,
+                passwords=self.passwords,
                 stdout_callback=callback,
             )
             tqm.run(play_inst)

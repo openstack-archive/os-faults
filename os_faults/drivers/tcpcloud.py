@@ -218,8 +218,10 @@ class TCPCloudManagement(cloud_management.CloudManagement,
           args:
             address: 192.168.1.10
             username: root
-            private_key_file: ~/.ssh/id_rsa_fuel
+            password: root_pass
+            private_key_file: ~/.ssh/id_rsa_tcpcloud
             slave_username: ubuntu
+            slave_password: ubuntu_pass
             master_sudo: False
             slave_sudo: True
             slave_name_regexp: ^(?!cfg|mon)
@@ -230,13 +232,17 @@ class TCPCloudManagement(cloud_management.CloudManagement,
 
     - **address** - ip address of salt config node
     - **username** - username for salt config node
+    - **password** - password for salt config node (optional)
     - **private_key_file** - path to key file (optional)
     - **slave_username** - username for salt minions (optional) *username*
       will be used if *slave_username* not specified
+    - **slave_password** - password for salt minions (optional) *password*
+      will be used if *slave_password* not specified
     - **master_sudo** - Use sudo on salt config node (optional)
     - **slave_sudo** - Use sudi on salt minion nodes (optional)
     - **slave_name_regexp** - regexp for minion FQDNs (optional)
     - **slave_direct_ssh** - if *False* then salt master is used as ssh proxy
+      (optional)
     - **get_ips_cmd** - salt command to get IPs of minions (optional)
     """
 
@@ -278,8 +284,10 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         'properties': {
             'address': {'type': 'string'},
             'username': {'type': 'string'},
+            'password': {'type': 'string'},
             'private_key_file': {'type': 'string'},
             'slave_username': {'type': 'string'},
+            'slave_password': {'type': 'string'},
             'master_sudo': {'type': 'boolean'},
             'slave_sudo': {'type': 'boolean'},
             'slave_name_regexp': {'type': 'string'},
@@ -305,13 +313,16 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         self.get_ips_cmd = cloud_management_params.get(
             'get_ips_cmd', 'pillar.get _param:single_address')
 
+        password = cloud_management_params.get('password')
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username,
+            password=password,
             private_key_file=self.private_key_file,
             become=cloud_management_params.get('master_sudo'))
 
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.slave_username,
+            password=cloud_management_params.get('slave_password', password),
             private_key_file=self.private_key_file,
             jump_host=self.master_node_address if use_jump else None,
             jump_user=self.username if use_jump else None,

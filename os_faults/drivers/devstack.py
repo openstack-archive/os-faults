@@ -134,6 +134,7 @@ class DevStackManagement(cloud_management.CloudManagement,
           args:
             address: 192.168.1.10
             username: ubuntu
+            password: ubuntu_pass
             private_key_file: ~/.ssh/id_rsa_devstack
             slaves:
             - 192.168.1.11
@@ -144,6 +145,7 @@ class DevStackManagement(cloud_management.CloudManagement,
 
     - **address** - ip address of any devstack node
     - **username** - username for all nodes
+    - **password** - password for all nodes (optional)
     - **private_key_file** - path to key file (optional)
     - **slaves** - list of ips for additional nodes (optional)
     - **iface** - network interface name to retrive mac address (optional)
@@ -171,6 +173,7 @@ class DevStackManagement(cloud_management.CloudManagement,
         'properties': {
             'address': {'type': 'string'},
             'username': {'type': 'string'},
+            'password': {'type': 'string'},
             'private_key_file': {'type': 'string'},
             'slaves': {
                 'type': 'array',
@@ -194,6 +197,7 @@ class DevStackManagement(cloud_management.CloudManagement,
 
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,
+            password=cloud_management_params.get('password'),
             become=False)
 
         self.hosts = [self.address]
