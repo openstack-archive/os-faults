@@ -7,7 +7,7 @@
         network_create_args: {}
       runner:
         type: "constant_for_duration"
-        duration: 400
+        duration: 480
         concurrency: 4
       context:
         users:
