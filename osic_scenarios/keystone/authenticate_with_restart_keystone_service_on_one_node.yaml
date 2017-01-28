@@ -5,7 +5,7 @@
     -
       runner:
         type: "constant_for_duration"
-        duration: 60
+        duration: 1200
         concurrency: 5
       context:
         users:
@@ -20,5 +20,5 @@
             name: event
             args:
               unit: time
-              at: [15]
+              at: [120]
 {% endfor %}

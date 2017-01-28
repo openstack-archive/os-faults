@@ -5,7 +5,7 @@
         agent_args: {}
       runner:
         type: "constant_for_duration"
-        duration: 480
+        duration: 1200
         concurrency: 4
       context:
         users:
