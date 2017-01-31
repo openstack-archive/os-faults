@@ -22,9 +22,9 @@ from os_faults.tests.unit import test
 @ddt.ddt
 class KillTestCase(test.TestCase):
 
-    @ddt.data(['foo', 9, 'bash -c "ps ax | grep \'foo\' '
+    @ddt.data(['foo', 9, 'bash -c "ps ax | grep -v grep | grep \'foo\' '
                          '| awk {\'print $1\'} | xargs kill -9"'],
-              ['bar', 3, 'bash -c "ps ax | grep \'bar\' '
+              ['bar', 3, 'bash -c "ps ax | grep -v grep | grep \'bar\' '
                          '| awk {\'print $1\'} | xargs kill -3"'])
     @ddt.unpack
     @mock.patch("os_faults.ansible.modules.kill.AnsibleModule")

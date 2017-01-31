@@ -25,7 +25,7 @@ def main():
     grep = module.params['grep']
     sig = module.params['sig']
 
-    cmd = ('bash -c "ps ax | grep \'%s\' | awk {\'print $1\'} '
+    cmd = ('bash -c "ps ax | grep -v grep | grep \'%s\' | awk {\'print $1\'} '
            '| xargs kill -%s"') % (grep, sig)
     rc, stdout, stderr = module.run_command(cmd, check_rc=True)
     module.exit_json(cmd=cmd, rc=rc, stderr=stderr, stdout=stdout)

@@ -28,6 +28,7 @@ def main():
     cmd = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
            'echo -n \'#!\' > $tf; '
            'echo -en \'/bin/bash\\npids=`ps ax | '
+           'grep -v grep | '
            'grep %s | awk {{\\047print $1\\047}}`; '
            'echo $pids | xargs kill -19; sleep %s; '
            'echo $pids | xargs kill -18; rm \' >> $tf; '

@@ -47,7 +47,7 @@ class ServiceAsProcess(service.Service):
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(self.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(self.GREP)
         results = self.cloud_management.execute_on_cloud(
             ips, {'command': cmd}, False)
         success_ips = [r.host for r in results

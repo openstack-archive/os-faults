@@ -54,25 +54,25 @@ class SaltService(service.ServiceAsProcess):
 
 class KeystoneService(SaltService):
     SERVICE_NAME = 'keystone'
-    GREP = '[k]eystone-all'
+    GREP = 'keystone-all'
     SALT_SERVICE = 'keystone'
 
 
 class HorizonService(SaltService):
     SERVICE_NAME = 'horizon'
-    GREP = '[a]pache2'
+    GREP = 'apache2'
     SALT_SERVICE = 'apache2'
 
 
 class MemcachedService(SaltService):
     SERVICE_NAME = 'memcached'
-    GREP = '[m]emcached'
+    GREP = 'memcached'
     SALT_SERVICE = 'memcached'
 
 
 class MySQLService(SaltService):
     SERVICE_NAME = 'mysql'
-    GREP = '[m]ysqld'
+    GREP = 'mysqld'
     SALT_SERVICE = 'mysql'
     PORT = ('tcp', 3307)
 
@@ -85,121 +85,121 @@ class RabbitMQService(SaltService):
 
 class GlanceAPIService(SaltService):
     SERVICE_NAME = 'glance-api'
-    GREP = '[g]lance-api'
+    GREP = 'glance-api'
     SALT_SERVICE = 'glance-api'
 
 
 class GlanceRegistryService(SaltService):
     SERVICE_NAME = 'glance-registry'
-    GREP = '[g]lance-registry'
+    GREP = 'glance-registry'
     SALT_SERVICE = 'glance-registry'
 
 
 class NovaAPIService(SaltService):
     SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
+    GREP = 'nova-api'
     SALT_SERVICE = 'nova-api'
 
 
 class NovaComputeService(SaltService):
     SERVICE_NAME = 'nova-compute'
-    GREP = '[n]ova-compute'
+    GREP = 'nova-compute'
     SALT_SERVICE = 'nova-compute'
 
 
 class NovaSchedulerService(SaltService):
     SERVICE_NAME = 'nova-scheduler'
-    GREP = '[n]ova-scheduler'
+    GREP = 'nova-scheduler'
     SALT_SERVICE = 'nova-scheduler'
 
 
 class NovaCertService(SaltService):
     SERVICE_NAME = 'nova-cert'
-    GREP = '[n]ova-cert'
+    GREP = 'nova-cert'
     SALT_SERVICE = 'nova-cert'
 
 
 class NovaConductorService(SaltService):
     SERVICE_NAME = 'nova-conductor'
-    GREP = '[n]ova-conductor'
+    GREP = 'nova-conductor'
     SALT_SERVICE = 'nova-conductor'
 
 
 class NovaConsoleAuthService(SaltService):
     SERVICE_NAME = 'nova-consoleauth'
-    GREP = '[n]ova-consoleauth'
+    GREP = 'nova-consoleauth'
     SALT_SERVICE = 'nova-consoleauth'
 
 
 class NovaNoVNCProxyService(SaltService):
     SERVICE_NAME = 'nova-novncproxy'
-    GREP = '[n]ova-novncproxy'
+    GREP = 'nova-novncproxy'
     SALT_SERVICE = 'nova-novncproxy'
 
 
 class NeutronServerService(SaltService):
     SERVICE_NAME = 'neutron-server'
-    GREP = '[n]eutron-server'
+    GREP = 'neutron-server'
     SALT_SERVICE = 'neutron-server'
 
 
 class NeutronDhcpAgentService(SaltService):
     SERVICE_NAME = 'neutron-dhcp-agent'
-    GREP = '[n]eutron-dhcp-agent'
+    GREP = 'neutron-dhcp-agent'
     SALT_SERVICE = 'neutron-dhcp-agent'
 
 
 class NeutronMetadataAgentService(SaltService):
     SERVICE_NAME = 'neutron-metadata-agent'
-    GREP = '[n]eutron-metadata-agent'
+    GREP = 'neutron-metadata-agent'
     SALT_SERVICE = 'neutron-metadata-agent'
 
 
 class NeutronOpenvswitchAgentService(SaltService):
     SERVICE_NAME = 'neutron-openvswitch-agent'
-    GREP = '[n]eutron-openvswitch-agent'
+    GREP = 'neutron-openvswitch-agent'
     SALT_SERVICE = 'neutron-openvswitch-agent'
 
 
 class NeutronL3AgentService(SaltService):
     SERVICE_NAME = 'neutron-l3-agent'
-    GREP = '[n]eutron-l3-agent'
+    GREP = 'neutron-l3-agent'
     SALT_SERVICE = 'neutron-l3-agent'
 
 
 class HeatAPIService(SaltService):
     SERVICE_NAME = 'heat-api'
-    GREP = '[h]eat-api '
+    GREP = 'heat-api '  # space at the end filters heat-api-* services
     SALT_SERVICE = 'heat-api'
 
 
 class HeatEngineService(SaltService):
     SERVICE_NAME = 'heat-engine'
-    GREP = '[h]eat-engine'
+    GREP = 'heat-engine'
     SALT_SERVICE = 'heat-engine'
 
 
 class CinderAPIService(SaltService):
     SERVICE_NAME = 'cinder-api'
-    GREP = '[c]inder-api'
+    GREP = 'cinder-api'
     SALT_SERVICE = 'cinder-api'
 
 
 class CinderSchedulerService(SaltService):
     SERVICE_NAME = 'cinder-scheduler'
-    GREP = '[c]inder-scheduler'
+    GREP = 'cinder-scheduler'
     SALT_SERVICE = 'cinder-scheduler'
 
 
 class CinderVolumeService(SaltService):
     SERVICE_NAME = 'cinder-volume'
-    GREP = '[c]inder-volume'
+    GREP = 'cinder-volume'
     SALT_SERVICE = 'cinder-volume'
 
 
 class CinderBackupService(SaltService):
     SERVICE_NAME = 'cinder-backup'
-    GREP = '[c]inder-backup'
+    GREP = 'cinder-backup'
     SALT_SERVICE = 'cinder-backup'
 
 
