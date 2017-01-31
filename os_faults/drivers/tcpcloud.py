@@ -126,8 +126,8 @@ class MySQLService(SaltService):
 
 class RabbitMQService(SaltService):
     SERVICE_NAME = 'rabbitmq'
-    GREP = '[r]abbitmq-server'
-    SALT_SERVICE = 'rabbitmq-server'
+    GREP = '[r]abbitmq'
+    SALT_SERVICE = 'rabbitmq'
 
 
 class GlanceAPIService(SaltService):
@@ -515,7 +515,7 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         :param raise_on_error: throw exception in case of error
         :return: Ansible execution result (list of records)
         """
-#        LOG.info('executing on remote hosts %s: %s',str(hosts), str(task)) 
+        LOG.info('executing on remote hosts %s: %s',str(hosts), str(task)) 
         if raise_on_error:
             return self.cloud_executor.execute(hosts, task)
         else:
@@ -532,7 +532,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
         hosts = self._get_cloud_hosts()
 
         if fqdns:
-            LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
+            #LOG.debug('Trying to find nodes with FQDNs: %s', fqdns)
+            #LOG.info('Value for fqdns %s:',str(fqdns))
             hosts = []
             for fqdn in fqdns:
                 if fqdn in self.fqdn_to_hosts:
@@ -540,8 +541,8 @@ class TCPCloudManagement(cloud_management.CloudManagement):
                 else:
                     raise error.NodeCollectionError(
                         'Node with FQDN \'%s\' not found!' % fqdn)
-            LOG.debug('The following nodes were found: %s', hosts)
-
+            #LOG.debug('The following nodes were found: %s', hosts)
+        #LOG.info('Cloud hosts are %s',str(hosts))
         return self.NODE_CLS(cloud_management=self,
                              power_management=self.power_management,
                              hosts=hosts)
