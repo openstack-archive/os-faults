@@ -59,7 +59,7 @@ class ServiceInScreen(service.ServiceAsProcess):
 
 class KeystoneService(service.ServiceAsProcess):
     SERVICE_NAME = 'keystone'
-    GREP = '[k]eystone-'
+    GREP = 'keystone-'
     RESTART_CMD = 'sudo service apache2 restart'
     TERMINATE_CMD = 'sudo service apache2 stop'
     START_CMD = 'sudo service apache2 start'
@@ -67,7 +67,7 @@ class KeystoneService(service.ServiceAsProcess):
 
 class MySQLService(service.ServiceAsProcess):
     SERVICE_NAME = 'mysql'
-    GREP = '[m]ysqld'
+    GREP = 'mysqld'
     RESTART_CMD = 'sudo service mysql restart'
     TERMINATE_CMD = 'sudo service mysql stop'
     START_CMD = 'sudo service mysql start'
@@ -76,7 +76,7 @@ class MySQLService(service.ServiceAsProcess):
 
 class RabbitMQService(service.ServiceAsProcess):
     SERVICE_NAME = 'rabbitmq'
-    GREP = '[r]abbitmq-server'
+    GREP = 'rabbitmq-server'
     RESTART_CMD = 'sudo service rabbitmq-server restart'
     TERMINATE_CMD = 'sudo service rabbitmq-server stop'
     START_CMD = 'sudo service rabbitmq-server start'
@@ -84,37 +84,37 @@ class RabbitMQService(service.ServiceAsProcess):
 
 class NovaAPIService(ServiceInScreen):
     SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
+    GREP = 'nova-api'
     WINDOW_NAME = 'n-api'
 
 
 class GlanceAPIService(ServiceInScreen):
     SERVICE_NAME = 'glance-api'
-    GREP = '[g]lance-api'
+    GREP = 'glance-api'
     WINDOW_NAME = 'g-api'
 
 
 class NovaComputeService(ServiceInScreen):
     SERVICE_NAME = 'nova-compute'
-    GREP = '[n]ova-compute'
+    GREP = 'nova-compute'
     WINDOW_NAME = 'n-cpu'
 
 
 class NovaSchedulerService(ServiceInScreen):
     SERVICE_NAME = 'nova-scheduler'
-    GREP = '[n]ova-scheduler'
+    GREP = 'nova-scheduler'
     WINDOW_NAME = 'n-sch'
 
 
 class IronicApiService(ServiceInScreen):
     SERVICE_NAME = 'ironic-api'
-    GREP = '[i]ronic-api'
+    GREP = 'ironic-api'
     WINDOW_NAME = 'ir-api'
 
 
 class IronicConductorService(ServiceInScreen):
     SERVICE_NAME = 'ironic-conductor'
-    GREP = '[i]ronic-conductor'
+    GREP = 'ironic-conductor'
     WINDOW_NAME = 'ir-cond'
 
 

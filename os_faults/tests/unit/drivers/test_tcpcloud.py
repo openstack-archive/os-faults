@@ -251,7 +251,8 @@ class TCPCloudManagementTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         nodes = service.get_nodes()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
             mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
@@ -327,7 +328,8 @@ class TcpServiceTestCase(test.TestCase):
 
         service.restart()
 
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
             mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
@@ -362,7 +364,8 @@ class TcpServiceTestCase(test.TestCase):
 
         service.terminate()
 
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
             mock.call(['tcp.local'], {'command': self.get_ips_cmd}),
@@ -397,7 +400,8 @@ class TcpServiceTestCase(test.TestCase):
 
         service.start()
 
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['tcp.local'], {'command': self.get_nodes_cmd}),
             mock.call(['tcp.local'], {'command': self.get_ips_cmd}),

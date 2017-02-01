@@ -57,7 +57,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.kill()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -91,7 +91,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.freeze()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -126,7 +126,7 @@ class FuelServiceTestCase(test.TestCase):
         delay_sec = 10
         service.freeze(nodes=None, sec=delay_sec)
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -161,7 +161,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.unfreeze()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -195,7 +195,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.unplug()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -232,7 +232,7 @@ class FuelServiceTestCase(test.TestCase):
 
         service.plug()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -269,8 +269,8 @@ class FuelServiceTestCase(test.TestCase):
 
         service.restart()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
-            service.GREP)
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -303,8 +303,8 @@ class FuelServiceTestCase(test.TestCase):
 
         service.terminate()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
-            service.GREP)
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -337,8 +337,8 @@ class FuelServiceTestCase(test.TestCase):
 
         service.start()
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
-            service.GREP)
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
@@ -369,7 +369,7 @@ class FuelServiceTestCase(test.TestCase):
         exception = self.assertRaises(error.ServiceError, service.restart)
         self.assertEqual('Task failed on some nodes', str(exception))
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
@@ -398,7 +398,7 @@ class FuelServiceTestCase(test.TestCase):
         exception = self.assertRaises(error.ServiceError, service.restart)
         self.assertEqual('Node collection is empty', str(exception))
 
-        get_nodes_cmd = 'bash -c "ps ax | grep \'{}\'"'.format(
+        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),

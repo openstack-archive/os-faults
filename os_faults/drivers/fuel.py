@@ -86,257 +86,257 @@ class PcsOrLinuxService(service.ServiceAsProcess):
 
 class KeystoneService(service.LinuxService):
     SERVICE_NAME = 'keystone'
-    GREP = '[k]eystone'
+    GREP = 'keystone'
     LINUX_SERVICE = 'apache2'
 
 
 class HorizonService(service.LinuxService):
     SERVICE_NAME = 'horizon'
-    GREP = '[a]pache2'
+    GREP = 'apache2'
     LINUX_SERVICE = 'apache2'
 
 
 class MemcachedService(service.LinuxService):
     SERVICE_NAME = 'memcached'
-    GREP = '[m]emcached'
+    GREP = 'memcached'
     LINUX_SERVICE = 'memcached'
 
 
 class MySQLService(PcsService):
     SERVICE_NAME = 'mysql'
-    GREP = '[m]ysqld'
+    GREP = 'mysqld'
     PCS_SERVICE = 'p_mysqld'
     PORT = ('tcp', 3307)
 
 
 class RabbitMQService(PcsService):
     SERVICE_NAME = 'rabbitmq'
-    GREP = '[r]abbit tcp_listeners'
+    GREP = 'rabbit tcp_listeners'
     PCS_SERVICE = 'p_rabbitmq-server'
 
 
 class GlanceAPIService(service.LinuxService):
     SERVICE_NAME = 'glance-api'
-    GREP = '[g]lance-api'
+    GREP = 'glance-api'
     LINUX_SERVICE = 'glance-api'
 
 
 class GlanceGlareService(service.LinuxService):
     SERVICE_NAME = 'glance-glare'
-    GREP = '[g]lance-glare'
+    GREP = 'glance-glare'
     LINUX_SERVICE = 'glance-glare'
 
 
 class GlanceRegistryService(service.LinuxService):
     SERVICE_NAME = 'glance-registry'
-    GREP = '[g]lance-registry'
+    GREP = 'glance-registry'
     LINUX_SERVICE = 'glance-registry'
 
 
 class NovaAPIService(service.LinuxService):
     SERVICE_NAME = 'nova-api'
-    GREP = '[n]ova-api'
+    GREP = 'nova-api'
     LINUX_SERVICE = 'nova-api'
 
 
 class NovaComputeService(service.LinuxService):
     SERVICE_NAME = 'nova-compute'
-    GREP = '[n]ova-compute'
+    GREP = 'nova-compute'
     LINUX_SERVICE = 'nova-compute'
 
 
 class NovaSchedulerService(service.LinuxService):
     SERVICE_NAME = 'nova-scheduler'
-    GREP = '[n]ova-scheduler'
+    GREP = 'nova-scheduler'
     LINUX_SERVICE = 'nova-scheduler'
 
 
 class NovaCertService(service.LinuxService):
     SERVICE_NAME = 'nova-cert'
-    GREP = '[n]ova-cert'
+    GREP = 'nova-cert'
     LINUX_SERVICE = 'nova-cert'
 
 
 class NovaConductorService(service.LinuxService):
     SERVICE_NAME = 'nova-conductor'
-    GREP = '[n]ova-conductor'
+    GREP = 'nova-conductor'
     LINUX_SERVICE = 'nova-conductor'
 
 
 class NovaConsoleAuthService(service.LinuxService):
     SERVICE_NAME = 'nova-consoleauth'
-    GREP = '[n]ova-consoleauth'
+    GREP = 'nova-consoleauth'
     LINUX_SERVICE = 'nova-consoleauth'
 
 
 class NovaNoVNCProxyService(service.LinuxService):
     SERVICE_NAME = 'nova-novncproxy'
-    GREP = '[n]ova-novncproxy'
+    GREP = 'nova-novncproxy'
     LINUX_SERVICE = 'nova-novncproxy'
 
 
 class NeutronServerService(service.LinuxService):
     SERVICE_NAME = 'neutron-server'
-    GREP = '[n]eutron-server'
+    GREP = 'neutron-server'
     LINUX_SERVICE = 'neutron-server'
 
 
 class NeutronDhcpAgentService(PcsService):
     SERVICE_NAME = 'neutron-dhcp-agent'
-    GREP = '[n]eutron-dhcp-agent'
+    GREP = 'neutron-dhcp-agent'
     PCS_SERVICE = 'neutron-dhcp-agent'
 
 
 class NeutronMetadataAgentService(PcsOrLinuxService):
     SERVICE_NAME = 'neutron-metadata-agent'
-    GREP = '[n]eutron-metadata-agent'
+    GREP = 'neutron-metadata-agent'
     PCS_SERVICE = 'neutron-metadata-agent'
     LINUX_SERVICE = 'neutron-metadata-agent'
 
 
 class NeutronOpenvswitchAgentService(PcsOrLinuxService):
     SERVICE_NAME = 'neutron-openvswitch-agent'
-    GREP = '[n]eutron-openvswitch-agent'
+    GREP = 'neutron-openvswitch-agent'
     PCS_SERVICE = 'neutron-openvswitch-agent'
     LINUX_SERVICE = 'neutron-openvswitch-agent'
 
 
 class NeutronL3AgentService(PcsOrLinuxService):
     SERVICE_NAME = 'neutron-l3-agent'
-    GREP = '[n]eutron-l3-agent'
+    GREP = 'neutron-l3-agent'
     PCS_SERVICE = 'neutron-l3-agent'
     LINUX_SERVICE = 'neutron-l3-agent'
 
 
 class HeatAPIService(service.LinuxService):
     SERVICE_NAME = 'heat-api'
-    GREP = '[h]eat-api'
+    GREP = 'heat-api'
     LINUX_SERVICE = 'heat-api'
 
 
 class HeatEngineService(PcsService):
     SERVICE_NAME = 'heat-engine'
-    GREP = '[h]eat-engine'
+    GREP = 'heat-engine'
     PCS_SERVICE = 'p_heat-engine'
 
 
 class CinderAPIService(service.LinuxService):
     SERVICE_NAME = 'cinder-api'
-    GREP = '[c]inder-api'
+    GREP = 'cinder-api'
     LINUX_SERVICE = 'cinder-api'
 
 
 class CinderSchedulerService(service.LinuxService):
     SERVICE_NAME = 'cinder-scheduler'
-    GREP = '[c]inder-scheduler'
+    GREP = 'cinder-scheduler'
     LINUX_SERVICE = 'cinder-scheduler'
 
 
 class CinderVolumeService(service.LinuxService):
     SERVICE_NAME = 'cinder-volume'
-    GREP = '[c]inder-volume'
+    GREP = 'cinder-volume'
     LINUX_SERVICE = 'cinder-volume'
 
 
 class CinderBackupService(service.LinuxService):
     SERVICE_NAME = 'cinder-backup'
-    GREP = '[c]inder-backup'
+    GREP = 'cinder-backup'
     LINUX_SERVICE = 'cinder-backup'
 
 
 class IronicApiService(service.LinuxService):
     SERVICE_NAME = 'ironic-api'
-    GREP = '[i]ronic-api'
+    GREP = 'ironic-api'
     LINUX_SERVICE = 'ironic-api'
 
 
 class IronicConductorService(service.LinuxService):
     SERVICE_NAME = 'ironic-conductor'
-    GREP = '[i]ronic-conductor'
+    GREP = 'ironic-conductor'
     LINUX_SERVICE = 'ironic-conductor'
 
 
 class SwiftAccountService(service.LinuxService):
     SERVICE_NAME = 'swift-account'
-    GREP = '[s]wift-account'
+    GREP = 'swift-account'
     LINUX_SERVICE = 'swift-account'
 
 
 class SwiftAccountAuditorService(service.LinuxService):
     SERVICE_NAME = 'swift-account-auditor'
-    GREP = '[s]wift-account-auditor'
+    GREP = 'swift-account-auditor'
     LINUX_SERVICE = 'swift-account-auditor'
 
 
 class SwiftAccountReaperService(service.LinuxService):
     SERVICE_NAME = 'swift-account-reaper'
-    GREP = '[s]wift-account-reaper'
+    GREP = 'swift-account-reaper'
     LINUX_SERVICE = 'swift-account-reaper'
 
 
 class SwiftAccountReplicatorService(service.LinuxService):
     SERVICE_NAME = 'swift-account-replicator'
-    GREP = '[s]wift-account-replicator'
+    GREP = 'swift-account-replicator'
     LINUX_SERVICE = 'swift-account-replicator'
 
 
 class SwiftContainerService(service.LinuxService):
     SERVICE_NAME = 'swift-container'
-    GREP = '[s]wift-container'
+    GREP = 'swift-container'
     LINUX_SERVICE = 'swift-container'
 
 
 class SwiftContainerAuditorService(service.LinuxService):
     SERVICE_NAME = 'swift-container-auditor'
-    GREP = '[s]wift-container-auditor'
+    GREP = 'swift-container-auditor'
     LINUX_SERVICE = 'swift-container-auditor'
 
 
 class SwiftContainerReplicatorService(service.LinuxService):
     SERVICE_NAME = 'swift-container-replicator'
-    GREP = '[s]wift-container-replicator'
+    GREP = 'swift-container-replicator'
     LINUX_SERVICE = 'swift-container-replicator'
 
 
 class SwiftContainerSyncService(service.LinuxService):
     SERVICE_NAME = 'swift-container-sync'
-    GREP = '[s]wift-container-sync'
+    GREP = 'swift-container-sync'
     LINUX_SERVICE = 'swift-container-sync'
 
 
 class SwiftContainerUpdaterService(service.LinuxService):
     SERVICE_NAME = 'swift-container-updater'
-    GREP = '[s]wift-container-updater'
+    GREP = 'swift-container-updater'
     LINUX_SERVICE = 'swift-container-updater'
 
 
 class SwiftObjectService(service.LinuxService):
     SERVICE_NAME = 'swift-object'
-    GREP = '[s]wift-object'
+    GREP = 'swift-object'
     LINUX_SERVICE = 'swift-object'
 
 
 class SwiftObjectAuditorService(service.LinuxService):
     SERVICE_NAME = 'swift-object-auditor'
-    GREP = '[s]wift-object-auditor'
+    GREP = 'swift-object-auditor'
     LINUX_SERVICE = 'swift-object-auditor'
 
 
 class SwiftObjectReplicatorService(service.LinuxService):
     SERVICE_NAME = 'swift-object-replicator'
-    GREP = '[s]wift-object-replicator'
+    GREP = 'swift-object-replicator'
     LINUX_SERVICE = 'swift-object-replicator'
 
 
 class SwiftObjectUpdaterService(service.LinuxService):
     SERVICE_NAME = 'swift-object-updater'
-    GREP = '[s]wift-object-updater'
+    GREP = 'swift-object-updater'
     LINUX_SERVICE = 'swift-object-updater'
 
 
 class SwiftProxyService(service.LinuxService):
     SERVICE_NAME = 'swift-proxy'
-    GREP = '[s]wift-proxy'
+    GREP = 'swift-proxy'
     LINUX_SERVICE = 'swift-proxy'
 
 

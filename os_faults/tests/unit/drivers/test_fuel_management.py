@@ -158,7 +158,8 @@ class FuelManagementTestCase(test.TestCase):
         self.assertIsInstance(service, service_cls)
 
         nodes = service.get_nodes()
-        cmd = 'bash -c "ps ax | grep \'{}\'"'.format(service_cls.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
+            service_cls.GREP)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],

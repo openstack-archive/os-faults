@@ -33,6 +33,7 @@ class FreezeTestCase(test.TestCase):
         cmd = ('bash -c "tf=$(mktemp /tmp/script.XXXXXX);'
                'echo -n \'#!\' > $tf; '
                'echo -en \'/bin/bash\\npids=`ps ax | '
+               'grep -v grep | '
                'grep foo | awk {{\\047print $1\\047}}`; '
                'echo $pids | xargs kill -19; sleep 15; '
                'echo $pids | xargs kill -18; rm \' >> $tf; '
