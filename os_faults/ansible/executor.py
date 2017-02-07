@@ -155,29 +155,28 @@ class AnsibleRunner(object):
                                              host_list=host_list)
         variable_manager.set_inventory(inventory_inst)
 
+        storage = []
+        callback = MyCallback(storage)
+
+        tqm = task_queue_manager.TaskQueueManager(
+            inventory=inventory_inst,
+            variable_manager=variable_manager,
+            loader=loader,
+            options=self.options,
+            passwords=self.passwords,
+            stdout_callback=callback,
+        )
+
         # create play
         play_inst = play.Play().load(play_source,
                                      variable_manager=variable_manager,
                                      loader=loader)
 
-        storage = []
-        callback = MyCallback(storage)
-
         # actually run it
-        tqm = None
         try:
-            tqm = task_queue_manager.TaskQueueManager(
-                inventory=inventory_inst,
-                variable_manager=variable_manager,
-                loader=loader,
-                options=self.options,
-                passwords=self.passwords,
-                stdout_callback=callback,
-            )
             tqm.run(play_inst)
         finally:
-            if tqm is not None:
-                tqm.cleanup()
+            tqm.cleanup()
 
         return storage
 
