@@ -90,7 +90,7 @@ class LibvirtDriverTestCase(test.TestCase):
 
     @mock.patch(DRIVER_PATH + '.LibvirtDriver._find_domain_by_mac_address')
     @ddt.data(('poweroff', 'destroy'), ('poweron', 'create'),
-              ('reset', 'reset'))
+              ('reset', 'reset'), ('shutdown', 'shutdown'))
     def test_driver_actions(self, actions, mock__find_domain_by_mac_address):
         getattr(self.driver, actions[0])(self.host)
         domain = mock__find_domain_by_mac_address.return_value
