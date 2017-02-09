@@ -134,3 +134,65 @@ class LinuxService(ServiceAsProcess):
         self.RESTART_CMD = 'service {} restart'.format(self.LINUX_SERVICE)
         self.TERMINATE_CMD = 'service {} stop'.format(self.LINUX_SERVICE)
         self.START_CMD = 'service {} start'.format(self.LINUX_SERVICE)
+
+
+class ServiceInDocker(service.Service):
+
+    @utils.require_variables('SERVICE_NAME', 'GREP_CONTAINER')
+    def __init__(self, node_cls, cloud_management=None):
+        self.node_cls = node_cls
+        self.cloud_management = cloud_management
+
+    def _run_task(self, task, nodes):
+        ips = nodes.get_ips()
+        if not ips:
+            raise error.ServiceError('Node collection is empty')
+
+        return self.cloud_management.execute_on_cloud(ips, task)
+
+    def get_nodes(self):
+        nodes = self.cloud_management.get_nodes()
+        ips = nodes.get_ips()
+        cmd = {'docker_grep': {'grep': self.GREP_CONTAINER}}
+        results = self.cloud_management.execute_on_cloud(
+            ips, cmd, False)
+        success_ips = [r.host for r in results
+                       if r.status == executor.STATUS_OK]
+        hosts = [h for h in nodes.hosts if h.ip in success_ips]
+        return self.node_cls(cloud_management=self.cloud_management,
+                             hosts=hosts)
+
+    @utils.require_variables('GREP_PROCESS')
+    def kill(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'docker_kill': {'grep_container': self.GREP_CONTAINER,
+                               'grep_process': self.GREP_PROCESS,
+                               'sig': signal.SIGKILL}}
+        self._run_task(cmd, nodes)
+
+    @utils.require_variables('GREP_PROCESS')
+    def freeze(self, nodes=None, sec=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        if sec:
+            cmd = {'docker_freeze': {'grep_container': self.GREP_CONTAINER,
+                                     'grep_process': self.GREP_PROCESS,
+                                     'sec': sec}}
+        else:
+            cmd = {'docker_kill': {'grep_container': self.GREP_CONTAINER,
+                                   'grep_process': self.GREP_PROCESS,
+                                   'sig': signal.SIGSTOP}}
+        LOG.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
+                 ('for %s sec ' % sec) if sec else '', nodes.get_ips())
+        self._run_task(cmd, nodes)
+
+    @utils.require_variables('GREP_PROCESS')
+    def unfreeze(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'docker_kill': {'grep_container': self.GREP_CONTAINER,
+                               'grep_process': self.GREP_PROCESS,
+                               'sig': signal.SIGCONT}}
+        self._run_task(cmd, nodes)
