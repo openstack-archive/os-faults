@@ -5,7 +5,7 @@
 ../osic_scenarios/glance/list_image_with_restart_memcached_service_on_one_node.yaml
 ../osic_scenarios/glance/list_image_with_restart_mysql_service_on_one_node.yaml
 ../osic_scenarios/glance/list_image_with_restart_rabbitmq_service_on_one_node.yaml
-../osic_scenarios/keystone/list_image_with_restart_keystone_service_on_one_node.yaml
+../osic_scenarios/glance/list_image_with_restart_keystone_service_on_one_node.yaml
 ../osic_scenarios/keystone/authenticate_with_restart_memcached_service_on_one_node.yaml
 ../osic_scenarios/keystone/authenticate_with_restart_rabbitmq_service_on_one_node.yaml
 ../osic_scenarios/keystone/authenticate_with_restart_mysql_service_on_one_node.yaml
