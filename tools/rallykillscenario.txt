@@ -10,7 +10,7 @@
 ../osic_scenarios/keystone/authenticate_with_kill_memcached_service_on_one_node.yaml
 ../osic_scenarios/keystone/authenticate_with_kill_mysql_service_on_one_node.yaml
 ../osic_scenarios/keystone/authenticate_with_kill_rabbitmq_service_on_one_node.yaml
-../osic_scenarios/neutron/create-and-delete-networks_with_kill_mysql_service_on_one_node.yaml
+../osic_scenarios/neutron/create_and_delete_networks_with_kill_mysql_service_on_one_node.yaml
 ../osic_scenarios/neutron/list_agents_with_kill_keystone_service_on_one_node.yaml
 ../osic_scenarios/swift/create_and_delete_object_with_kill_memcached_service_on_one_node.yaml
 ../osic_scenarios/swift/create_and_delete_object_with_kill_mysql_service_on_one_node.yaml
