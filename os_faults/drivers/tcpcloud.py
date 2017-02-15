@@ -203,6 +203,36 @@ class CinderBackupService(SaltService):
     SALT_SERVICE = 'cinder-backup'
 
 
+class ElasticSearchService(SaltService):
+    SERVICE_NAME = 'elasticsearch'
+    GREP = 'java .*elasticsearch'
+    SALT_SERVICE = 'elasticsearch'
+
+
+class GrafanaServerService(SaltService):
+    SERVICE_NAME = 'grafana-server'
+    GREP = 'grafana-server'
+    SALT_SERVICE = 'grafana-server'
+
+
+class InfluxDBService(SaltService):
+    SERVICE_NAME = 'influxdb'
+    GREP = 'influxd'
+    SALT_SERVICE = 'influxdb'
+
+
+class KibanaService(SaltService):
+    SERVICE_NAME = 'kibana'
+    GREP = 'kibana'
+    SALT_SERVICE = 'kibana'
+
+
+class Nagios3Service(SaltService):
+    SERVICE_NAME = 'nagios3'
+    GREP = 'nagios3'
+    SALT_SERVICE = 'nagios3'
+
+
 class TCPCloudManagement(cloud_management.CloudManagement,
                          node_discover.NodeDiscover):
     """TCPCloud driver.
@@ -275,6 +305,11 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         'cinder-scheduler': CinderSchedulerService,
         'cinder-volume': CinderVolumeService,
         'cinder-backup': CinderBackupService,
+        'elasticsearch': ElasticSearchService,
+        'grafana-server': GrafanaServerService,
+        'influxdb': InfluxDBService,
+        'kibana': KibanaService,
+        'nagios3': Nagios3Service,
     }
     SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []
