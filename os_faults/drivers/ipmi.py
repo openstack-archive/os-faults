@@ -23,6 +23,17 @@ from os_faults import utils
 LOG = logging.getLogger(__name__)
 
 
+BMC_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'address': {'type': 'string'},
+        'username': {'type': 'string'},
+        'password': {'type': 'string'},
+    },
+    'required': ['address', 'username', 'password']
+}
+
+
 class IPMIDriver(power_management.PowerDriver):
     """IPMI driver.
 
@@ -41,6 +52,11 @@ class IPMIDriver(power_management.PowerDriver):
               aa:bb:cc:dd:ee:02:
                 address: 170.0.10.51
                 username: admin2
+                password: Admin_123
+            fqdn_to_bmc:
+              node3.local:
+                address: 170.0.10.52
+                username: admin1
                 password: Admin_123
 
     parameters:
@@ -63,79 +79,81 @@ class IPMIDriver(power_management.PowerDriver):
             'mac_to_bmc': {
                 'type': 'object',
                 'patternProperties': {
-                    utils.MACADDR_REGEXP: {
-                        'type': 'object',
-                        'properties': {
-                            'address': {'type': 'string'},
-                            'username': {'type': 'string'},
-                            'password': {'type': 'string'},
-                        },
-                        'required': ['address', 'username', 'password']
-                    }
+                    utils.MACADDR_REGEXP: BMC_SCHEMA
                 }
-            }
+            },
+            'fqdn_to_bmc': {
+                'type': 'object',
+                'patternProperties': {
+                    '.*': BMC_SCHEMA
+                }
+            },
         },
-        'required': ['mac_to_bmc'],
+        'anyOf': [
+            {'required': ['mac_to_bmc']},
+            {'required': ['fqdn_to_bmc']},
+        ],
         'additionalProperties': False,
     }
 
     def __init__(self, params):
-        self.mac_to_bmc = params['mac_to_bmc']
+        self.mac_to_bmc = params.get('mac_to_bmc', {})
+        self.fqdn_to_bmc = params.get('fqdn_to_bmc', {})
         # TODO(astudenov): make macs lowercased
 
-    def _find_bmc_by_mac_address(self, mac_address):
-        if mac_address not in self.mac_to_bmc:
-            raise error.PowerManagementError(
-                'BMC for Node(%s) not found!' % mac_address)
+    def _find_bmc_by_host(self, host):
+        if host.mac in self.mac_to_bmc:
+            return self.mac_to_bmc[host.mac]
+        if host.fqdn in self.fqdn_to_bmc:
+            return self.fqdn_to_bmc[host.fqdn]
 
-        return self.mac_to_bmc[mac_address]
+        raise error.PowerManagementError(
+            'BMC for {!r} not found!'.format(host))
 
-    def _run_set_power_cmd(self, mac_address, cmd, expected_state=None):
-        bmc = self._find_bmc_by_mac_address(mac_address)
+    def _run_set_power_cmd(self, host, cmd, expected_state=None):
+        bmc = self._find_bmc_by_host(host)
         try:
             ipmicmd = ipmi_command.Command(bmc=bmc['address'],
                                            userid=bmc['username'],
                                            password=bmc['password'])
             ret = ipmicmd.set_power(cmd, wait=True)
         except pyghmi_exception.IpmiException:
-            msg = 'IPMI cmd {!r} failed on bmc {!r}, Node({})'.format(
-                cmd, bmc['address'], mac_address)
+            msg = 'IPMI cmd {!r} failed on bmc {!r}, {!r}'.format(
+                cmd, bmc['address'], host)
             LOG.error(msg, exc_info=True)
             raise
 
         LOG.debug('IPMI response: {}'.format(ret))
         if ret.get('powerstate') != expected_state or 'error' in ret:
             msg = ('Failed to change power state to {!r} on bmc {!r}, '
-                   'Node({})'.format(expected_state,
-                                     bmc['address'],
-                                     mac_address))
+                   '{!r}'.format(expected_state, bmc['address'], host))
             raise error.PowerManagementError(msg)
 
     def supports(self, host):
         try:
-            self._find_bmc_by_mac_address(host.mac)
+            self._find_bmc_by_host(host)
         except error.PowerManagementError:
             return False
         return True
 
     def poweroff(self, host):
-        LOG.debug('Power off Node with MAC address: %s', host.mac)
-        self._run_set_power_cmd(host.mac, cmd='off', expected_state='off')
-        LOG.info('Node powered off: %s', host.mac)
+        LOG.debug('Power off Node: %s', host)
+        self._run_set_power_cmd(host, cmd='off', expected_state='off')
+        LOG.info('Node powered off: %s', host)
 
     def poweron(self, host):
-        LOG.debug('Power on Node with MAC address: %s', host.mac)
-        self._run_set_power_cmd(host.mac, cmd='on', expected_state='on')
-        LOG.info('Node powered on: %s', host.mac)
+        LOG.debug('Power on Node: %s', host)
+        self._run_set_power_cmd(host, cmd='on', expected_state='on')
+        LOG.info('Node powered on: %s', host)
 
     def reset(self, host):
-        LOG.debug('Reset Node with MAC address: %s', host.mac)
+        LOG.debug('Reset Node: %s', host)
         # boot -- If system is off, then 'on', else 'reset'
-        self._run_set_power_cmd(host.mac, cmd='boot')
+        self._run_set_power_cmd(host, cmd='boot')
         # NOTE(astudenov): This command does not wait for node to boot
-        LOG.info('Node reset: %s', host.mac)
+        LOG.info('Node reset: %s', host)
 
     def shutdown(self, host):
-        LOG.debug('Shutdown Node with MAC address: %s', host.mac)
-        self._run_set_power_cmd(host.mac, cmd='shutdown', expected_state='off')
-        LOG.info('Node is off: %s', host.mac)
+        LOG.debug('Shutdown Node: %s', host)
+        self._run_set_power_cmd(host, cmd='shutdown', expected_state='off')
+        LOG.info('Node is off: %s', host)
