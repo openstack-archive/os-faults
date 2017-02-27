@@ -27,13 +27,19 @@ class TestDriver(base_driver.BaseDriver):
 
 class RegistryTestCase(test.TestCase):
 
+    def setUp(self):
+        super(RegistryTestCase, self).setUp()
+        registry.DRIVERS.clear()  # reset global drivers list
+
+    def tearDown(self):
+        super(RegistryTestCase, self).tearDown()
+        registry.DRIVERS.clear()  # reset global drivers list
+
     @mock.patch('oslo_utils.importutils.import_module')
     @mock.patch('os.walk')
     def test_get_drivers(self, mock_os_walk, mock_import_module):
         drivers_folder = os.path.dirname(drivers.__file__)
         mock_os_walk.return_value = [(drivers_folder, [], ['test_driver.py'])]
         mock_import_module.return_value = sys.modules[__name__]
-
-        registry.DRIVERS.clear()  # reset global drivers list
 
         self.assertEqual({'test': TestDriver}, registry.get_drivers())
