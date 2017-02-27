@@ -18,6 +18,7 @@ import threading
 LOG = logging.getLogger(__name__)
 
 MACADDR_REGEXP = '^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$'
+FQDN_REGEXP = '.*'
 
 
 class ThreadsWrapper(object):
