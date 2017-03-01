@@ -134,3 +134,8 @@ class IPMIDriver(power_management.PowerDriver):
         self._run_set_power_cmd(host.mac, cmd='boot')
         # NOTE(astudenov): This command does not wait for node to boot
         LOG.info('Node reset: %s', host.mac)
+
+    def shutdown(self, host):
+        LOG.debug('Shutdown Node with MAC address: %s', host.mac)
+        self._run_set_power_cmd(host.mac, cmd='shutdown', expected_state='off')
+        LOG.info('Node is off: %s', host.mac)

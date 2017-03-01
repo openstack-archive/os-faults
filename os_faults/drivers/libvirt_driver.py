@@ -101,6 +101,12 @@ class LibvirtDriver(power_management.PowerDriver):
         domain.reset()
         LOG.info('Domain reset: %s', host.mac)
 
+    def shutdown(self, host):
+        LOG.debug('Shutdown domain with MAC address: %s', host.mac)
+        domain = self._find_domain_by_mac_address(host.mac)
+        domain.shutdown()
+        LOG.info('Domain is off: %s', host.mac)
+
     def snapshot(self, host, snapshot_name, suspend):
         LOG.debug('Create snapshot "%s" for domain with MAC address: %s',
                   snapshot_name, host.mac)

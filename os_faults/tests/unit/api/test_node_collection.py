@@ -188,6 +188,10 @@ class NodeCollectionTestCase(test.TestCase):
         self.node_collection.reset()
         self.mock_power_manager.reset.assert_called_once_with(self.hosts)
 
+    def test_shutdown(self):
+        self.node_collection.shutdown()
+        self.mock_power_manager.shutdown.assert_called_once_with(self.hosts)
+
     def test_reboot(self):
         self.node_collection.reboot()
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
