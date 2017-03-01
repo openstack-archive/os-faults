@@ -85,12 +85,15 @@ class IPMIDriverTestCase(test.TestCase):
                           '00:00:00:00:00:00', 'off', expected_state='off')
 
     @mock.patch('os_faults.drivers.ipmi.IPMIDriver._run_set_power_cmd')
-    @ddt.data(('poweroff', 'off'), ('poweron', 'on'), ('reset', 'boot'))
+    @ddt.data(('poweroff', 'off', 'off'),
+              ('poweron', 'on', 'on'),
+              ('reset', 'boot'),
+              ('shutdown', 'shutdown', 'off'))
     def test_driver_actions(self, actions, mock__run_set_power_cmd):
         getattr(self.driver, actions[0])(self.host)
-        if actions[0] in ('poweroff', 'poweron'):
+        if len(actions) == 3:
             mock__run_set_power_cmd.assert_called_once_with(
-                '00:00:00:00:00:00', cmd=actions[1], expected_state=actions[1])
+                '00:00:00:00:00:00', cmd=actions[1], expected_state=actions[2])
         else:
             mock__run_set_power_cmd.assert_called_once_with(
                 '00:00:00:00:00:00', cmd=actions[1])

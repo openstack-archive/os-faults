@@ -25,19 +25,23 @@ class PowerDriver(base_driver.BaseDriver):
 
     @abc.abstractmethod
     def supports(host):
-        pass
+        """Returns True if host is supported by the power driver"""
 
     @abc.abstractmethod
     def poweroff(self, host):
-        pass
+        """Power off host abruptly"""
 
     @abc.abstractmethod
     def poweron(self, host):
-        pass
+        """Power on host"""
 
     @abc.abstractmethod
     def reset(self, host):
-        pass
+        """Reset host"""
+
+    @abc.abstractmethod
+    def shutdown(self, host):
+        """Graceful shutdown host"""
 
     def snapshot(self, host, snapshot_name, suspend=True):
         raise NotImplementedError
@@ -87,6 +91,9 @@ class PowerManager(object):
 
     def reset(self, hosts):
         self._run_command('reset', hosts)
+
+    def shutdown(self, hosts):
+        self._run_command('shutdown', hosts)
 
     def snapshot(self, hosts, snapshot_name, suspend=True):
         self._run_command('snapshot', hosts,

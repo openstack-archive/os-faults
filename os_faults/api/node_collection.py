@@ -165,6 +165,14 @@ class NodeCollection(object):
         LOG.info('Reset nodes: %s', self)
         self.cloud_management.power_manager.reset(self.hosts)
 
+    @public
+    def shutdown(self):
+        """Shutdown all nodes gracefully
+
+        """
+        LOG.info('Shutdown nodes: %s', self)
+        self.cloud_management.power_manager.shutdown(self.hosts)
+
     def snapshot(self, snapshot_name, suspend=True):
         """Create snapshot for all nodes
 

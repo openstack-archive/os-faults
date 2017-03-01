@@ -59,6 +59,12 @@ class PowerManagerTestCase(test.TestCase):
         self.dummy_driver1.reset.called_once_with(host=self.hosts[0])
         self.dummy_driver2.reset.called_once_with(host=self.hosts[1])
 
+    def test_shutdown(self):
+        self.pm.shutdown(self.hosts)
+
+        self.dummy_driver1.shutdown.called_once_with(host=self.hosts[0])
+        self.dummy_driver2.shutdown.called_once_with(host=self.hosts[1])
+
     def test_snapshot(self):
         self.pm.snapshot(self.hosts, 'snap1', suspend=False)
 
