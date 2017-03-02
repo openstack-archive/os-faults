@@ -1,0 +1,9 @@
+Code-Review+2: Ilya Shakhat <shakhat@gmail.com>
+Code-Review+2: Yaroslav Lobankov <ylobankov@mirantis.com>
+Workflow+1: Yaroslav Lobankov <ylobankov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 02 Mar 2017 12:07:30 +0000
+Reviewed-on: https://review.openstack.org/430899
+Project: openstack/os-faults
+Branch: refs/heads/master
