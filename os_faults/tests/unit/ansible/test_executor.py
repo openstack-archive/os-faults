@@ -142,11 +142,13 @@ class AnsibleRunnerTestCase(test.TestCase):
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
+                              '-o ConnectTimeout=60 '
                               '-o ProxyCommand='
                               '"ssh -i /path/my.key '
                               '-W %h:%p '
                               '-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
+                              '-o ConnectTimeout=60 '
                               'root@jhost.com"'),
              ssh_extra_args=None, verbosity=100),
         dict(conn_pass=None, become_pass=None),
@@ -159,11 +161,13 @@ class AnsibleRunnerTestCase(test.TestCase):
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
+                              '-o ConnectTimeout=60 '
                               '-o ProxyCommand='
                               '"ssh -i /path/my.key '
                               '-W %h:%p '
                               '-o UserKnownHostsFile=/dev/null '
                               '-o StrictHostKeyChecking=no '
+                              '-o ConnectTimeout=60 '
                               'juser@jhost.com"'),
              ssh_extra_args=None, verbosity=100),
         dict(conn_pass=None, become_pass=None),

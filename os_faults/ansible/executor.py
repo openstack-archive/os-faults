@@ -34,7 +34,9 @@ STATUS_SKIPPED = 'SKIPPED'
 
 DEFAULT_ERROR_STATUSES = {STATUS_FAILED, STATUS_UNREACHABLE}
 
-SSH_COMMON_ARGS = '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+SSH_COMMON_ARGS = ('-o UserKnownHostsFile=/dev/null '
+                   '-o StrictHostKeyChecking=no '
+                   '-o ConnectTimeout=60')
 
 STDOUT_LIMIT = 4096  # Symbols count
 
