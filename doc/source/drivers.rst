@@ -11,6 +11,8 @@ Cloud management
 
 .. cloud_driver_doc:: tcpcloud
 
+.. cloud_driver_doc:: mcp
+
 
 Power management
 ----------------

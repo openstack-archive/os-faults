@@ -134,3 +134,59 @@ class LinuxService(ServiceAsProcess):
         self.RESTART_CMD = 'service {} restart'.format(self.LINUX_SERVICE)
         self.TERMINATE_CMD = 'service {} stop'.format(self.LINUX_SERVICE)
         self.START_CMD = 'service {} start'.format(self.LINUX_SERVICE)
+
+
+class ServiceInKubernetes(service.Service):
+    @utils.require_variables('SERVICE_NAME', 'SELECTOR')
+    def __init__(self, node_cls, cloud_management=None):
+        self.node_cls = node_cls
+        self.cloud_management = cloud_management
+
+    def _run_task_on_cloud(self, task, nodes):
+        ips = nodes.get_ips()
+        if not ips:
+            raise error.ServiceError('Node collection is empty')
+
+        return self.cloud_management.execute_on_cloud(ips, task)
+
+    def _run_task_on_kubernetes(self, task):
+        return self.cloud_management.execute_on_kubernetes_node(task)
+
+    def get_nodes(self):
+        nodes = self.cloud_management.get_nodes()
+        cmd = {'kubectl': {'namespace': 'ccp',
+                           'command': 'get',
+                           'resource': 'pod',
+                           'selector': self.SELECTOR,
+                           'jsonpath': '{.items[*].status.hostIP}'}}
+        results = self._run_task_on_kubernetes(cmd)
+        ips = results[0].payload['stdout'].split()
+        hosts = [h for h in nodes.hosts if h.ip in ips]
+        return self.node_cls(cloud_management=self.cloud_management,
+                             hosts=hosts)
+
+    def restart(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'kubectl': {'namespace': 'ccp',
+                           'command': 'delete',
+                           'resource': 'pod',
+                           'selector': self.SELECTOR,
+                           'nodes': nodes.get_fqdns()}}
+        self._run_task_on_kubernetes(cmd)
+
+    @utils.require_variables('GREP_PROCESS')
+    def kill(self, nodes=None):
+        nodes = nodes if nodes is not None else self.get_nodes()
+        LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
+                 nodes.get_ips())
+        cmd = {'kubectl': {'namespace': 'ccp',
+                           'command': 'exec',
+                           'selector': self.SELECTOR,
+                           'nodes': nodes.get_fqdns(),
+                           'pod_action': 'kill',
+                           'grep_process': self.GREP_PROCESS,
+                           'container': getattr(self, 'CONTAINER', None),
+                           }}
+        self._run_task_on_kubernetes(cmd)
