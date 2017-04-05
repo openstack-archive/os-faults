@@ -35,6 +35,28 @@ class FuelManagementTestCase(test.TestCase):
             })
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
+    @ddt.data((
+        dict(address='fuel.local', username='root'),
+        (mock.call(private_key_file=None, remote_user='root'),
+         mock.call(private_key_file=None, remote_user='root',
+                   jump_host='fuel.local'))
+    ), (
+        dict(address='fuel.local', username='root', slave_direct_ssh=True),
+        (mock.call(private_key_file=None, remote_user='root'),
+         mock.call(private_key_file=None, remote_user='root',
+                   jump_host=None))
+    ))
+    @ddt.unpack
+    def test_init(self, config, expected_runner_calls, mock_ansible_runner):
+        ansible_runner_inst = mock_ansible_runner.return_value
+
+        fuel_managment = fuel.FuelManagement(config)
+
+        mock_ansible_runner.assert_has_calls(expected_runner_calls)
+        self.assertIs(fuel_managment.master_node_executor, ansible_runner_inst)
+        self.assertIs(fuel_managment.cloud_executor, ansible_runner_inst)
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_verify(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
