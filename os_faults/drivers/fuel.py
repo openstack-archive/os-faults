@@ -356,12 +356,15 @@ class FuelManagement(cloud_management.CloudManagement,
             address: 192.168.1.10
             username: root
             private_key_file: ~/.ssh/id_rsa_fuel
+            slave_direct_ssh: True
 
     parameters:
 
     - **address** - ip address of fuel master node
     - **username** - username for fuel master and slave nodes
     - **private_key_file** - path to key file (optional)
+    - **slave_direct_ssh** - if *False* then fuel master is used as ssh proxy
+      (optional)
     """
 
     NAME = 'fuel'
@@ -420,6 +423,7 @@ class FuelManagement(cloud_management.CloudManagement,
             'address': {'type': 'string'},
             'username': {'type': 'string'},
             'private_key_file': {'type': 'string'},
+            'slave_direct_ssh': {'type': 'boolean'},
 
         },
         'required': ['address', 'username'],
@@ -433,13 +437,19 @@ class FuelManagement(cloud_management.CloudManagement,
         self.master_node_address = cloud_management_params['address']
         self.username = cloud_management_params['username']
         self.private_key_file = cloud_management_params.get('private_key_file')
+        self.slave_direct_ssh = cloud_management_params.get(
+            'slave_direct_ssh', False)
 
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file)
 
+        jump_host = self.master_node_address
+        if self.slave_direct_ssh:
+            jump_host = None
+
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,
-            jump_host=self.master_node_address)
+            jump_host=jump_host)
 
         self.cached_cloud_hosts = list()
 
