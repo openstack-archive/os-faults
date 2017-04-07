@@ -51,7 +51,7 @@ def require_variables(*variables):
         def wrapper(self, *args, **kawrgs):
             missing_vars = []
             for var in variables:
-                if not hasattr(self, var):
+                if not getattr(self, var, None):
                     missing_vars.append(var)
             if missing_vars:
                 missing_vars = ', '.join(missing_vars)

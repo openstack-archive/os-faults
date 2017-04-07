@@ -19,7 +19,6 @@ from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
 from os_faults.common import service
-from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -45,299 +44,122 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
 
 class PcsService(service.ServiceAsProcess):
+    """Service as a resource in Pacemaker
 
-    @utils.require_variables('PCS_SERVICE')
+    Service that can be controled by `pcs resource` CLI tool.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: pcs_service
+            args:
+              pcs_service: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **pcs_service** - name of a service
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+
+    NAME = 'pcs_service'
+    DESCRIPTION = 'Service in pacemaker'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'pcs_service': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': service.PORT_SCHEMA,
+        },
+        'required': ['grep', 'pcs_service'],
+        'additionalProperties': False,
+    }
+
     def __init__(self, *args, **kwargs):
         super(PcsService, self).__init__(*args, **kwargs)
+        self.pcs_service = self.config['pcs_service']
 
-        self.RESTART_CMD = 'pcs resource restart {} $(hostname)'.format(
-            self.PCS_SERVICE)
-        self.TERMINATE_CMD = 'pcs resource ban {} $(hostname)'.format(
-            self.PCS_SERVICE)
-        self.START_CMD = 'pcs resource clear {} $(hostname)'.format(
-            self.PCS_SERVICE)
+        self.restart_cmd = 'pcs resource restart {} $(hostname)'.format(
+            self.pcs_service)
+        self.terminate_cmd = 'pcs resource ban {} $(hostname)'.format(
+            self.pcs_service)
+        self.start_cmd = 'pcs resource clear {} $(hostname)'.format(
+            self.pcs_service)
 
 
 class PcsOrLinuxService(service.ServiceAsProcess):
+    """Service as a resource in Pacemaker or Linux service
 
-    @utils.require_variables('PCS_SERVICE', 'LINUX_SERVICE')
+    Service that can be controled by `pcs resource` CLI tool or
+    linux `service` tool. This is a hybrid driver that tries to find
+    service in Pacemaker and uses linux `service` if it is not found
+    there.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: pcs_or_linux_service
+            args:
+              pcs_service: p_app
+              linux_service: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **pcs_service** - name of a service in Pacemaker
+    - **linux_service** - name of a service in init.d
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+
+    NAME = 'pcs_or_linux_service'
+    DESCRIPTION = 'Service in pacemaker or init.d'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'pcs_service': {'type': 'string'},
+            'linux_service': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': service.PORT_SCHEMA,
+        },
+        'required': ['grep', 'pcs_service', 'linux_service'],
+        'additionalProperties': False,
+    }
+
     def __init__(self, *args, **kwargs):
         super(PcsOrLinuxService, self).__init__(*args, **kwargs)
+        self.pcs_service = self.config.get('pcs_service')
+        self.linux_service = self.config.get('linux_service')
 
-        self.RESTART_CMD = (
+        self.restart_cmd = (
             'if pcs resource show {pcs_service}; '
             'then pcs resource restart {pcs_service} $(hostname); '
             'else service {linux_service} restart; fi').format(
-                linux_service=self.LINUX_SERVICE,
-                pcs_service=self.PCS_SERVICE)
-        self.TERMINATE_CMD = (
+                linux_service=self.linux_service,
+                pcs_service=self.pcs_service)
+        self.terminate_cmd = (
             'if pcs resource show {pcs_service}; '
             'then pcs resource ban {pcs_service} $(hostname); '
             'else service {linux_service} stop; fi').format(
-                linux_service=self.LINUX_SERVICE,
-                pcs_service=self.PCS_SERVICE)
-        self.START_CMD = (
+                linux_service=self.linux_service,
+                pcs_service=self.pcs_service)
+        self.start_cmd = (
             'if pcs resource show {pcs_service}; '
             'then pcs resource clear {pcs_service} $(hostname); '
             'else service {linux_service} start; fi').format(
-                linux_service=self.LINUX_SERVICE,
-                pcs_service=self.PCS_SERVICE)
-
-
-class KeystoneService(service.LinuxService):
-    SERVICE_NAME = 'keystone'
-    GREP = 'keystone'
-    LINUX_SERVICE = 'apache2'
-
-
-class HorizonService(service.LinuxService):
-    SERVICE_NAME = 'horizon'
-    GREP = 'apache2'
-    LINUX_SERVICE = 'apache2'
-
-
-class MemcachedService(service.LinuxService):
-    SERVICE_NAME = 'memcached'
-    GREP = 'memcached'
-    LINUX_SERVICE = 'memcached'
-
-
-class MySQLService(PcsService):
-    SERVICE_NAME = 'mysql'
-    GREP = 'mysqld'
-    PCS_SERVICE = 'p_mysqld'
-    PORT = ('tcp', 3307)
-
-
-class RabbitMQService(PcsService):
-    SERVICE_NAME = 'rabbitmq'
-    GREP = 'rabbit tcp_listeners'
-    PCS_SERVICE = 'p_rabbitmq-server'
-
-
-class GlanceAPIService(service.LinuxService):
-    SERVICE_NAME = 'glance-api'
-    GREP = 'glance-api'
-    LINUX_SERVICE = 'glance-api'
-
-
-class GlanceGlareService(service.LinuxService):
-    SERVICE_NAME = 'glance-glare'
-    GREP = 'glance-glare'
-    LINUX_SERVICE = 'glance-glare'
-
-
-class GlanceRegistryService(service.LinuxService):
-    SERVICE_NAME = 'glance-registry'
-    GREP = 'glance-registry'
-    LINUX_SERVICE = 'glance-registry'
-
-
-class NovaAPIService(service.LinuxService):
-    SERVICE_NAME = 'nova-api'
-    GREP = 'nova-api'
-    LINUX_SERVICE = 'nova-api'
-
-
-class NovaComputeService(service.LinuxService):
-    SERVICE_NAME = 'nova-compute'
-    GREP = 'nova-compute'
-    LINUX_SERVICE = 'nova-compute'
-
-
-class NovaSchedulerService(service.LinuxService):
-    SERVICE_NAME = 'nova-scheduler'
-    GREP = 'nova-scheduler'
-    LINUX_SERVICE = 'nova-scheduler'
-
-
-class NovaCertService(service.LinuxService):
-    SERVICE_NAME = 'nova-cert'
-    GREP = 'nova-cert'
-    LINUX_SERVICE = 'nova-cert'
-
-
-class NovaConductorService(service.LinuxService):
-    SERVICE_NAME = 'nova-conductor'
-    GREP = 'nova-conductor'
-    LINUX_SERVICE = 'nova-conductor'
-
-
-class NovaConsoleAuthService(service.LinuxService):
-    SERVICE_NAME = 'nova-consoleauth'
-    GREP = 'nova-consoleauth'
-    LINUX_SERVICE = 'nova-consoleauth'
-
-
-class NovaNoVNCProxyService(service.LinuxService):
-    SERVICE_NAME = 'nova-novncproxy'
-    GREP = 'nova-novncproxy'
-    LINUX_SERVICE = 'nova-novncproxy'
-
-
-class NeutronServerService(service.LinuxService):
-    SERVICE_NAME = 'neutron-server'
-    GREP = 'neutron-server'
-    LINUX_SERVICE = 'neutron-server'
-
-
-class NeutronDhcpAgentService(PcsService):
-    SERVICE_NAME = 'neutron-dhcp-agent'
-    GREP = 'neutron-dhcp-agent'
-    PCS_SERVICE = 'neutron-dhcp-agent'
-
-
-class NeutronMetadataAgentService(PcsOrLinuxService):
-    SERVICE_NAME = 'neutron-metadata-agent'
-    GREP = 'neutron-metadata-agent'
-    PCS_SERVICE = 'neutron-metadata-agent'
-    LINUX_SERVICE = 'neutron-metadata-agent'
-
-
-class NeutronOpenvswitchAgentService(PcsOrLinuxService):
-    SERVICE_NAME = 'neutron-openvswitch-agent'
-    GREP = 'neutron-openvswitch-agent'
-    PCS_SERVICE = 'neutron-openvswitch-agent'
-    LINUX_SERVICE = 'neutron-openvswitch-agent'
-
-
-class NeutronL3AgentService(PcsOrLinuxService):
-    SERVICE_NAME = 'neutron-l3-agent'
-    GREP = 'neutron-l3-agent'
-    PCS_SERVICE = 'neutron-l3-agent'
-    LINUX_SERVICE = 'neutron-l3-agent'
-
-
-class HeatAPIService(service.LinuxService):
-    SERVICE_NAME = 'heat-api'
-    GREP = 'heat-api'
-    LINUX_SERVICE = 'heat-api'
-
-
-class HeatEngineService(PcsService):
-    SERVICE_NAME = 'heat-engine'
-    GREP = 'heat-engine'
-    PCS_SERVICE = 'p_heat-engine'
-
-
-class CinderAPIService(service.LinuxService):
-    SERVICE_NAME = 'cinder-api'
-    GREP = 'cinder-api'
-    LINUX_SERVICE = 'cinder-api'
-
-
-class CinderSchedulerService(service.LinuxService):
-    SERVICE_NAME = 'cinder-scheduler'
-    GREP = 'cinder-scheduler'
-    LINUX_SERVICE = 'cinder-scheduler'
-
-
-class CinderVolumeService(service.LinuxService):
-    SERVICE_NAME = 'cinder-volume'
-    GREP = 'cinder-volume'
-    LINUX_SERVICE = 'cinder-volume'
-
-
-class CinderBackupService(service.LinuxService):
-    SERVICE_NAME = 'cinder-backup'
-    GREP = 'cinder-backup'
-    LINUX_SERVICE = 'cinder-backup'
-
-
-class IronicApiService(service.LinuxService):
-    SERVICE_NAME = 'ironic-api'
-    GREP = 'ironic-api'
-    LINUX_SERVICE = 'ironic-api'
-
-
-class IronicConductorService(service.LinuxService):
-    SERVICE_NAME = 'ironic-conductor'
-    GREP = 'ironic-conductor'
-    LINUX_SERVICE = 'ironic-conductor'
-
-
-class SwiftAccountService(service.LinuxService):
-    SERVICE_NAME = 'swift-account'
-    GREP = 'swift-account'
-    LINUX_SERVICE = 'swift-account'
-
-
-class SwiftAccountAuditorService(service.LinuxService):
-    SERVICE_NAME = 'swift-account-auditor'
-    GREP = 'swift-account-auditor'
-    LINUX_SERVICE = 'swift-account-auditor'
-
-
-class SwiftAccountReaperService(service.LinuxService):
-    SERVICE_NAME = 'swift-account-reaper'
-    GREP = 'swift-account-reaper'
-    LINUX_SERVICE = 'swift-account-reaper'
-
-
-class SwiftAccountReplicatorService(service.LinuxService):
-    SERVICE_NAME = 'swift-account-replicator'
-    GREP = 'swift-account-replicator'
-    LINUX_SERVICE = 'swift-account-replicator'
-
-
-class SwiftContainerService(service.LinuxService):
-    SERVICE_NAME = 'swift-container'
-    GREP = 'swift-container'
-    LINUX_SERVICE = 'swift-container'
-
-
-class SwiftContainerAuditorService(service.LinuxService):
-    SERVICE_NAME = 'swift-container-auditor'
-    GREP = 'swift-container-auditor'
-    LINUX_SERVICE = 'swift-container-auditor'
-
-
-class SwiftContainerReplicatorService(service.LinuxService):
-    SERVICE_NAME = 'swift-container-replicator'
-    GREP = 'swift-container-replicator'
-    LINUX_SERVICE = 'swift-container-replicator'
-
-
-class SwiftContainerSyncService(service.LinuxService):
-    SERVICE_NAME = 'swift-container-sync'
-    GREP = 'swift-container-sync'
-    LINUX_SERVICE = 'swift-container-sync'
-
-
-class SwiftContainerUpdaterService(service.LinuxService):
-    SERVICE_NAME = 'swift-container-updater'
-    GREP = 'swift-container-updater'
-    LINUX_SERVICE = 'swift-container-updater'
-
-
-class SwiftObjectService(service.LinuxService):
-    SERVICE_NAME = 'swift-object'
-    GREP = 'swift-object'
-    LINUX_SERVICE = 'swift-object'
-
-
-class SwiftObjectAuditorService(service.LinuxService):
-    SERVICE_NAME = 'swift-object-auditor'
-    GREP = 'swift-object-auditor'
-    LINUX_SERVICE = 'swift-object-auditor'
-
-
-class SwiftObjectReplicatorService(service.LinuxService):
-    SERVICE_NAME = 'swift-object-replicator'
-    GREP = 'swift-object-replicator'
-    LINUX_SERVICE = 'swift-object-replicator'
-
-
-class SwiftObjectUpdaterService(service.LinuxService):
-    SERVICE_NAME = 'swift-object-updater'
-    GREP = 'swift-object-updater'
-    LINUX_SERVICE = 'swift-object-updater'
-
-
-class SwiftProxyService(service.LinuxService):
-    SERVICE_NAME = 'swift-proxy'
-    GREP = 'swift-proxy'
-    LINUX_SERVICE = 'swift-proxy'
+                linux_service=self.linux_service,
+                pcs_service=self.pcs_service)
 
 
 class FuelManagement(cloud_management.CloudManagement,
@@ -370,51 +192,306 @@ class FuelManagement(cloud_management.CloudManagement,
     NAME = 'fuel'
     DESCRIPTION = 'Fuel 9.x cloud management driver'
     NODE_CLS = FuelNodeCollection
-    SERVICE_NAME_TO_CLASS = {
-        'keystone': KeystoneService,
-        'horizon': HorizonService,
-        'memcached': MemcachedService,
-        'mysql': MySQLService,
-        'rabbitmq': RabbitMQService,
-        'glance-api': GlanceAPIService,
-        'glance-glare': GlanceGlareService,
-        'glance-registry': GlanceRegistryService,
-        'nova-api': NovaAPIService,
-        'nova-compute': NovaComputeService,
-        'nova-scheduler': NovaSchedulerService,
-        'nova-cert': NovaCertService,
-        'nova-conductor': NovaConductorService,
-        'nova-consoleauth': NovaConsoleAuthService,
-        'nova-novncproxy': NovaNoVNCProxyService,
-        'neutron-server': NeutronServerService,
-        'neutron-dhcp-agent': NeutronDhcpAgentService,
-        'neutron-metadata-agent': NeutronMetadataAgentService,
-        'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
-        'neutron-l3-agent': NeutronL3AgentService,
-        'heat-api': HeatAPIService,
-        'heat-engine': HeatEngineService,
-        'cinder-api': CinderAPIService,
-        'cinder-scheduler': CinderSchedulerService,
-        'cinder-volume': CinderVolumeService,
-        'cinder-backup': CinderBackupService,
-        'ironic-api': IronicApiService,
-        'ironic-conductor': IronicConductorService,
-        'swift-account': SwiftAccountService,
-        'swift-account-auditor': SwiftAccountAuditorService,
-        'swift-account-reaper': SwiftAccountReaperService,
-        'swift-account-replicator': SwiftAccountReplicatorService,
-        'swift-container': SwiftContainerService,
-        'swift-container-auditor': SwiftContainerAuditorService,
-        'swift-container-replicator': SwiftContainerReplicatorService,
-        'swift-container-sync': SwiftContainerSyncService,
-        'swift-container-updater': SwiftContainerUpdaterService,
-        'swift-object': SwiftObjectService,
-        'swift-object-auditor': SwiftObjectAuditorService,
-        'swift-object-replicator': SwiftObjectReplicatorService,
-        'swift-object-updater': SwiftObjectUpdaterService,
-        'swift-proxy': SwiftProxyService,
+    SERVICES = {
+        'keystone': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'keystone',
+                'linux_service': 'apache2',
+            }
+        },
+        'horizon': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'apache2',
+                'linux_service': 'apache2',
+            }
+        },
+        'memcached': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'memcached',
+                'linux_service': 'memcached',
+            }
+        },
+        'mysql': {
+            'driver': 'pcs_service',
+            'args': {
+                'grep': 'mysqld',
+                'pcs_service': 'p_mysqld',
+                'port': ('tcp', 3307),
+            }
+        },
+        'rabbitmq': {
+            'driver': 'pcs_service',
+            'args': {
+                'grep': 'rabbit tcp_listeners',
+                'pcs_service': 'p_rabbitmq-server',
+            }
+        },
+        'glance-api': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'glance-api',
+                'linux_service': 'glance-api',
+            }
+        },
+        'glance-glare': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'glance-glare',
+                'linux_service': 'glance-glare',
+            }
+        },
+        'glance-registry': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'glance-registry',
+                'linux_service': 'glance-registry',
+            }
+        },
+        'nova-api': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-api',
+                'linux_service': 'nova-api',
+            }
+        },
+        'nova-compute': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-compute',
+                'linux_service': 'nova-compute',
+            }
+        },
+        'nova-scheduler': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-scheduler',
+                'linux_service': 'nova-scheduler',
+            }
+        },
+        'nova-cert': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-cert',
+                'linux_service': 'nova-cert',
+            }
+        },
+        'nova-conductor': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-conductor',
+                'linux_service': 'nova-conductor',
+            }
+        },
+        'nova-consoleauth': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-consoleauth',
+                'linux_service': 'nova-consoleauth',
+            }
+        },
+        'nova-novncproxy': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'nova-novncproxy',
+                'linux_service': 'nova-novncproxy',
+            }
+        },
+        'neutron-server': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'neutron-server',
+                'linux_service': 'neutron-server',
+            }
+        },
+        'neutron-dhcp-agent': {
+            'driver': 'pcs_service',
+            'args': {
+                'grep': 'neutron-dhcp-agent',
+                'pcs_service': 'neutron-dhcp-agent',
+            }
+        },
+        'neutron-metadata-agent': {
+            'driver': 'pcs_or_linux_service',
+            'args': {
+                'grep': 'neutron-metadata-agent',
+                'pcs_service': 'neutron-metadata-agent',
+                'linux_service': 'neutron-metadata-agent',
+            }
+        },
+        'neutron-openvswitch-agent': {
+            'driver': 'pcs_or_linux_service',
+            'args': {
+                'grep': 'neutron-openvswitch-agent',
+                'pcs_service': 'neutron-openvswitch-agent',
+                'linux_service': 'neutron-openvswitch-agent',
+            }
+        },
+        'neutron-l3-agent': {
+            'driver': 'pcs_or_linux_service',
+            'args': {
+                'grep': 'neutron-l3-agent',
+                'pcs_service': 'neutron-l3-agent',
+                'linux_service': 'neutron-l3-agent',
+            }
+        },
+        'heat-api': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'heat-api',
+                'linux_service': 'heat-api',
+            }
+        },
+        'heat-engine': {
+            'driver': 'pcs_service',
+            'args': {
+                'grep': 'heat-engine',
+                'pcs_service': 'p_heat-engine',
+            }
+        },
+        'cinder-api': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'cinder-api',
+                'linux_service': 'cinder-api',
+            }
+        },
+        'cinder-scheduler': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'cinder-scheduler',
+                'linux_service': 'cinder-scheduler',
+            }
+        },
+        'cinder-volume': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'cinder-volume',
+                'linux_service': 'cinder-volume',
+            }
+        },
+        'cinder-backup': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'cinder-backup',
+                'linux_service': 'cinder-backup',
+            }
+        },
+        'ironic-api': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'ironic-api',
+                'linux_service': 'ironic-api',
+            }
+        },
+        'ironic-conductor': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'ironic-conductor',
+                'linux_service': 'ironic-conductor',
+            }
+        },
+        'swift-account': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-account',
+                'linux_service': 'swift-account',
+            }
+        },
+        'swift-account-auditor': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-account-auditor',
+                'linux_service': 'swift-account-auditor',
+            }
+        },
+        'swift-account-reaper': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-account-reaper',
+                'linux_service': 'swift-account-reaper',
+            }
+        },
+        'swift-account-replicator': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-account-replicator',
+                'linux_service': 'swift-account-replicator',
+            }
+        },
+        'swift-container': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-container',
+                'linux_service': 'swift-container',
+            }
+        },
+        'swift-container-auditor': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-container-auditor',
+                'linux_service': 'swift-container-auditor',
+            }
+        },
+        'swift-container-replicator': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-container-replicator',
+                'linux_service': 'swift-container-replicator',
+            }
+        },
+        'swift-container-sync': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-container-sync',
+                'linux_service': 'swift-container-sync',
+            }
+        },
+        'swift-container-updater': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-container-updater',
+                'linux_service': 'swift-container-updater',
+            }
+        },
+        'swift-object': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-object',
+                'linux_service': 'swift-object',
+            }
+        },
+        'swift-object-auditor': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-object-auditor',
+                'linux_service': 'swift-object-auditor',
+            }
+        },
+        'swift-object-replicator': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-object-replicator',
+                'linux_service': 'swift-object-replicator',
+            }
+        },
+        'swift-object-updater': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-object-updater',
+                'linux_service': 'swift-object-updater',
+            }
+        },
+        'swift-proxy': {
+            'driver': 'linux_service',
+            'args': {
+                'grep': 'swift-proxy',
+                'linux_service': 'swift-proxy',
+            }
+        },
     }
-    SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['management', 'private', 'public', 'storage']
     CONFIG_SCHEMA = {
         'type': 'object',
@@ -424,7 +501,6 @@ class FuelManagement(cloud_management.CloudManagement,
             'username': {'type': 'string'},
             'private_key_file': {'type': 'string'},
             'slave_direct_ssh': {'type': 'boolean'},
-
         },
         'required': ['address', 'username'],
         'additionalProperties': False,

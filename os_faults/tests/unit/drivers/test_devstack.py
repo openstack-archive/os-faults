@@ -163,10 +163,8 @@ class DevStackManagementTestCase(test.TestCase):
             nodes.hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_get_service_nodes(self, service_name, service_cls,
-                               mock_ansible_runner):
+    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    def test_get_service_nodes(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'},
@@ -177,12 +175,10 @@ class DevStackManagementTestCase(test.TestCase):
         devstack_management = devstack.DevStackManagement(self.conf)
 
         service = devstack_management.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         nodes = service.get_nodes()
 
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(
                 ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
@@ -202,9 +198,8 @@ class DevStackServiceTestCase(test.TestCase):
         self.conf = {'address': '10.0.0.2', 'username': 'root'}
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_restart(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    def test_restart(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'},
@@ -216,23 +211,20 @@ class DevStackServiceTestCase(test.TestCase):
         devstack_management = devstack.DevStackManagement(self.conf)
 
         service = devstack_management.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.restart()
 
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(
                 ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call(['10.0.0.2'], {'command': cmd}, []),
-            mock.call(['10.0.0.2'], {'shell': service.RESTART_CMD})
+            mock.call(['10.0.0.2'], {'shell': service.restart_cmd})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_terminate(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    def test_terminate(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'},
@@ -244,23 +236,20 @@ class DevStackServiceTestCase(test.TestCase):
         devstack_management = devstack.DevStackManagement(self.conf)
 
         service = devstack_management.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.terminate()
 
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(
                 ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call(['10.0.0.2'], {'command': cmd}, []),
-            mock.call(['10.0.0.2'], {'shell': service.TERMINATE_CMD})
+            mock.call(['10.0.0.2'], {'shell': service.terminate_cmd})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_start(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    def test_start(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'},
@@ -272,15 +261,13 @@ class DevStackServiceTestCase(test.TestCase):
         devstack_management = devstack.DevStackManagement(self.conf)
 
         service = devstack_management.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.start()
 
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(
                 ['10.0.0.2'], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call(['10.0.0.2'], {'command': cmd}, []),
-            mock.call(['10.0.0.2'], {'shell': service.START_CMD})
+            mock.call(['10.0.0.2'], {'shell': service.start_cmd})
         ])

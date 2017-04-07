@@ -157,10 +157,8 @@ class FuelManagementTestCase(test.TestCase):
         self.assertEqual(nodes.hosts, hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_get_service_nodes(self, service_name, service_cls,
-                               mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_get_service_nodes(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -177,11 +175,10 @@ class FuelManagementTestCase(test.TestCase):
         })
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
 
         nodes = service.get_nodes()
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
