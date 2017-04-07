@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import abc
+import copy
 import logging
 
 import six
@@ -20,20 +21,21 @@ from os_faults.api import base_driver
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import power_management
+from os_faults import registry
 
 LOG = logging.getLogger(__name__)
 
 
 @six.add_metaclass(abc.ABCMeta)
 class CloudManagement(base_driver.BaseDriver):
-    SERVICE_NAME_TO_CLASS = {}
-    SUPPORTED_SERVICES = []
+    SERVICES = {}
     SUPPORTED_NETWORKS = []
     NODE_CLS = node_collection.NodeCollection
 
     def __init__(self):
         self.power_manager = power_management.PowerManager()
         self.node_discover = None
+        self.services = copy.deepcopy(self.SERVICES)
 
     def add_power_management(self, driver):
         self.power_manager.add_driver(driver)
@@ -75,12 +77,15 @@ class CloudManagement(base_driver.BaseDriver):
         :param name: name of the serives
         :return: Service
         """
-        if name in self.SERVICE_NAME_TO_CLASS:
-            klazz = self.SERVICE_NAME_TO_CLASS[name]
-            return klazz(node_cls=self.NODE_CLS, cloud_management=self)
-        raise error.ServiceError(
-            '{} driver does not support {!r} service'.format(
-                self.NAME.title(), name))
+        if name not in self.services:
+            raise error.ServiceError(
+                '{} driver does not support {!r} service'.format(
+                    self.NAME.title(), name))
+
+        config = self.services[name]
+        klazz = registry.get_driver(config["driver"])
+        return klazz(node_cls=self.NODE_CLS, cloud_management=self,
+                     service_name=name, config=config["args"])
 
     @abc.abstractmethod
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
@@ -98,7 +103,7 @@ class CloudManagement(base_driver.BaseDriver):
 
         :return: [String] list of service names
         """
-        return cls.SUPPORTED_SERVICES
+        return cls.SERVICES.keys()
 
     @classmethod
     def list_supported_networks(cls):

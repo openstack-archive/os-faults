@@ -21,12 +21,71 @@ from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
+PORT_SCHEMA = {
+    'type': 'array',
+    'items': [
+        {'enum': ['tcp', 'udp']},
+        {'type': 'integer', 'minimum': 0, 'maximum': 65535},
+    ],
+    'minItems': 2,
+    'maxItems': 2,
+}
+
 
 class ServiceAsProcess(service.Service):
+    """Service as process
 
-    def __init__(self, node_cls, cloud_management=None):
-        self.node_cls = node_cls
-        self.cloud_management = cloud_management
+    "process" is a basic service driver that uses `ps` and `kill` in
+    actions like kill / freeze / unfreeze. Commands for start / restart
+    / terminate should be specified in configuration, otherwise
+    the commands will fail at runtime.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: process
+            args:
+              grep: my_app
+              restart_cmd: /bin/my_app --restart
+              terminate_cmd: /bin/stop_my_app
+              start_cmd: /bin/my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **grep** - regexp for grep to find process PID
+    - **restart_cmd** - command to restart service (optional)
+    - **terminate_cmd** - command to terminate service (optional)
+    - **start_cmd** - command to start service (optional)
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+
+    NAME = 'process'
+    DESCRIPTION = 'Service as process'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'grep': {'type': 'string'},
+            'start_cmd': {'type': 'string'},
+            'terminate_cmd': {'type': 'string'},
+            'restart_cmd': {'type': 'string'},
+            'port': PORT_SCHEMA,
+        },
+        'required': ['grep'],
+        'additionalProperties': False,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(ServiceAsProcess, self).__init__(*args, **kwargs)
+        self.grep = self.config['grep']
+        self.start_cmd = self.config.get('start_cmd')
+        self.terminate_cmd = self.config.get('terminate_cmd')
+        self.restart_cmd = self.config.get('restart_cmd')
+        self.port = self.config.get('port')
 
     def _run_task(self, task, nodes):
         ips = nodes.get_ips()
@@ -47,7 +106,7 @@ class ServiceAsProcess(service.Service):
     def get_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
-        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(self.GREP)
+        cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(self.grep)
         results = self.cloud_management.execute_on_cloud(
             ips, {'command': cmd}, False)
         success_ips = [r.host for r in results
@@ -56,81 +115,114 @@ class ServiceAsProcess(service.Service):
         return self.node_cls(cloud_management=self.cloud_management,
                              hosts=hosts)
 
-    @utils.require_variables('RESTART_CMD', 'SERVICE_NAME')
+    @utils.require_variables('restart_cmd')
     def restart(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Restart '%s' service on nodes: %s", self.SERVICE_NAME,
+        LOG.info("Restart '%s' service on nodes: %s", self.service_name,
                  nodes.get_ips())
-        self._run_task({'shell': self.RESTART_CMD}, nodes)
+        self._run_task({'shell': self.restart_cmd}, nodes)
 
-    @utils.require_variables('TERMINATE_CMD', 'SERVICE_NAME')
+    @utils.require_variables('terminate_cmd')
     def terminate(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Terminate '%s' service on nodes: %s", self.SERVICE_NAME,
+        LOG.info("Terminate '%s' service on nodes: %s", self.service_name,
                  nodes.get_ips())
-        self._run_task({'shell': self.TERMINATE_CMD}, nodes)
+        self._run_task({'shell': self.terminate_cmd}, nodes)
 
-    @utils.require_variables('START_CMD', 'SERVICE_NAME')
+    @utils.require_variables('start_cmd')
     def start(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Start '%s' service on nodes: %s", self.SERVICE_NAME,
+        LOG.info("Start '%s' service on nodes: %s", self.service_name,
                  nodes.get_ips())
-        self._run_task({'shell': self.START_CMD}, nodes)
+        self._run_task({'shell': self.start_cmd}, nodes)
 
-    @utils.require_variables('GREP', 'SERVICE_NAME')
     def kill(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Kill '%s' service on nodes: %s", self.SERVICE_NAME,
+        LOG.info("Kill '%s' service on nodes: %s", self.service_name,
                  nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGKILL}}
+        cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGKILL}}
         self._run_task(cmd, nodes)
 
-    @utils.require_variables('GREP', 'SERVICE_NAME')
     def freeze(self, nodes=None, sec=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         if sec:
-            cmd = {'freeze': {'grep': self.GREP, 'sec': sec}}
+            cmd = {'freeze': {'grep': self.grep, 'sec': sec}}
         else:
-            cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGSTOP}}
-        LOG.info("Freeze '%s' service %son nodes: %s", self.SERVICE_NAME,
+            cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGSTOP}}
+        LOG.info("Freeze '%s' service %son nodes: %s", self.service_name,
                  ('for %s sec ' % sec) if sec else '', nodes.get_ips())
         self._run_task(cmd, nodes)
 
-    @utils.require_variables('GREP', 'SERVICE_NAME')
     def unfreeze(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Unfreeze '%s' service on nodes: %s", self.SERVICE_NAME,
+        LOG.info("Unfreeze '%s' service on nodes: %s", self.service_name,
                  nodes.get_ips())
-        cmd = {'kill': {'grep': self.GREP, 'sig': signal.SIGCONT}}
+        cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGCONT}}
         self._run_task(cmd, nodes)
 
-    @utils.require_variables('PORT', 'SERVICE_NAME')
+    @utils.require_variables('port')
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Open port %d for '%s' service on nodes: %s",
-                 self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.PORT[0],
-                                     'port': self.PORT[1],
+                 self.port[1], self.service_name, nodes.get_ips())
+        self._run_task({'iptables': {'protocol': self.port[0],
+                                     'port': self.port[1],
                                      'action': 'unblock',
-                                     'service': self.SERVICE_NAME}}, nodes)
+                                     'service': self.service_name}}, nodes)
 
-    @utils.require_variables('PORT', 'SERVICE_NAME')
+    @utils.require_variables('port')
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
         LOG.info("Close port %d for '%s' service on nodes: %s",
-                 self.PORT[1], self.SERVICE_NAME, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.PORT[0],
-                                     'port': self.PORT[1],
+                 self.port[1], self.service_name, nodes.get_ips())
+        self._run_task({'iptables': {'protocol': self.port[0],
+                                     'port': self.port[1],
                                      'action': 'block',
-                                     'service': self.SERVICE_NAME}}, nodes)
+                                     'service': self.service_name}}, nodes)
 
 
 class LinuxService(ServiceAsProcess):
+    """Linux service
 
-    @utils.require_variables('LINUX_SERVICE')
+    Service that is defined in init.d and can be controled by `service`
+    CLI tool.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: linux_service
+            args:
+              linux_service: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **linux_service** - name of a service
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+    NAME = 'linux_service'
+    DESCRIPTION = 'Service in init.d'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'linux_service': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': PORT_SCHEMA,
+        },
+        'required': ['grep', 'linux_service'],
+        'additionalProperties': False,
+    }
+
     def __init__(self, *args, **kwargs):
         super(LinuxService, self).__init__(*args, **kwargs)
+        self.linux_service = self.config['linux_service']
 
-        self.RESTART_CMD = 'service {} restart'.format(self.LINUX_SERVICE)
-        self.TERMINATE_CMD = 'service {} stop'.format(self.LINUX_SERVICE)
-        self.START_CMD = 'service {} start'.format(self.LINUX_SERVICE)
+        self.restart_cmd = 'service {} restart'.format(self.linux_service)
+        self.terminate_cmd = 'service {} stop'.format(self.linux_service)
+        self.start_cmd = 'service {} start'.format(self.linux_service)

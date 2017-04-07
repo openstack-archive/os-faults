@@ -61,6 +61,9 @@ class UtilsTestCase(test.TestCase):
 class MyClass(object):
     FOO = 10
 
+    def __init__(self):
+        self.BAR = None
+
     @utils.require_variables('FOO')
     def method(self, a, b):
         return self.FOO + a + b

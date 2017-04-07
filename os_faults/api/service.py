@@ -15,11 +15,18 @@ import abc
 
 import six
 
+from os_faults.api import base_driver
 from os_faults.api.util import public
 
 
 @six.add_metaclass(abc.ABCMeta)
-class Service(object):
+class Service(base_driver.BaseDriver):
+
+    def __init__(self, service_name, config, node_cls, cloud_management):
+        self.service_name = service_name
+        self.config = config
+        self.node_cls = node_cls
+        self.cloud_management = cloud_management
 
     @abc.abstractmethod
     def get_nodes(self):
