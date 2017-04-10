@@ -219,7 +219,7 @@ class FuelManagement(cloud_management.CloudManagement,
             'args': {
                 'grep': 'mysqld',
                 'pcs_service': 'p_mysqld',
-                'port': ('tcp', 3307),
+                'port': ['tcp', 3307],
             }
         },
         'rabbitmq': {

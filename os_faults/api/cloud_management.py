@@ -15,6 +15,7 @@ import abc
 import copy
 import logging
 
+import jsonschema
 import six
 
 from os_faults.api import base_driver
@@ -42,6 +43,14 @@ class CloudManagement(base_driver.BaseDriver):
 
     def set_node_discover(self, node_discover):
         self.node_discover = node_discover
+
+    def update_services(self, services):
+        self.services.update(services)
+
+    def validate_services(self):
+        for service_name, serive_conf in self.services.items():
+            serive_cls = registry.get_driver(serive_conf["driver"])
+            jsonschema.validate(serive_conf['args'], serive_cls.CONFIG_SCHEMA)
 
     @abc.abstractmethod
     def verify(self):
@@ -74,7 +83,7 @@ class CloudManagement(base_driver.BaseDriver):
     def get_service(self, name):
         """Get service with specified name
 
-        :param name: name of the serives
+        :param name: name of the service
         :return: Service
         """
         if name not in self.services:

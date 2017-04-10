@@ -160,7 +160,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
             'args': {
                 'grep': 'mysqld',
                 'salt_service': 'mysql',
-                'port': ('tcp', 3307),
+                'port': ['tcp', 3307],
             }
         },
         'rabbitmq': {

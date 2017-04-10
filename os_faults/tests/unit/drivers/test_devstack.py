@@ -189,6 +189,10 @@ class DevStackManagementTestCase(test.TestCase):
                                   fqdn='')],
             nodes.hosts)
 
+    def test_validate_services(self):
+        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management.validate_services()
+
 
 @ddt.ddt
 class DevStackServiceTestCase(test.TestCase):
