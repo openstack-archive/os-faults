@@ -21,7 +21,6 @@ from os_faults.api import node_collection
 from os_faults.api import node_discover
 from os_faults.common import service
 from os_faults import error
-from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -42,195 +41,50 @@ SALT_START = SALT_CALL + 'service.start {service}'
 
 
 class SaltService(service.ServiceAsProcess):
+    """Salt service
 
-    @utils.require_variables('SALT_SERVICE')
+    Service that can be controled by `salt service.*` commands.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: salt_service
+            args:
+              salt_service: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **salt_service** - name of a service
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+
+    NAME = 'salt_service'
+    DESCRIPTION = 'Service in salt'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'salt_service': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': service.PORT_SCHEMA,
+        },
+        'required': ['grep', 'salt_service'],
+        'additionalProperties': False,
+    }
+
     def __init__(self, *args, **kwargs):
         super(SaltService, self).__init__(*args, **kwargs)
+        self.salt_service = self.config['salt_service']
 
-        self.RESTART_CMD = SALT_RESTART.format(service=self.SALT_SERVICE)
-        self.TERMINATE_CMD = SALT_TERMINATE.format(service=self.SALT_SERVICE)
-        self.START_CMD = SALT_START.format(service=self.SALT_SERVICE)
-
-
-class KeystoneService(SaltService):
-    SERVICE_NAME = 'keystone'
-    GREP = 'keystone-all'
-    SALT_SERVICE = 'keystone'
-
-
-class HorizonService(SaltService):
-    SERVICE_NAME = 'horizon'
-    GREP = 'apache2'
-    SALT_SERVICE = 'apache2'
-
-
-class MemcachedService(SaltService):
-    SERVICE_NAME = 'memcached'
-    GREP = 'memcached'
-    SALT_SERVICE = 'memcached'
-
-
-class MySQLService(SaltService):
-    SERVICE_NAME = 'mysql'
-    GREP = 'mysqld'
-    SALT_SERVICE = 'mysql'
-    PORT = ('tcp', 3307)
-
-
-class RabbitMQService(SaltService):
-    SERVICE_NAME = 'rabbitmq'
-    GREP = 'beam\.smp .*rabbitmq_server'
-    SALT_SERVICE = 'rabbitmq-server'
-
-
-class GlanceAPIService(SaltService):
-    SERVICE_NAME = 'glance-api'
-    GREP = 'glance-api'
-    SALT_SERVICE = 'glance-api'
-
-
-class GlanceRegistryService(SaltService):
-    SERVICE_NAME = 'glance-registry'
-    GREP = 'glance-registry'
-    SALT_SERVICE = 'glance-registry'
-
-
-class NovaAPIService(SaltService):
-    SERVICE_NAME = 'nova-api'
-    GREP = 'nova-api'
-    SALT_SERVICE = 'nova-api'
-
-
-class NovaComputeService(SaltService):
-    SERVICE_NAME = 'nova-compute'
-    GREP = 'nova-compute'
-    SALT_SERVICE = 'nova-compute'
-
-
-class NovaSchedulerService(SaltService):
-    SERVICE_NAME = 'nova-scheduler'
-    GREP = 'nova-scheduler'
-    SALT_SERVICE = 'nova-scheduler'
-
-
-class NovaCertService(SaltService):
-    SERVICE_NAME = 'nova-cert'
-    GREP = 'nova-cert'
-    SALT_SERVICE = 'nova-cert'
-
-
-class NovaConductorService(SaltService):
-    SERVICE_NAME = 'nova-conductor'
-    GREP = 'nova-conductor'
-    SALT_SERVICE = 'nova-conductor'
-
-
-class NovaConsoleAuthService(SaltService):
-    SERVICE_NAME = 'nova-consoleauth'
-    GREP = 'nova-consoleauth'
-    SALT_SERVICE = 'nova-consoleauth'
-
-
-class NovaNoVNCProxyService(SaltService):
-    SERVICE_NAME = 'nova-novncproxy'
-    GREP = 'nova-novncproxy'
-    SALT_SERVICE = 'nova-novncproxy'
-
-
-class NeutronServerService(SaltService):
-    SERVICE_NAME = 'neutron-server'
-    GREP = 'neutron-server'
-    SALT_SERVICE = 'neutron-server'
-
-
-class NeutronDhcpAgentService(SaltService):
-    SERVICE_NAME = 'neutron-dhcp-agent'
-    GREP = 'neutron-dhcp-agent'
-    SALT_SERVICE = 'neutron-dhcp-agent'
-
-
-class NeutronMetadataAgentService(SaltService):
-    SERVICE_NAME = 'neutron-metadata-agent'
-    GREP = 'neutron-metadata-agent'
-    SALT_SERVICE = 'neutron-metadata-agent'
-
-
-class NeutronOpenvswitchAgentService(SaltService):
-    SERVICE_NAME = 'neutron-openvswitch-agent'
-    GREP = 'neutron-openvswitch-agent'
-    SALT_SERVICE = 'neutron-openvswitch-agent'
-
-
-class NeutronL3AgentService(SaltService):
-    SERVICE_NAME = 'neutron-l3-agent'
-    GREP = 'neutron-l3-agent'
-    SALT_SERVICE = 'neutron-l3-agent'
-
-
-class HeatAPIService(SaltService):
-    SERVICE_NAME = 'heat-api'
-    GREP = 'heat-api '  # space at the end filters heat-api-* services
-    SALT_SERVICE = 'heat-api'
-
-
-class HeatEngineService(SaltService):
-    SERVICE_NAME = 'heat-engine'
-    GREP = 'heat-engine'
-    SALT_SERVICE = 'heat-engine'
-
-
-class CinderAPIService(SaltService):
-    SERVICE_NAME = 'cinder-api'
-    GREP = 'cinder-api'
-    SALT_SERVICE = 'cinder-api'
-
-
-class CinderSchedulerService(SaltService):
-    SERVICE_NAME = 'cinder-scheduler'
-    GREP = 'cinder-scheduler'
-    SALT_SERVICE = 'cinder-scheduler'
-
-
-class CinderVolumeService(SaltService):
-    SERVICE_NAME = 'cinder-volume'
-    GREP = 'cinder-volume'
-    SALT_SERVICE = 'cinder-volume'
-
-
-class CinderBackupService(SaltService):
-    SERVICE_NAME = 'cinder-backup'
-    GREP = 'cinder-backup'
-    SALT_SERVICE = 'cinder-backup'
-
-
-class ElasticSearchService(SaltService):
-    SERVICE_NAME = 'elasticsearch'
-    GREP = 'java .*elasticsearch'
-    SALT_SERVICE = 'elasticsearch'
-
-
-class GrafanaServerService(SaltService):
-    SERVICE_NAME = 'grafana-server'
-    GREP = 'grafana-server'
-    SALT_SERVICE = 'grafana-server'
-
-
-class InfluxDBService(SaltService):
-    SERVICE_NAME = 'influxdb'
-    GREP = 'influxd'
-    SALT_SERVICE = 'influxdb'
-
-
-class KibanaService(SaltService):
-    SERVICE_NAME = 'kibana'
-    GREP = 'kibana'
-    SALT_SERVICE = 'kibana'
-
-
-class Nagios3Service(SaltService):
-    SERVICE_NAME = 'nagios3'
-    GREP = 'nagios3'
-    SALT_SERVICE = 'nagios3'
+        self.restart_cmd = SALT_RESTART.format(service=self.salt_service)
+        self.terminate_cmd = SALT_TERMINATE.format(service=self.salt_service)
+        self.start_cmd = SALT_START.format(service=self.salt_service)
 
 
 class TCPCloudManagement(cloud_management.CloudManagement,
@@ -279,39 +133,220 @@ class TCPCloudManagement(cloud_management.CloudManagement,
     NAME = 'tcpcloud'
     DESCRIPTION = 'TCPCloud management driver'
     NODE_CLS = TCPCloudNodeCollection
-    SERVICE_NAME_TO_CLASS = {
-        'keystone': KeystoneService,
-        'horizon': HorizonService,
-        'memcached': MemcachedService,
-        'mysql': MySQLService,
-        'rabbitmq': RabbitMQService,
-        'glance-api': GlanceAPIService,
-        'glance-registry': GlanceRegistryService,
-        'nova-api': NovaAPIService,
-        'nova-compute': NovaComputeService,
-        'nova-scheduler': NovaSchedulerService,
-        'nova-cert': NovaCertService,
-        'nova-conductor': NovaConductorService,
-        'nova-consoleauth': NovaConsoleAuthService,
-        'nova-novncproxy': NovaNoVNCProxyService,
-        'neutron-server': NeutronServerService,
-        'neutron-dhcp-agent': NeutronDhcpAgentService,
-        'neutron-metadata-agent': NeutronMetadataAgentService,
-        'neutron-openvswitch-agent': NeutronOpenvswitchAgentService,
-        'neutron-l3-agent': NeutronL3AgentService,
-        'heat-api': HeatAPIService,
-        'heat-engine': HeatEngineService,
-        'cinder-api': CinderAPIService,
-        'cinder-scheduler': CinderSchedulerService,
-        'cinder-volume': CinderVolumeService,
-        'cinder-backup': CinderBackupService,
-        'elasticsearch': ElasticSearchService,
-        'grafana-server': GrafanaServerService,
-        'influxdb': InfluxDBService,
-        'kibana': KibanaService,
-        'nagios3': Nagios3Service,
+    SERVICES = {
+        'keystone': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'keystone-all',
+                'salt_service': 'keystone',
+            }
+        },
+        'horizon': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'apache2',
+                'salt_service': 'apache2',
+            }
+        },
+        'memcached': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'memcached',
+                'salt_service': 'memcached',
+            }
+        },
+        'mysql': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'mysqld',
+                'salt_service': 'mysql',
+                'port': ['tcp', 3307],
+            }
+        },
+        'rabbitmq': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'beam\.smp .*rabbitmq_server',
+                'salt_service': 'rabbitmq-server',
+            }
+        },
+        'glance-api': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'glance-api',
+                'salt_service': 'glance-api',
+            }
+        },
+        'glance-registry': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'glance-registry',
+                'salt_service': 'glance-registry',
+            }
+        },
+        'nova-api': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-api',
+                'salt_service': 'nova-api',
+            }
+        },
+        'nova-compute': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-compute',
+                'salt_service': 'nova-compute',
+            }
+        },
+        'nova-scheduler': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-scheduler',
+                'salt_service': 'nova-scheduler',
+            }
+        },
+        'nova-cert': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-cert',
+                'salt_service': 'nova-cert',
+            }
+        },
+        'nova-conductor': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-conductor',
+                'salt_service': 'nova-conductor',
+            }
+        },
+        'nova-consoleauth': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-consoleauth',
+                'salt_service': 'nova-consoleauth',
+            }
+        },
+        'nova-novncproxy': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nova-novncproxy',
+                'salt_service': 'nova-novncproxy',
+            }
+        },
+        'neutron-server': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'neutron-server',
+                'salt_service': 'neutron-server',
+            }
+        },
+        'neutron-dhcp-agent': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'neutron-dhcp-agent',
+                'salt_service': 'neutron-dhcp-agent',
+            }
+        },
+        'neutron-metadata-agent': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'neutron-metadata-agent',
+                'salt_service': 'neutron-metadata-agent',
+            }
+        },
+        'neutron-openvswitch-agent': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'neutron-openvswitch-agent',
+                'salt_service': 'neutron-openvswitch-agent',
+            }
+        },
+        'neutron-l3-agent': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'neutron-l3-agent',
+                'salt_service': 'neutron-l3-agent',
+            }
+        },
+        'heat-api': {
+            'driver': 'salt_service',
+            'args': {
+                # space at the end filters heat-api-* services
+                'grep': 'heat-api ',
+                'salt_service': 'heat-api',
+            }
+        },
+        'heat-engine': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'heat-engine',
+                'salt_service': 'heat-engine',
+            }
+        },
+        'cinder-api': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'cinder-api',
+                'salt_service': 'cinder-api',
+            }
+        },
+        'cinder-scheduler': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'cinder-scheduler',
+                'salt_service': 'cinder-scheduler',
+            }
+        },
+        'cinder-volume': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'cinder-volume',
+                'salt_service': 'cinder-volume',
+            }
+        },
+        'cinder-backup': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'cinder-backup',
+                'salt_service': 'cinder-backup',
+            }
+        },
+        'elasticsearch': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'java .*elasticsearch',
+                'salt_service': 'elasticsearch',
+            }
+        },
+        'grafana-server': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'grafana-server',
+                'salt_service': 'grafana-server',
+            }
+        },
+        'influxdb': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'influxd',
+                'salt_service': 'influxdb',
+            }
+        },
+        'kibana': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'kibana',
+                'salt_service': 'kibana',
+            }
+        },
+        'nagios3': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'nagios3',
+                'salt_service': 'nagios3',
+            }
+        },
     }
-    SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = []
     CONFIG_SCHEMA = {
         'type': 'object',

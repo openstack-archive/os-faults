@@ -18,7 +18,6 @@ from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
 from os_faults.common import service
-from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
@@ -33,89 +32,64 @@ class DevStackNode(node_collection.NodeCollection):
 
 
 class ServiceInScreen(service.ServiceAsProcess):
+    """Service in Screen
 
-    @utils.require_variables('WINDOW_NAME')
+    This driver controls service that is started in a window of
+    `screen` tool.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: screen
+            args:
+              window_name: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **window_name** - name of a service
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - potocol, port number (optional)
+
+    """
+    NAME = 'screen'
+    DESCRIPTION = 'Service in screen'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'window_name': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': service.PORT_SCHEMA,
+        },
+        'required': ['grep', 'window_name'],
+        'additionalProperties': False,
+    }
+
     def __init__(self, *args, **kwargs):
         super(ServiceInScreen, self).__init__(*args, **kwargs)
+        self.window_name = self.config['window_name']
 
         # sends ctr+c, arrow up key, enter key
-        self.RESTART_CMD = (
+        self.restart_cmd = (
             "screen -S stack -p {window_name} -X "
             "stuff $'\\003'$'\\033[A'$(printf \\\\r)").format(
-                window_name=self.WINDOW_NAME)
+                window_name=self.window_name)
 
         # sends ctr+c
-        self.TERMINATE_CMD = (
+        self.terminate_cmd = (
             "screen -S stack -p {window_name} -X "
             "stuff $'\\003'").format(
-                window_name=self.WINDOW_NAME)
+                window_name=self.window_name)
 
         # sends arrow up key, enter key
-        self.START_CMD = (
+        self.start_cmd = (
             "screen -S stack -p {window_name} -X "
             "stuff $'\\033[A'$(printf \\\\r)").format(
-                window_name=self.WINDOW_NAME)
-
-
-class KeystoneService(service.ServiceAsProcess):
-    SERVICE_NAME = 'keystone'
-    GREP = 'keystone-'
-    RESTART_CMD = 'sudo service apache2 restart'
-    TERMINATE_CMD = 'sudo service apache2 stop'
-    START_CMD = 'sudo service apache2 start'
-
-
-class MySQLService(service.ServiceAsProcess):
-    SERVICE_NAME = 'mysql'
-    GREP = 'mysqld'
-    RESTART_CMD = 'sudo service mysql restart'
-    TERMINATE_CMD = 'sudo service mysql stop'
-    START_CMD = 'sudo service mysql start'
-    PORT = ('tcp', 3307)
-
-
-class RabbitMQService(service.ServiceAsProcess):
-    SERVICE_NAME = 'rabbitmq'
-    GREP = 'rabbitmq-server'
-    RESTART_CMD = 'sudo service rabbitmq-server restart'
-    TERMINATE_CMD = 'sudo service rabbitmq-server stop'
-    START_CMD = 'sudo service rabbitmq-server start'
-
-
-class NovaAPIService(ServiceInScreen):
-    SERVICE_NAME = 'nova-api'
-    GREP = 'nova-api'
-    WINDOW_NAME = 'n-api'
-
-
-class GlanceAPIService(ServiceInScreen):
-    SERVICE_NAME = 'glance-api'
-    GREP = 'glance-api'
-    WINDOW_NAME = 'g-api'
-
-
-class NovaComputeService(ServiceInScreen):
-    SERVICE_NAME = 'nova-compute'
-    GREP = 'nova-compute'
-    WINDOW_NAME = 'n-cpu'
-
-
-class NovaSchedulerService(ServiceInScreen):
-    SERVICE_NAME = 'nova-scheduler'
-    GREP = 'nova-scheduler'
-    WINDOW_NAME = 'n-sch'
-
-
-class IronicApiService(ServiceInScreen):
-    SERVICE_NAME = 'ironic-api'
-    GREP = 'ironic-api'
-    WINDOW_NAME = 'ir-api'
-
-
-class IronicConductorService(ServiceInScreen):
-    SERVICE_NAME = 'ironic-conductor'
-    GREP = 'ironic-conductor'
-    WINDOW_NAME = 'ir-cond'
+                window_name=self.window_name)
 
 
 class DevStackManagement(cloud_management.CloudManagement,
@@ -154,18 +128,78 @@ class DevStackManagement(cloud_management.CloudManagement,
     NAME = 'devstack'
     DESCRIPTION = 'DevStack management driver'
     NODE_CLS = DevStackNode
-    SERVICE_NAME_TO_CLASS = {
-        'keystone': KeystoneService,
-        'mysql': MySQLService,
-        'rabbitmq': RabbitMQService,
-        'nova-api': NovaAPIService,
-        'glance-api': GlanceAPIService,
-        'nova-compute': NovaComputeService,
-        'nova-scheduler': NovaSchedulerService,
-        'ironic-api': IronicApiService,
-        'ironic-conductor': IronicConductorService,
+    SERVICES = {
+        'keystone': {
+            'driver': 'process',
+            'args': {
+                'grep': 'keystone-',
+                'restart_cmd': 'sudo service apache2 restart',
+                'terminate_cmd': 'sudo service apache2 stop',
+                'start_cmd': 'sudo service apache2 start',
+            }
+        },
+        'mysql': {
+            'driver': 'process',
+            'args': {
+                'grep': 'mysqld',
+                'restart_cmd': 'sudo service mysql restart',
+                'terminate_cmd': 'sudo service mysql stop',
+                'start_cmd': 'sudo service mysql start',
+                'port': ['tcp', 3307],
+            }
+        },
+        'rabbitmq': {
+            'driver': 'process',
+            'args': {
+                'grep': 'rabbitmq-server',
+                'restart_cmd': 'sudo service rabbitmq-server restart',
+                'terminate_cmd': 'sudo service rabbitmq-server stop',
+                'start_cmd': 'sudo service rabbitmq-server start',
+            }
+        },
+        'nova-api': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'nova-api',
+                'window_name': 'n-api',
+            }
+        },
+        'glance-api': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'glance-api',
+                'window_name': 'g-api',
+            }
+        },
+        'nova-compute': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'nova-compute',
+                'window_name': 'n-cpu',
+            }
+        },
+        'nova-scheduler': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'nova-scheduler',
+                'window_name': 'n-sch',
+            }
+        },
+        'ironic-api': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'ironic-api',
+                'window_name': 'ir-api',
+            }
+        },
+        'ironic-conductor': {
+            'driver': 'screen',
+            'args': {
+                'grep': 'ironic-conductor',
+                'window_name': 'ir-cond',
+            }
+        },
     }
-    SUPPORTED_SERVICES = list(SERVICE_NAME_TO_CLASS.keys())
     SUPPORTED_NETWORKS = ['all-in-one']
     CONFIG_SCHEMA = {
         'type': 'object',

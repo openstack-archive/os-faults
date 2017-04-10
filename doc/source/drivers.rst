@@ -25,3 +25,18 @@ Node discover
 
 .. driver_doc:: node_list
 
+
+Services
+--------
+
+.. driver_doc:: process
+
+.. driver_doc:: linux_service
+
+.. driver_doc:: screen
+
+.. driver_doc:: salt_service
+
+.. driver_doc:: pcs_service
+
+.. driver_doc:: pcs_or_linux_service

@@ -16,6 +16,7 @@ import sys
 import mock
 
 from os_faults.api import base_driver
+from os_faults.api import error
 from os_faults import drivers
 from os_faults import registry
 from os_faults.tests.unit import test
@@ -39,7 +40,19 @@ class RegistryTestCase(test.TestCase):
     @mock.patch('os.walk')
     def test_get_drivers(self, mock_os_walk, mock_import_module):
         drivers_folder = os.path.dirname(drivers.__file__)
-        mock_os_walk.return_value = [(drivers_folder, [], ['test_driver.py'])]
+        mock_os_walk.return_value = [(drivers_folder, [], ['driver.py'])]
         mock_import_module.return_value = sys.modules[__name__]
 
         self.assertEqual({'test': TestDriver}, registry.get_drivers())
+
+    @mock.patch('os_faults.registry._list_drivers')
+    def test_name_collision(self, mock_list_drivers):
+        class TestDriver1(base_driver.BaseDriver):
+            NAME = 'test'
+
+        class TestDriver2(base_driver.BaseDriver):
+            NAME = 'test'
+
+        mock_list_drivers.return_value = [TestDriver1, TestDriver2]
+        self.assertRaises(error.OSFDriverWithSuchNameExists,
+                          registry.get_drivers)

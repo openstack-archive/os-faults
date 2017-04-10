@@ -38,3 +38,7 @@ class NodeCollectionError(OSFError):
 
 class OSFDriverNotFound(OSFError):
     """Driver Not Found by os-faults registry"""
+
+
+class OSFDriverWithSuchNameExists(OSFError):
+    """Driver with such name already exists in os-faults registry"""
