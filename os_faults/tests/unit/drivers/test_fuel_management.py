@@ -197,3 +197,10 @@ class FuelManagementTestCase(test.TestCase):
         })
         self.assertRaises(error.ServiceError,
                           fuel_managment.get_service, 'unknown')
+
+    def test_validate_services(self):
+        fuel_managment = fuel.FuelManagement({
+            'address': 'fuel.local',
+            'username': 'root',
+        })
+        fuel_managment.validate_services()

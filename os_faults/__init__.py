@@ -63,6 +63,21 @@ CONFIG_SCHEMA = {
             'required': ['driver', 'args'],
             'additionalProperties': False,
         },
+        'services': {
+            'type': 'object',
+            'patternProperties': {
+                '.*': {
+                    'type': 'object',
+                    'properties': {
+                        'driver': {'type': 'string'},
+                        'args': {'type': 'object'},
+                    },
+                    'required': ['driver', 'args'],
+                    'additionalProperties': False,
+                }
+            },
+            'additionalProperties': False,
+        },
         'cloud_management': {
             'type': 'object',
             'properties': {
@@ -133,6 +148,11 @@ def connect(cloud_config=None, config_filename=None):
 
     cloud_management_conf = cloud_config['cloud_management']
     cloud_management = _init_driver(cloud_management_conf)
+
+    services = cloud_config.get('services')
+    if services:
+        cloud_management.update_services(services)
+    cloud_management.validate_services()
 
     node_discover_conf = cloud_config.get('node_discover')
     if node_discover_conf:

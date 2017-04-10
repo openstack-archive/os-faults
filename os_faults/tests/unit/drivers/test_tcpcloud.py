@@ -148,6 +148,10 @@ class TCPCloudManagementTestCase(test.TestCase):
             mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'hostname'}),
         ])
 
+    def test_validate_services(self):
+        tcp_managment = tcpcloud.TCPCloudManagement(self.tcp_conf)
+        tcp_managment.validate_services()
+
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
