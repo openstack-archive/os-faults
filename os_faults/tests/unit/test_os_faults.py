@@ -62,6 +62,17 @@ class OSFaultsTestCase(test.TestCase):
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackManagement)
 
+    def test_config_with_services(self):
+        self.cloud_config['services'] = {
+            'app': {
+                'driver': 'process',
+                'args': {'grep': 'myapp'}
+            }
+        }
+        destructor = os_faults.connect(self.cloud_config)
+        app = destructor.get_service('app')
+        self.assertIsNotNone(app)
+
     def test_connect_fuel_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
