@@ -22,18 +22,32 @@ from os_faults.api.util import public
 @six.add_metaclass(abc.ABCMeta)
 class Service(base_driver.BaseDriver):
 
-    def __init__(self, service_name, config, node_cls, cloud_management):
+    def __init__(self, service_name, config, node_cls, cloud_management,
+                 ips=None):
         self.service_name = service_name
         self.config = config
         self.node_cls = node_cls
         self.cloud_management = cloud_management
+        self.ips = ips
 
     @abc.abstractmethod
+    def discover_nodes(self):
+        """Discover nodes where this Service is running
+
+        :returns: NodesCollection
+        """
+
     def get_nodes(self):
         """Get nodes where this Service is running
 
-        :return: NodesCollection
+        :returns: NodesCollection
         """
+        if self.ips is not None:
+            nodes = self.cloud_management.get_nodes()
+            hosts = [h for h in nodes.hosts if h.ip in self.ips]
+            return self.node_cls(cloud_management=self.cloud_management,
+                                 hosts=hosts)
+        return self.discover_nodes()
 
     @public
     def restart(self, nodes=None):

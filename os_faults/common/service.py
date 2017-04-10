@@ -103,7 +103,7 @@ class ServiceAsProcess(service.Service):
             raise error.ServiceError('Task failed on some nodes')
         return results
 
-    def get_nodes(self):
+    def discover_nodes(self):
         nodes = self.cloud_management.get_nodes()
         ips = nodes.get_ips()
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(self.grep)
