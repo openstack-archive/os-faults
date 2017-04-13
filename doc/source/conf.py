@@ -21,15 +21,20 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
+on_zuul = "ZUUL_PROJECT" in os.environ
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
     #'sphinx.ext.intersphinx',
     'sphinxcontrib.programoutput',
-    'oslosphinx',
     'ext.driver_doc',
 ]
+
+if on_zuul:
+    extensions.append('oslosphinx')
 
 version = os_faults.get_version()
 # The full version, including alpha/beta/rc tags.
@@ -69,6 +74,8 @@ modindex_common_prefix = ['os_faults.']
 # html_theme_path = ["."]
 # html_theme = '_theme'
 # html_static_path = ['static']
+if not on_zuul:
+    html_theme = "sphinx_rtd_theme"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
