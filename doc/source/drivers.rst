@@ -26,8 +26,8 @@ Node discover
 .. driver_doc:: node_list
 
 
-Services
---------
+Service drivers
+---------------
 
 .. driver_doc:: process
 

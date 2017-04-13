@@ -1,6 +1,6 @@
-==========
-Public API
-==========
+=============
+API Reference
+=============
 
 .. automodule:: os_faults
     :members:

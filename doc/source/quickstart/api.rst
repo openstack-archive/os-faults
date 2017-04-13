@@ -1,56 +1,6 @@
-=====
-Usage
-=====
-
-Configuration
--------------
-
-The cloud deployment configuration schema is an extension to the cloud config
-used by the `os-client-config <https://github.com/openstack/os-client-config>`_
-library:
-
-.. code-block:: python
-
-    cloud_config = {
-        'cloud_management': {
-            'driver': 'devstack',
-            'args': {
-                'address': 'devstack.local',
-                'username': 'root',
-            }
-        },
-        'power_managements': [
-            {
-                'driver': 'libvirt',
-                'args': {
-                    'connection_uri': 'qemu+unix:///system',
-                }
-            }
-        ]
-    }
-
-Establish a connection to the cloud and verify it:
-
-.. code-block:: python
-
-    destructor = os_faults.connect(cloud_config)
-    destructor.verify()
-
-The library can also read configuration from a file and the file can be in the
-following three formats: os-faults.{json,yaml,yml}. The configuration file can
-be specified in the `OS_FAULTS_CONFIG` environment variable or can be read from
-one of the default locations:
-
-    * current directory
-    * ~/.config/os-faults
-    * /etc/openstack
-
-Make some destructive actions:
-
-.. code-block:: python
-
-    destructor.get_service(name='keystone').restart()
-
+===
+API
+===
 
 The library operates with 2 types of objects:
 
@@ -62,6 +12,13 @@ Simplified API
 --------------
 
 Simplified API is used to inject faults in a human-friendly form.
+
+.. code-block:: python
+
+    import os_faults
+    destructor = os_faults.connect(config_filename='os-faults.yaml')
+    os_faults.human_api(destructor, 'restart keystone service')
+
 
 **Service-oriented** command performs specified `action` against `service` on
 all, on one random node or on the node specified by FQDN::
