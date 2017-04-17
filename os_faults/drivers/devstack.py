@@ -123,6 +123,8 @@ class DevStackManagement(cloud_management.CloudManagement,
     - **private_key_file** - path to key file (optional)
     - **slaves** - list of ips for additional nodes (optional)
     - **iface** - network interface name to retrive mac address (optional)
+    - **serial** - how many hosts Ansible should manage at a single time.
+      (optional) default: 10
     """
 
     NAME = 'devstack'
@@ -214,6 +216,7 @@ class DevStackManagement(cloud_management.CloudManagement,
                 'items': {'type': 'string'},
             },
             'iface': {'type': 'string'},
+            'serial': {'type': 'integer', 'minimum': 1},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -228,11 +231,12 @@ class DevStackManagement(cloud_management.CloudManagement,
         self.private_key_file = cloud_management_params.get('private_key_file')
         self.slaves = cloud_management_params.get('slaves', [])
         self.iface = cloud_management_params.get('iface', 'eth0')
+        self.serial = cloud_management_params.get('serial')
 
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,
             password=cloud_management_params.get('password'),
-            become=False)
+            become=False, serial=self.serial)
 
         self.hosts = [self.address]
         if self.slaves:

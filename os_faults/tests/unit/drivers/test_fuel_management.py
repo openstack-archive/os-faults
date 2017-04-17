@@ -39,12 +39,13 @@ class FuelManagementTestCase(test.TestCase):
         dict(address='fuel.local', username='root'),
         (mock.call(private_key_file=None, remote_user='root'),
          mock.call(private_key_file=None, remote_user='root',
-                   jump_host='fuel.local'))
+                   jump_host='fuel.local', serial=None))
     ), (
-        dict(address='fuel.local', username='root', slave_direct_ssh=True),
+        dict(address='fuel.local', username='root', slave_direct_ssh=True,
+             serial=42),
         (mock.call(private_key_file=None, remote_user='root'),
          mock.call(private_key_file=None, remote_user='root',
-                   jump_host=None))
+                   jump_host=None, serial=42))
     ))
     @ddt.unpack
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):
