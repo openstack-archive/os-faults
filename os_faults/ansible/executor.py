@@ -125,7 +125,7 @@ Options = collections.namedtuple(
 class AnsibleRunner(object):
     def __init__(self, remote_user='root', password=None, forks=100,
                  jump_host=None, jump_user=None, private_key_file=None,
-                 become=None):
+                 become=None, serial=None):
         super(AnsibleRunner, self).__init__()
 
         ssh_common_args = SSH_COMMON_ARGS
@@ -146,6 +146,7 @@ class AnsibleRunner(object):
             sftp_extra_args=None, scp_extra_args=None,
             become=become, become_method='sudo', become_user='root',
             verbosity=100, check=False)
+        self.serial = serial or 10
 
     def _run_play(self, play_source):
         host_list = play_source['hosts']
@@ -203,9 +204,10 @@ class AnsibleRunner(object):
         any of these statuses
         :return: execution result, type AnsibleExecutionRecord
         """
-        LOG.debug('Executing task: %s on hosts: %s', task, hosts)
+        LOG.debug('Executing task: %s on hosts: %s with serial: %s',
+                  task, hosts, self.serial)
 
-        task_play = {'hosts': hosts, 'tasks': [task]}
+        task_play = {'hosts': hosts, 'tasks': [task], 'serial': self.serial}
         result = self.run_playbook([task_play])
 
         log_result = copy.deepcopy(result)
