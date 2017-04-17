@@ -48,7 +48,7 @@ class CloudDriverDocDirective(rst.Directive):
 
         subcat = utils.subcategory('{} [{}]'.format(drv_name, types))
         subcat.extend(utils.parse_text(doc))
-        subcat.extend(utils.parse_text('**Supported services:**'))
+        subcat.extend(utils.parse_text('**Default services:**'))
         subcat.extend(utils.rstlist(services))
         return [subcat]
 

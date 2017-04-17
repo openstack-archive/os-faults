@@ -17,21 +17,22 @@ import sys
 
 from oslo_utils import importutils
 
+import os_faults
 from os_faults.api import base_driver
 from os_faults.api import error
-from os_faults import drivers
 
 DRIVERS = {}
 
 
 def _import_modules_from_package():
-    drivers_folder = os.path.dirname(drivers.__file__)
-    library_root = os.path.normpath(os.path.join(
-        os.path.join(drivers_folder, os.pardir), os.pardir))
+    folder = os.path.dirname(os_faults.__file__)
+    library_root = os.path.normpath(os.path.join(folder, os.pardir))
 
-    for root, dirs, files in os.walk(drivers_folder):
+    for root, dirs, files in os.walk(folder):
         for filename in files:
-            if filename.startswith('__') or not filename.endswith('.py'):
+            if (filename.startswith('__') or
+                    filename.startswith('test') or
+                    not filename.endswith('.py')):
                 continue
 
             relative_path = os.path.relpath(os.path.join(root, filename),
@@ -56,16 +57,33 @@ def _list_drivers():
 
         for class_info in class_info_list:
             klazz = class_info[1]
+            if not issubclass(klazz, base_driver.BaseDriver):
+                continue
+            if 'NAME' not in vars(klazz):  # driver must have a name
+                continue
+            if klazz.NAME == 'base':  # skip base class
+                continue
 
-            if issubclass(klazz, base_driver.BaseDriver):
-                yield klazz
+            yield klazz
 
 
 def get_drivers():
     global DRIVERS
 
     if not DRIVERS:
-        DRIVERS = dict((k.get_driver_name(), k) for k in _list_drivers())
+        DRIVERS = {}
+        for k in _list_drivers():
+            driver_name = k.get_driver_name()
+            if driver_name in DRIVERS:
+                orig_k = DRIVERS[driver_name]
+                orig_path = orig_k.__module__ + '.' + orig_k.__name__
+                dup_path = k.__module__ + '.' + k.__name__
+
+                raise error.OSFDriverWithSuchNameExists(
+                    'Driver "%s" already defined in %s. '
+                    'Found a duplicate in %s ' % (
+                        driver_name, orig_path, dup_path))
+            DRIVERS[driver_name] = k
 
     return DRIVERS
 

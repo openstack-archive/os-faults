@@ -34,9 +34,8 @@ class FuelServiceTestCase(test.TestCase):
             })
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_kill(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_kill(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -53,24 +52,21 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.kill()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service_cls.GREP, 'sig': 9}}),
+                      {'kill': {'grep': service.grep, 'sig': 9}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_freeze(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_freeze(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -87,24 +83,21 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.freeze()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service_cls.GREP, 'sig': 19}}),
+                      {'kill': {'grep': service.grep, 'sig': 19}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_freeze_sec(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_freeze_sec(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -121,26 +114,23 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         delay_sec = 10
         service.freeze(nodes=None, sec=delay_sec)
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'freeze': {'grep': service_cls.GREP,
+                      {'freeze': {'grep': service.grep,
                                   'sec': delay_sec}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_unfreeze(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_unfreeze(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -157,24 +147,21 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.unfreeze()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service_cls.GREP, 'sig': 18}}),
+                      {'kill': {'grep': service.grep, 'sig': 18}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('mysql', fuel.MySQLService))
-    @ddt.unpack
-    def test_unplug(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data('mysql')
+    def test_unplug(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -191,27 +178,24 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.unplug()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'iptables': {'protocol': service_cls.PORT[0],
-                                    'port': service_cls.PORT[1],
+                      {'iptables': {'protocol': service.port[0],
+                                    'port': service.port[1],
                                     'action': 'block',
-                                    'service': service_cls.SERVICE_NAME}}),
+                                    'service': service.service_name}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(('mysql', fuel.MySQLService))
-    @ddt.unpack
-    def test_plug(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data('mysql')
+    def test_plug(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -228,27 +212,24 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.plug()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'iptables': {'protocol': service_cls.PORT[0],
-                                    'port': service_cls.PORT[1],
+                      {'iptables': {'protocol': service.port[0],
+                                    'port': service.port[1],
                                     'action': 'unblock',
-                                    'service': service_cls.SERVICE_NAME}}),
+                                    'service': service.service_name}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_restart(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_restart(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -265,24 +246,21 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.restart()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.RESTART_CMD}),
+                      {'shell': service.restart_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_terminate(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_terminate(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -299,24 +277,21 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.terminate()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.TERMINATE_CMD}),
+                      {'shell': service.terminate_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*fuel.FuelManagement.SERVICE_NAME_TO_CLASS.items())
-    @ddt.unpack
-    def test_start(self, service_name, service_cls, mock_ansible_runner):
+    @ddt.data(*fuel.FuelManagement.SERVICES.keys())
+    def test_start(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
             [self.fake_ansible_result],
@@ -333,18 +308,16 @@ class FuelServiceTestCase(test.TestCase):
         fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
-        self.assertIsInstance(service, service_cls)
-
         service.start()
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service_cls.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.START_CMD}),
+                      {'shell': service.start_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -370,13 +343,13 @@ class FuelServiceTestCase(test.TestCase):
         self.assertEqual('Task failed on some nodes', str(exception))
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
                       {'command': get_nodes_cmd}, []),
             mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.RESTART_CMD}),
+                      {'shell': service.restart_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -399,7 +372,7 @@ class FuelServiceTestCase(test.TestCase):
         self.assertEqual('Node collection is empty', str(exception))
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service.GREP)
+            service.grep)
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(['fuel.local'], {'command': 'fuel node --json'}),
             mock.call(['10.0.0.2', '10.0.0.3'],
