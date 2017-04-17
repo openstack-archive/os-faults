@@ -187,6 +187,8 @@ class FuelManagement(cloud_management.CloudManagement,
     - **private_key_file** - path to key file (optional)
     - **slave_direct_ssh** - if *False* then fuel master is used as ssh proxy
       (optional)
+    - **serial** - how many hosts Ansible should manage at a single time.
+      (optional) default: 10
     """
 
     NAME = 'fuel'
@@ -501,6 +503,7 @@ class FuelManagement(cloud_management.CloudManagement,
             'username': {'type': 'string'},
             'private_key_file': {'type': 'string'},
             'slave_direct_ssh': {'type': 'boolean'},
+            'serial': {'type': 'integer', 'minimum': 1},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -515,6 +518,7 @@ class FuelManagement(cloud_management.CloudManagement,
         self.private_key_file = cloud_management_params.get('private_key_file')
         self.slave_direct_ssh = cloud_management_params.get(
             'slave_direct_ssh', False)
+        self.serial = cloud_management_params.get('serial')
 
         self.master_node_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file)
@@ -525,7 +529,7 @@ class FuelManagement(cloud_management.CloudManagement,
 
         self.cloud_executor = executor.AnsibleRunner(
             remote_user=self.username, private_key_file=self.private_key_file,
-            jump_host=jump_host)
+            jump_host=jump_host, serial=self.serial)
 
         self.cached_cloud_hosts = list()
 

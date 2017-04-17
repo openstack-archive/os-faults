@@ -215,7 +215,19 @@ class AnsibleRunnerTestCase(test.TestCase):
         ex.execute(my_hosts, my_tasks)
         mock_run_playbook.assert_called_once_with(
             [{'tasks': ['my_task'],
-              'hosts': ['0.0.0.0', '255.255.255.255']}])
+              'hosts': ['0.0.0.0', '255.255.255.255'],
+              'serial': 10}])
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
+    def test_execute_with_serial(self, mock_run_playbook):
+        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_tasks = 'my_task'
+        ex = executor.AnsibleRunner(serial=50)
+        ex.execute(my_hosts, my_tasks)
+        mock_run_playbook.assert_called_once_with(
+            [{'tasks': ['my_task'],
+              'hosts': ['0.0.0.0', '255.255.255.255'],
+              'serial': 50}])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
     def test_execute_status_unreachable(self, mock_run_playbook):
@@ -290,7 +302,8 @@ class AnsibleRunnerTestCase(test.TestCase):
         ex.execute([host], task)
 
         mock_debug.assert_has_calls((
-            mock.call('Executing task: %s on hosts: %s', task, [host]),
+            mock.call('Executing task: %s on hosts: %s with serial: %s',
+                      task, [host], 10),
             mock.call('Execution completed with 1 result(s):'),
             mock.call(result),
         ))

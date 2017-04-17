@@ -128,6 +128,8 @@ class TCPCloudManagement(cloud_management.CloudManagement,
     - **slave_direct_ssh** - if *False* then salt master is used as ssh proxy
       (optional)
     - **get_ips_cmd** - salt command to get IPs of minions (optional)
+    - **serial** - how many hosts Ansible should manage at a single time.
+      (optional) default: 10
     """
 
     NAME = 'tcpcloud'
@@ -363,6 +365,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
             'slave_name_regexp': {'type': 'string'},
             'slave_direct_ssh': {'type': 'boolean'},
             'get_ips_cmd': {'type': 'string'},
+            'serial': {'type': 'integer', 'minimum': 1},
         },
         'required': ['address', 'username'],
         'additionalProperties': False,
@@ -382,6 +385,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         use_jump = not self.slave_direct_ssh
         self.get_ips_cmd = cloud_management_params.get(
             'get_ips_cmd', 'pillar.get _param:single_address')
+        self.serial = cloud_management_params.get('serial')
 
         password = cloud_management_params.get('password')
         self.master_node_executor = executor.AnsibleRunner(
@@ -396,7 +400,8 @@ class TCPCloudManagement(cloud_management.CloudManagement,
             private_key_file=self.private_key_file,
             jump_host=self.master_node_address if use_jump else None,
             jump_user=self.username if use_jump else None,
-            become=cloud_management_params.get('slave_sudo'))
+            become=cloud_management_params.get('slave_sudo'),
+            serial=self.serial)
 
         # get all nodes except salt master (that has cfg* hostname) by default
         self.slave_name_regexp = cloud_management_params.get(

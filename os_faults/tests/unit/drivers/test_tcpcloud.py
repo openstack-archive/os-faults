@@ -71,7 +71,7 @@ class TCPCloudManagementTestCase(test.TestCase):
                    password=None),
          mock.call(become=None, jump_host='tcp.local', jump_user='root',
                    private_key_file=None, remote_user='root',
-                   password=None))
+                   password=None, serial=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', master_sudo=True,
@@ -80,7 +80,7 @@ class TCPCloudManagementTestCase(test.TestCase):
                    remote_user='ubuntu', password=None),
          mock.call(become=None, jump_host='tcp.local', jump_user='ubuntu',
                    private_key_file='/path/id_rsa', remote_user='root',
-                   password=None))
+                   password=None, serial=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', slave_sudo=True,
@@ -89,7 +89,7 @@ class TCPCloudManagementTestCase(test.TestCase):
                    remote_user='ubuntu', password=None),
          mock.call(become=True, jump_host='tcp.local', jump_user='ubuntu',
                    private_key_file='/path/id_rsa', remote_user='root',
-                   password=None))
+                   password=None, serial=None))
     ), (
         dict(address='tcp.local', username='ubuntu',
              slave_username='root', slave_sudo=True,
@@ -99,22 +99,22 @@ class TCPCloudManagementTestCase(test.TestCase):
                    remote_user='ubuntu', password=None),
          mock.call(become=True, jump_host=None, jump_user=None,
                    private_key_file='/path/id_rsa', remote_user='root',
-                   password=None))
+                   password=None, serial=None))
     ), (
         dict(address='tcp.local', username='root', password='root_pass'),
         (mock.call(become=None, private_key_file=None, remote_user='root',
                    password='root_pass'),
          mock.call(become=None, jump_host='tcp.local', jump_user='root',
                    private_key_file=None, remote_user='root',
-                   password='root_pass'))
+                   password='root_pass', serial=None))
     ), (
         dict(address='tcp.local', username='root',
-             slave_password='slave_pass'),
+             slave_password='slave_pass', serial=42),
         (mock.call(become=None, private_key_file=None, remote_user='root',
                    password=None),
          mock.call(become=None, jump_host='tcp.local', jump_user='root',
                    private_key_file=None, remote_user='root',
-                   password='slave_pass'))
+                   password='slave_pass', serial=42))
     ))
     @ddt.unpack
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):
