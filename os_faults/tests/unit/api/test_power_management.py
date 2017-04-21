@@ -101,7 +101,7 @@ class PowerManagerTestCase(test.TestCase):
                                 self.pm.reset, self.hosts)
         self.assertEqual("No supported driver found for host "
                          "Host(ip='10.0.0.3', mac='09:7b:74:90:63:c2', "
-                         "fqdn='node2.com')", str(exc))
+                         "fqdn='node2.com', libvirt_name=None)", str(exc))
 
     def test_run_no_drivers(self):
         self.pm = power_management.PowerManager()
@@ -110,4 +110,4 @@ class PowerManagerTestCase(test.TestCase):
                                 self.pm.reset, self.hosts)
         self.assertEqual("No supported driver found for host "
                          "Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1', "
-                         "fqdn='node1.com')", str(exc))
+                         "fqdn='node1.com', libvirt_name=None)", str(exc))
