@@ -94,7 +94,8 @@ class CloudManagement(base_driver.BaseDriver):
         config = self.services[name]
         klazz = registry.get_driver(config["driver"])
         return klazz(node_cls=self.NODE_CLS, cloud_management=self,
-                     service_name=name, config=config["args"])
+                     service_name=name, config=config["args"],
+                     hosts=config.get('hosts'))
 
     @abc.abstractmethod
     def execute_on_cloud(self, hosts, task, raise_on_error=True):

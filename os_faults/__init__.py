@@ -71,6 +71,11 @@ CONFIG_SCHEMA = {
                     'properties': {
                         'driver': {'type': 'string'},
                         'args': {'type': 'object'},
+                        'hosts': {
+                            'type': 'array',
+                            'minItems': 1,
+                            'items': {'type': 'string'},
+                        },
                     },
                     'required': ['driver', 'args'],
                     'additionalProperties': False,

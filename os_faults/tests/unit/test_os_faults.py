@@ -73,6 +73,37 @@ class OSFaultsTestCase(test.TestCase):
         app = destructor.get_service('app')
         self.assertIsNotNone(app)
 
+    def test_config_with_services_and_hosts(self):
+        self.cloud_config['node_discover'] = {
+            'driver': 'node_list',
+            'args': [
+                {
+                    'ip': '10.0.0.11',
+                    'mac': '01:ab:cd:01:ab:cd',
+                    'fqdn': 'node-1'
+                }, {
+                    'ip': '10.0.0.12',
+                    'mac': '02:ab:cd:02:ab:cd',
+                    'fqdn': 'node-2'
+                },
+            ]
+        }
+        self.cloud_config['services'] = {
+            'app': {
+                'driver': 'process',
+                'args': {'grep': 'myapp'},
+                'hosts': ['10.0.0.11', '10.0.0.12']
+            }
+        }
+        destructor = os_faults.connect(self.cloud_config)
+        app = destructor.get_service('app')
+        self.assertIsNotNone(app)
+        nodes = app.get_nodes()
+        self.assertEqual(['10.0.0.11', '10.0.0.12'], nodes.get_ips())
+        self.assertEqual(['node-1', 'node-2'], nodes.get_fqdns())
+        self.assertEqual(['01:ab:cd:01:ab:cd', '02:ab:cd:02:ab:cd'],
+                         nodes.get_macs())
+
     def test_connect_fuel_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, fuel.FuelManagement)
