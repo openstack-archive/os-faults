@@ -52,14 +52,14 @@ class NodeCollectionTestCase(test.TestCase):
             hosts=copy.deepcopy(self.hosts))
 
         self.hosts2 = [
-            node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
-                                 fqdn='node1.com'),
+            node_collection.Host(ip='10.0.0.7', mac='09:7b:74:90:63:c7',
+                                 fqdn='node6.com'),
             node_collection.Host(ip='10.0.0.3', mac='09:7b:74:90:63:c2',
                                  fqdn='node2.com'),
             node_collection.Host(ip='10.0.0.6', mac='09:7b:74:90:63:c6',
                                  fqdn='node5.com'),
-            node_collection.Host(ip='10.0.0.7', mac='09:7b:74:90:63:c7',
-                                 fqdn='node6.com'),
+            node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
+                                 fqdn='node1.com'),
         ]
 
         self.node_collection2 = node_collection.NodeCollection(

@@ -11,20 +11,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import logging
 import random
 import warnings
 
 from os_faults.api import error
 from os_faults.api.util import public
+from os_faults import utils
 
 LOG = logging.getLogger(__name__)
 
-Host = collections.namedtuple('Host', ['ip', 'mac', 'fqdn'])
+
+class Host(utils.ComparableMixin, utils.ReprMixin):
+
+    ATTRS = ('ip', 'mac', 'fqdn', 'libvirt_name')
+
+    def __init__(self, ip, mac=None, fqdn=None, libvirt_name=None):
+        self.ip = ip
+        self.mac = mac
+        self.fqdn = fqdn
+        self.libvirt_name = libvirt_name
 
 
-class NodeCollection(object):
+class NodeCollection(utils.ReprMixin):
+
+    ATTRS = ('hosts', )
 
     def __init__(self, cloud_management=None, hosts=None):
         self.cloud_management = cloud_management
@@ -33,9 +44,6 @@ class NodeCollection(object):
     @property
     def hosts(self):
         return sorted(self._hosts)
-
-    def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, repr(self.hosts))
 
     def __len__(self):
         return len(self._hosts)

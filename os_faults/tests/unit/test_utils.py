@@ -85,3 +85,60 @@ class RequiredVariablesTestCase(test.TestCase):
                                 inst.method_that_miss_variables)
         msg = 'BAR, BAZ required for MyClass.method_that_miss_variables'
         self.assertEqual(str(err), msg)
+
+
+class MyPoint(utils.ComparableMixin):
+    ATTRS = ('a', 'b')
+
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+
+class ComparableMixinTestCase(test.TestCase):
+
+    def test_operations(self):
+        p1 = MyPoint(1, 'a')
+        p2 = MyPoint(1, 'b')
+        p3 = MyPoint(2, 'c')
+        p4 = MyPoint(2, 'c')
+
+        self.assertTrue(p1 < p2)
+        self.assertTrue(p1 <= p2)
+        self.assertFalse(p1 == p2)
+        self.assertFalse(p1 >= p2)
+        self.assertFalse(p1 > p2)
+        self.assertTrue(p1 != p2)
+        self.assertTrue(hash(p1) != hash(p2))
+
+        self.assertTrue(p2 < p3)
+        self.assertTrue(p2 <= p3)
+        self.assertFalse(p2 == p3)
+        self.assertFalse(p2 >= p3)
+        self.assertFalse(p2 > p3)
+        self.assertTrue(p2 != p3)
+        self.assertTrue(hash(p2) != hash(p3))
+
+        self.assertFalse(p3 < p4)
+        self.assertTrue(p3 <= p4)
+        self.assertTrue(p3 == p4)
+        self.assertTrue(p3 >= p4)
+        self.assertFalse(p3 > p4)
+        self.assertFalse(p3 != p4)
+        self.assertEqual(hash(p3), hash(p4))
+
+
+class MyRepr(utils.ReprMixin):
+    REPR_ATTRS = ('a', 'b', 'c')
+
+    def __init__(self):
+        self.a = 'foo'
+        self.b = {'foo': 'bar'}
+        self.c = 42
+
+
+class ReprMixinTestCase(test.TestCase):
+
+    def test_repr(self):
+        r = MyRepr()
+        self.assertEqual("MyRepr(a='foo', b={'foo': 'bar'}, c=42)", repr(r))

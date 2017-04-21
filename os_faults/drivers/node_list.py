@@ -32,6 +32,7 @@ class NodeListDiscover(node_discover.NodeDiscover):
           - ip: 10.0.0.51
             mac: aa:bb:cc:dd:ee:01
             fqdn: node1.local
+            libvirt_name: node1
           - ip: 10.0.0.52
             mac: aa:bb:cc:dd:ee:02
             fqdn: node2.local
@@ -54,16 +55,16 @@ class NodeListDiscover(node_discover.NodeDiscover):
                     'pattern': utils.MACADDR_REGEXP,
                 },
                 'fqdn': {'type': 'string'},
+                'libvirt_name': {'type': 'string'},
             },
-            'required': ['ip', 'mac', 'fqdn'],
+            'required': ['ip'],
             'additionalProperties': False,
         },
         'minItems': 1,
     }
 
     def __init__(self, conf):
-        self.hosts = [node_collection.Host(ip=host['ip'], mac=host['mac'],
-                                           fqdn=host['fqdn']) for host in conf]
+        self.hosts = [node_collection.Host(**host) for host in conf]
 
     def discover_hosts(self):
         """Discover hosts

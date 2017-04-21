@@ -68,49 +68,51 @@ class LibvirtDriver(power_management.PowerDriver):
 
         return self._cached_conn
 
-    def _find_domain_by_mac_address(self, mac_address):
+    def _find_domain_by_host(self, host):
         for domain in self.conn.listAllDomains():
-            if mac_address in domain.XMLDesc():
+            if host.libvirt_name and host.libvirt_name == domain.name():
+                return domain
+            if host.mac and host.mac in domain.XMLDesc():
                 return domain
 
         raise error.PowerManagementError(
-            'Domain with MAC address %s not found!' % mac_address)
+            'Domain not found for host %s.' % host)
 
     def supports(self, host):
         try:
-            self._find_domain_by_mac_address(host.mac)
+            self._find_domain_by_host(host)
         except error.PowerManagementError:
             return False
         return True
 
     def poweroff(self, host):
-        LOG.debug('Power off domain with MAC address: %s', host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Power off domain with name: %s', host.mac)
         domain.destroy()
         LOG.info('Domain powered off: %s', host.mac)
 
     def poweron(self, host):
-        LOG.debug('Power on domain with MAC address: %s', host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Power on domain with name: %s', domain.name())
         domain.create()
-        LOG.info('Domain powered on: %s', host.mac)
+        LOG.info('Domain powered on: %s', domain.name())
 
     def reset(self, host):
-        LOG.debug('Reset domain with MAC address: %s', host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Reset domain with name: %s', domain.name())
         domain.reset()
-        LOG.info('Domain reset: %s', host.mac)
+        LOG.info('Domain reset: %s', domain.name())
 
     def shutdown(self, host):
-        LOG.debug('Shutdown domain with MAC address: %s', host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Shutdown domain with name: %s', domain.name())
         domain.shutdown()
-        LOG.info('Domain is off: %s', host.mac)
+        LOG.info('Domain is off: %s', domain.name())
 
     def snapshot(self, host, snapshot_name, suspend):
-        LOG.debug('Create snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Create snapshot "%s" for domain with name: %s',
+                  snapshot_name, domain.name())
         if suspend:
             domain.suspend()
         domain.snapshotCreateXML(
@@ -118,18 +120,18 @@ class LibvirtDriver(power_management.PowerDriver):
                 snapshot_name))
         if suspend:
             domain.resume()
-        LOG.debug('Created snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, host.mac)
+        LOG.debug('Created snapshot "%s" for domain with name: %s',
+                  snapshot_name, domain.name())
 
     def revert(self, host, snapshot_name, resume):
-        LOG.debug('Revert snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, host.mac)
-        domain = self._find_domain_by_mac_address(host.mac)
+        domain = self._find_domain_by_host(host)
+        LOG.debug('Revert snapshot "%s" for domain with name: %s',
+                  snapshot_name, domain.name())
         snapshot = domain.snapshotLookupByName(snapshot_name)
         if domain.isActive():
             domain.destroy()
         domain.revertToSnapshot(snapshot)
         if resume:
             domain.resume()
-        LOG.debug('Reverted snapshot "%s" for domain with MAC address: %s',
-                  snapshot_name, host.mac)
+        LOG.debug('Reverted snapshot "%s" for domain with name: %s',
+                  snapshot_name, domain.name())

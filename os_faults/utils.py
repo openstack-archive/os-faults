@@ -61,3 +61,44 @@ def require_variables(*variables):
             return fn(self, *args, **kawrgs)
         return wrapper
     return decorator
+
+
+class ComparableMixin(object):
+
+    ATTRS = ()
+
+    def _cmp_attrs(self):
+        return tuple(getattr(self, attr) for attr in self.ATTRS)
+
+    def __lt__(self, other):
+        return self._cmp_attrs() < other._cmp_attrs()
+
+    def __le__(self, other):
+        return self._cmp_attrs() <= other._cmp_attrs()
+
+    def __eq__(self, other):
+        return self._cmp_attrs() == other._cmp_attrs()
+
+    def __ge__(self, other):
+        return self._cmp_attrs() >= other._cmp_attrs()
+
+    def __gt__(self, other):
+        return self._cmp_attrs() > other._cmp_attrs()
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(self._cmp_attrs())
+
+
+class ReprMixin(object):
+
+    ATTRS = ()
+    REPR_ATTRS = ()
+
+    def __repr__(self):
+        return '{}({})'.format(
+            self.__class__.__name__,
+            ', '.join('{}={}'.format(attr, repr(getattr(self, attr)))
+                      for attr in self.REPR_ATTRS or self.ATTRS))
