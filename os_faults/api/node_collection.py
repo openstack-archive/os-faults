@@ -26,11 +26,12 @@ class Host(utils.ComparableMixin, utils.ReprMixin):
 
     ATTRS = ('ip', 'mac', 'fqdn', 'libvirt_name')
 
-    def __init__(self, ip, mac=None, fqdn=None, libvirt_name=None):
+    def __init__(self, ip, mac=None, fqdn=None, libvirt_name=None, auth=None):
         self.ip = ip
         self.mac = mac
         self.fqdn = fqdn
         self.libvirt_name = libvirt_name
+        self.auth = auth
 
 
 class NodeCollection(utils.ReprMixin):
@@ -131,7 +132,7 @@ class NodeCollection(utils.ReprMixin):
         """
         LOG.info('Run task: %s on nodes: %s', task, self)
         return self.cloud_management.execute_on_cloud(
-            self.get_ips(), task, raise_on_error=raise_on_error)
+            self.hosts, task, raise_on_error=raise_on_error)
 
     @public
     def reboot(self):
@@ -140,7 +141,7 @@ class NodeCollection(utils.ReprMixin):
         """
         LOG.info('Reboot nodes: %s', self)
         task = {'command': 'reboot now'}
-        self.cloud_management.execute_on_cloud(self.get_ips(), task)
+        self.cloud_management.execute_on_cloud(self.hosts, task)
 
     @public
     def oom(self):

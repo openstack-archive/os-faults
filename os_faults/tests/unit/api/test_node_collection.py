@@ -163,8 +163,7 @@ class NodeCollectionTestCase(test.TestCase):
         expected_result = mock_execute_on_cloud.return_value
         self.assertIs(result, expected_result)
         mock_execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'], {'foo': 'bar'},
-            raise_on_error=False)
+            self.hosts, {'foo': 'bar'}, raise_on_error=False)
 
     def test_pick_count(self):
         two = self.node_collection.pick(count=2)
@@ -195,8 +194,7 @@ class NodeCollectionTestCase(test.TestCase):
     def test_reboot(self):
         self.node_collection.reboot()
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
-            {'command': 'reboot now'})
+            self.hosts, {'command': 'reboot now'})
 
     def test_snapshot(self):
         self.node_collection.snapshot('foo')

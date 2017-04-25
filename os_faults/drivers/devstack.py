@@ -238,16 +238,17 @@ class DevStackManagement(cloud_management.CloudManagement,
             password=cloud_management_params.get('password'),
             become=False, serial=self.serial)
 
-        self.hosts = [self.address]
+        self.hosts = [node_collection.Host(ip=self.address)]
         if self.slaves:
-            self.hosts.extend(self.slaves)
+            self.hosts.extend([node_collection.Host(ip=h)
+                               for h in self.slaves])
         self.nodes = None
 
     def verify(self):
         """Verify connection to the cloud."""
         nodes = self.get_nodes()
         task = {'shell': 'screen -ls | grep -P "\\d+\\.stack"'}
-        results = self.execute_on_cloud(nodes.get_ips(), task)
+        results = self.execute_on_cloud(nodes.hosts, task)
         hostnames = [result.host for result in results]
         LOG.debug('DevStack hostnames: %s', hostnames)
         LOG.info('Connected to cloud successfully')

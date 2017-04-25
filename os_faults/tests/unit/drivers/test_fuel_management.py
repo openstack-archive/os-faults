@@ -27,12 +27,22 @@ class FuelManagementTestCase(test.TestCase):
 
     def setUp(self):
         super(FuelManagementTestCase, self).setUp()
+        self.conf = {
+            'address': 'fuel.local',
+            'username': 'root',
+        }
 
         self.fake_ansible_result = fakes.FakeAnsibleResult(
             payload={
                 'stdout': '[{"ip": "10.0.0.2", "mac": "02", "fqdn": "node-2"},'
                           ' {"ip": "10.0.0.3", "mac": "03", "fqdn": "node-3"}]'
             })
+
+        self.master_host = node_collection.Host('fuel.local')
+        self.hosts = [
+            node_collection.Host(ip='10.0.0.2', mac='02', fqdn='node-2'),
+            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
+        ]
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data((
@@ -65,36 +75,26 @@ class FuelManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})],
         ]
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         fuel_managment.verify()
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'hostname'}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': 'hostname'}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         nodes = fuel_managment.get_nodes()
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
         ])
 
-        hosts = [
-            node_collection.Host(ip='10.0.0.2', mac='02', fqdn='node-2'),
-            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
-        ]
-        self.assertEqual(nodes.hosts, hosts)
+        self.assertEqual(nodes.hosts, self.hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_get_nodes_from_discover_driver(self, mock_ansible_runner):
@@ -107,10 +107,7 @@ class FuelManagementTestCase(test.TestCase):
         ]
         node_discover_driver = mock.Mock()
         node_discover_driver.discover_hosts.return_value = hosts
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         fuel_managment.set_node_discover(node_discover_driver)
         nodes = fuel_managment.get_nodes()
 
@@ -125,17 +122,14 @@ class FuelManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})]
         ]
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         nodes = fuel_managment.get_nodes()
         result = fuel_managment.execute_on_cloud(
-            nodes.get_ips(), {'command': 'mycmd'}, raise_on_error=False)
+            nodes.hosts, {'command': 'mycmd'}, raise_on_error=False)
 
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'], {'command': 'mycmd'}, []),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': 'mycmd'}, []),
         ])
 
         self.assertEqual(result,
@@ -146,10 +140,7 @@ class FuelManagementTestCase(test.TestCase):
     def test_get_nodes_fqdns(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [[self.fake_ansible_result]]
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         nodes = fuel_managment.get_nodes(fqdns=['node-3'])
 
         hosts = [
@@ -170,10 +161,7 @@ class FuelManagementTestCase(test.TestCase):
                                      host='10.0.0.3')]
         ]
 
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
 
         service = fuel_managment.get_service(service_name)
 
@@ -181,27 +169,17 @@ class FuelManagementTestCase(test.TestCase):
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': cmd}, []),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': cmd}, []),
         ])
 
-        hosts = [
-            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
-        ]
-        self.assertEqual(nodes.hosts, hosts)
+        self.assertEqual(nodes.hosts, [self.hosts[1]])
 
     def test_get_unknown_service(self):
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         self.assertRaises(error.ServiceError,
                           fuel_managment.get_service, 'unknown')
 
     def test_validate_services(self):
-        fuel_managment = fuel.FuelManagement({
-            'address': 'fuel.local',
-            'username': 'root',
-        })
+        fuel_managment = fuel.FuelManagement(self.conf)
         fuel_managment.validate_services()

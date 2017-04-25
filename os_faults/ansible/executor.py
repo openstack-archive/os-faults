@@ -130,11 +130,10 @@ class AnsibleRunner(object):
 
         ssh_common_args = SSH_COMMON_ARGS
         if jump_host:
-            ssh_common_args += (
-                ' -o ProxyCommand="ssh -i %(key)s -W %%h:%%p %(ssh_args)s '
-                '%(user)s@%(host)s"'
-                % dict(key=private_key_file, user=jump_user or remote_user,
-                       host=jump_host, ssh_args=SSH_COMMON_ARGS))
+            ssh_common_args += self._build_proxy_arg(
+                jump_host=jump_host,
+                jump_user=jump_user or remote_user,
+                private_key_file=private_key_file)
 
         self.passwords = dict(conn_pass=password, become_pass=password)
         self.options = Options(
@@ -148,7 +147,15 @@ class AnsibleRunner(object):
             verbosity=100, check=False)
         self.serial = serial or 10
 
-    def _run_play(self, play_source):
+    @staticmethod
+    def _build_proxy_arg(jump_user, jump_host, private_key_file=None):
+        key = '-i ' + private_key_file if private_key_file else ''
+        return (' -o ProxyCommand="ssh %(key)s -W %%h:%%p %(ssh_args)s '
+                '%(user)s@%(host)s"'
+                % dict(key=key, user=jump_user,
+                       host=jump_host, ssh_args=SSH_COMMON_ARGS))
+
+    def _run_play(self, play_source, host_vars):
         host_list = play_source['hosts']
 
         loader = dataloader.DataLoader()
@@ -157,6 +164,13 @@ class AnsibleRunner(object):
                                              variable_manager=variable_manager,
                                              host_list=host_list)
         variable_manager.set_inventory(inventory_inst)
+
+        for host, variables in host_vars.items():
+            host_inst = inventory_inst.get_host(host)
+            for var_name, value in variables.items():
+                if value is not None:
+                    variable_manager.set_host_variable(
+                        host_inst, var_name, value)
 
         storage = []
         callback = MyCallback(storage)
@@ -183,13 +197,13 @@ class AnsibleRunner(object):
 
         return storage
 
-    def run_playbook(self, playbook):
+    def run_playbook(self, playbook, host_vars):
         result = []
 
         for play_source in playbook:
             play_source['gather_facts'] = 'no'
 
-            result += self._run_play(play_source)
+            result += self._run_play(play_source, host_vars)
 
         return result
 
@@ -207,8 +221,11 @@ class AnsibleRunner(object):
         LOG.debug('Executing task: %s on hosts: %s with serial: %s',
                   task, hosts, self.serial)
 
-        task_play = {'hosts': hosts, 'tasks': [task], 'serial': self.serial}
-        result = self.run_playbook([task_play])
+        host_vars = {h.ip: self._build_host_vars(h) for h in hosts}
+        task_play = {'hosts': [h.ip for h in hosts],
+                     'tasks': [task],
+                     'serial': self.serial}
+        result = self.run_playbook([task_play], host_vars)
 
         log_result = copy.deepcopy(result)
         LOG.debug('Execution completed with %s result(s):' % len(log_result))
@@ -240,3 +257,25 @@ class AnsibleRunner(object):
                 raise ek(msg)
 
         return result
+
+    def _build_host_vars(self, host):
+        if not host.auth:
+            return {}
+
+        ssh_common_args = None
+        if 'jump' in host.auth:
+            ssh_common_args = SSH_COMMON_ARGS
+            ssh_common_args += self._build_proxy_arg(
+                jump_host=host.auth['jump']['host'],
+                jump_user=host.auth['jump'].get(
+                    'username', self.options.remote_user),
+                private_key_file=host.auth['jump'].get(
+                    'private_key_file', self.options.private_key_file))
+
+        return {
+            'ansible_user': host.auth.get('username'),
+            'ansible_ssh_pass': host.auth.get('password'),
+            'ansible_become': host.auth.get('sudo'),
+            'ansible_ssh_private_key_file': host.auth.get('private_key_file'),
+            'ansible_ssh_common_args': ssh_common_args,
+        }

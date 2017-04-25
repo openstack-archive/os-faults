@@ -16,6 +16,7 @@ import mock
 
 from os_faults.ansible import executor
 from os_faults.api import error
+from os_faults.api import node_collection
 from os_faults.drivers import fuel
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
@@ -32,6 +33,11 @@ class FuelServiceTestCase(test.TestCase):
                 'stdout': '[{"ip": "10.0.0.2", "mac": "02", "fqdn": "node-2"},'
                           ' {"ip": "10.0.0.3", "mac": "03", "fqdn": "node-3"}]'
             })
+        self.master_host = node_collection.Host('fuel.local')
+        self.hosts = [
+            node_collection.Host(ip='10.0.0.2', mac='02', fqdn='node-2'),
+            node_collection.Host(ip='10.0.0.3', mac='03', fqdn='node-3'),
+        ]
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data(*fuel.FuelManagement.SERVICES.keys())
@@ -57,11 +63,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service.grep, 'sig': 9}}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'kill': {'grep': service.grep, 'sig': 9}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -88,11 +92,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service.grep, 'sig': 19}}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'kill': {'grep': service.grep, 'sig': 19}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -120,12 +122,10 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'freeze': {'grep': service.grep,
-                                  'sec': delay_sec}}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'freeze': {'grep': service.grep,
+                                              'sec': delay_sec}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -152,11 +152,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'kill': {'grep': service.grep, 'sig': 18}}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'kill': {'grep': service.grep, 'sig': 18}}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -183,10 +181,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts,
                       {'iptables': {'protocol': service.port[0],
                                     'port': service.port[1],
                                     'action': 'block',
@@ -217,10 +214,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts,
                       {'iptables': {'protocol': service.port[0],
                                     'port': service.port[1],
                                     'action': 'unblock',
@@ -251,11 +247,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.restart_cmd}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'shell': service.restart_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -282,11 +276,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.terminate_cmd}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'shell': service.terminate_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -313,43 +305,9 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.start_cmd}),
-        ])
-
-    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    def test_run_task_error(self, mock_ansible_runner):
-        ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [
-            [self.fake_ansible_result],
-            [fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.2'),
-             fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.3')],
-            [fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.2',
-                                     status=executor.STATUS_FAILED),
-             fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.3')]
-        ]
-
-        fuel_managment = fuel.FuelManagement(self.conf)
-
-        service = fuel_managment.get_service('keystone')
-        exception = self.assertRaises(error.ServiceError, service.restart)
-        self.assertEqual('Task failed on some nodes', str(exception))
-
-        get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
-            service.grep)
-        ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'shell': service.restart_cmd}),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
+            mock.call(self.hosts, {'shell': service.start_cmd}),
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -374,7 +332,6 @@ class FuelServiceTestCase(test.TestCase):
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
         ansible_runner_inst.execute.assert_has_calls([
-            mock.call(['fuel.local'], {'command': 'fuel node --json'}),
-            mock.call(['10.0.0.2', '10.0.0.3'],
-                      {'command': get_nodes_cmd}, []),
+            mock.call([self.master_host], {'command': 'fuel node --json'}),
+            mock.call(self.hosts, {'command': get_nodes_cmd}, []),
         ])

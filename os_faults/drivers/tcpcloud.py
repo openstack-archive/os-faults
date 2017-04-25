@@ -376,6 +376,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         self.node_discover = self  # supports discovering
 
         self.master_node_address = cloud_management_params['address']
+        self._master_host = node_collection.Host(ip=self.master_node_address)
         self.username = cloud_management_params['username']
         self.slave_username = cloud_management_params.get(
             'slave_username', self.username)
@@ -415,7 +416,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         LOG.debug('Cloud nodes: %s', nodes)
 
         task = {'command': 'hostname'}
-        task_result = self.execute_on_cloud(nodes.get_ips(), task)
+        task_result = self.execute_on_cloud(nodes.hosts, task)
         LOG.debug('Hostnames of cloud nodes: %s',
                   [r.payload['stdout'] for r in task_result])
 
@@ -459,8 +460,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         :param task: Ansible task
         :return: Ansible execution result (list of records)
         """
-        return self.master_node_executor.execute(
-            [self.master_node_address], task)
+        return self.master_node_executor.execute([self._master_host], task)
 
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.

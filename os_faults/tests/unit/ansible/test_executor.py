@@ -15,6 +15,7 @@ import ddt
 import mock
 
 from os_faults.ansible import executor
+from os_faults.api import node_collection
 from os_faults.tests.unit import test
 
 
@@ -185,23 +186,61 @@ class AnsibleRunnerTestCase(test.TestCase):
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
     @mock.patch('ansible.inventory.Inventory')
-    @mock.patch('ansible.vars.VariableManager.set_inventory')
+    @mock.patch('os_faults.ansible.executor.VariableManager')
     @mock.patch('ansible.parsing.dataloader.DataLoader')
     def test__run_play(self, mock_dataloader, mock_vmanager, mock_inventory,
                        mock_play_load, mock_taskqm):
         mock_play_load.return_value = 'my_load'
+        variable_manager = mock_vmanager.return_value
+        host_inst = mock_inventory.return_value.get_host.return_value
+        host_vars = {
+            '0.0.0.0': {
+                'ansible_user': 'foo',
+                'ansible_ssh_pass': 'bar',
+                'ansible_become': True,
+                'ansible_ssh_private_key_file': None,
+                'ansible_ssh_common_args': '-o Option=yes',
+            }
+        }
         ex = executor.AnsibleRunner()
-        ex._run_play({'hosts': ['0.0.0.0']})
+        ex._run_play({'hosts': ['0.0.0.0']}, host_vars)
 
         mock_taskqm.assert_called_once()
         self.assertEqual(mock_taskqm.mock_calls[1], mock.call().run('my_load'))
         self.assertEqual(mock_taskqm.mock_calls[2], mock.call().cleanup())
 
+        variable_manager.set_host_variable.assert_has_calls((
+            mock.call(host_inst, 'ansible_user', 'foo'),
+            mock.call(host_inst, 'ansible_ssh_pass', 'bar'),
+            mock.call(host_inst, 'ansible_become', True),
+            mock.call(host_inst, 'ansible_ssh_common_args', '-o Option=yes'),
+        ), any_order=True)
+
+    @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
+    @mock.patch('ansible.playbook.play.Play.load')
+    @mock.patch('ansible.inventory.Inventory')
+    @mock.patch('os_faults.ansible.executor.VariableManager')
+    @mock.patch('ansible.parsing.dataloader.DataLoader')
+    def test__run_play_no_host_vars(
+            self, mock_dataloader, mock_vmanager, mock_inventory,
+            mock_play_load, mock_taskqm):
+        mock_play_load.return_value = 'my_load'
+        variable_manager = mock_vmanager.return_value
+        host_vars = {}
+        ex = executor.AnsibleRunner()
+        ex._run_play({'hosts': ['0.0.0.0']}, host_vars)
+
+        mock_taskqm.assert_called_once()
+        self.assertEqual(mock_taskqm.mock_calls[1], mock.call().run('my_load'))
+        self.assertEqual(mock_taskqm.mock_calls[2], mock.call().cleanup())
+
+        self.assertEqual(0, variable_manager.set_host_variable.call_count)
+
     @mock.patch('os_faults.ansible.executor.AnsibleRunner._run_play')
     def test_run_playbook(self, mock_run_play):
         ex = executor.AnsibleRunner()
         my_playbook = [{'gather_facts': 'yes'}, {'gather_facts': 'no'}]
-        ex.run_playbook(my_playbook)
+        ex.run_playbook(my_playbook, {})
 
         self.assertEqual(my_playbook, [{'gather_facts': 'no'},
                                        {'gather_facts': 'no'}])
@@ -209,36 +248,79 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
     def test_execute(self, mock_run_playbook):
-        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_hosts = [node_collection.Host('0.0.0.0'),
+                    node_collection.Host('255.255.255.255')]
         my_tasks = 'my_task'
         ex = executor.AnsibleRunner()
         ex.execute(my_hosts, my_tasks)
         mock_run_playbook.assert_called_once_with(
             [{'tasks': ['my_task'],
               'hosts': ['0.0.0.0', '255.255.255.255'],
-              'serial': 10}])
+              'serial': 10}], {'0.0.0.0': {}, '255.255.255.255': {}})
+
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
+    def test_execute_with_host_vars(self, mock_run_playbook):
+        my_hosts = [
+            node_collection.Host('0.0.0.0', auth={'username': 'foo',
+                                                  'password': 'bar',
+                                                  'sudo': True}),
+            node_collection.Host('255.255.255.255',
+                                 auth={'jump': {'host': '192.168.1.100',
+                                                'username': 'foo'}})]
+        my_tasks = 'my_task'
+        ex = executor.AnsibleRunner()
+        ex.execute(my_hosts, my_tasks)
+        mock_run_playbook.assert_called_once_with(
+            [{'tasks': ['my_task'],
+              'hosts': ['0.0.0.0', '255.255.255.255'],
+              'serial': 10}],
+            {
+                '0.0.0.0': {
+                    'ansible_user': 'foo',
+                    'ansible_ssh_pass': 'bar',
+                    'ansible_become': True,
+                    'ansible_ssh_private_key_file': None,
+                    'ansible_ssh_common_args': None,
+                },
+                '255.255.255.255': {
+                    'ansible_user': None,
+                    'ansible_ssh_pass': None,
+                    'ansible_become': None,
+                    'ansible_ssh_private_key_file': None,
+                    'ansible_ssh_common_args':
+                        '-o UserKnownHostsFile=/dev/null '
+                        '-o StrictHostKeyChecking=no '
+                        '-o ConnectTimeout=60 '
+                        '-o ProxyCommand="'
+                        'ssh  -W %h:%p '
+                        '-o UserKnownHostsFile=/dev/null '
+                        '-o StrictHostKeyChecking=no '
+                        '-o ConnectTimeout=60 '
+                        'foo@192.168.1.100"'}})
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
     def test_execute_with_serial(self, mock_run_playbook):
-        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_hosts = [node_collection.Host('0.0.0.0'),
+                    node_collection.Host('255.255.255.255')]
         my_tasks = 'my_task'
         ex = executor.AnsibleRunner(serial=50)
         ex.execute(my_hosts, my_tasks)
         mock_run_playbook.assert_called_once_with(
             [{'tasks': ['my_task'],
               'hosts': ['0.0.0.0', '255.255.255.255'],
-              'serial': 50}])
+              'serial': 50}], {'0.0.0.0': {}, '255.255.255.255': {}})
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
     def test_execute_status_unreachable(self, mock_run_playbook):
-        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_hosts = [node_collection.Host('0.0.0.0'),
+                    node_collection.Host('255.255.255.255')]
         my_tasks = 'my_task'
         my_statuses = {executor.STATUS_FAILED,
                        executor.STATUS_SKIPPED, executor.STATUS_UNREACHABLE}
         r0 = executor.AnsibleExecutionRecord(
-            host=my_hosts[0], status=executor.STATUS_OK, task={}, payload={})
+            host='0.0.0.0', status=executor.STATUS_OK, task={}, payload={})
         r1 = executor.AnsibleExecutionRecord(
-            host=my_hosts[1], status=executor.STATUS_UNREACHABLE,
+            host='255.255.255.255', status=executor.STATUS_UNREACHABLE,
             task={}, payload={})
 
         mock_run_playbook.return_value = [r0, r1]
@@ -250,14 +332,15 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner.run_playbook')
     def test_execute_status_failed(self, mock_run_playbook):
-        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_hosts = [node_collection.Host('0.0.0.0'),
+                    node_collection.Host('255.255.255.255')]
         my_tasks = 'my_task'
         my_statuses = {executor.STATUS_OK, executor.STATUS_FAILED,
                        executor.STATUS_SKIPPED, executor.STATUS_UNREACHABLE}
         r0 = executor.AnsibleExecutionRecord(
-            host=my_hosts[0], status=executor.STATUS_OK, task={}, payload={})
+            host='0.0.0.0', status=executor.STATUS_OK, task={}, payload={})
         r1 = executor.AnsibleExecutionRecord(
-            host=my_hosts[1], status=executor.STATUS_UNREACHABLE,
+            host='255.255.255.255', status=executor.STATUS_UNREACHABLE,
             task={}, payload={})
 
         mock_run_playbook.return_value = [r0, r1]
@@ -279,7 +362,8 @@ class AnsibleRunnerTestCase(test.TestCase):
         mock_deepcopy.return_value = [result]
         log_result = mock_deepcopy.return_value[0]
 
-        my_hosts = ['0.0.0.0', '255.255.255.255']
+        my_hosts = [node_collection.Host('0.0.0.0'),
+                    node_collection.Host('255.255.255.255')]
         my_tasks = 'my_task'
         ex = executor.AnsibleRunner()
         ex.execute(my_hosts, my_tasks)
@@ -298,12 +382,13 @@ class AnsibleRunnerTestCase(test.TestCase):
             task=task, payload={'foo': 'bar'})
         mock_run_playbook.return_value = [result]
 
+        hosts = [node_collection.Host('0.0.0.0')]
         ex = executor.AnsibleRunner()
-        ex.execute([host], task)
+        ex.execute(hosts, task)
 
         mock_debug.assert_has_calls((
             mock.call('Executing task: %s on hosts: %s with serial: %s',
-                      task, [host], 10),
+                      task, hosts, 10),
             mock.call('Execution completed with 1 result(s):'),
             mock.call(result),
         ))

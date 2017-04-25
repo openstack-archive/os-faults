@@ -31,7 +31,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
             'network_name': network_name,
             'operation': 'up',
         }}
-        self.cloud_management.execute_on_cloud(self.get_ips(), task)
+        self.cloud_management.execute_on_cloud(self.hosts, task)
 
     def disconnect(self, network_name):
         LOG.info("Disconnect network '%s' on nodes: %s",
@@ -40,7 +40,7 @@ class FuelNodeCollection(node_collection.NodeCollection):
             'network_name': network_name,
             'operation': 'down',
         }}
-        self.cloud_management.execute_on_cloud(self.get_ips(), task)
+        self.cloud_management.execute_on_cloud(self.hosts, task)
 
 
 class PcsService(service.ServiceAsProcess):
@@ -514,6 +514,7 @@ class FuelManagement(cloud_management.CloudManagement,
         self.node_discover = self  # supports discovering
 
         self.master_node_address = cloud_management_params['address']
+        self._master_host = node_collection.Host(ip=self.master_node_address)
         self.username = cloud_management_params['username']
         self.private_key_file = cloud_management_params.get('private_key_file')
         self.slave_direct_ssh = cloud_management_params.get(
@@ -539,7 +540,7 @@ class FuelManagement(cloud_management.CloudManagement,
         LOG.debug('Cloud nodes: %s', nodes)
 
         task = {'command': 'hostname'}
-        task_result = self.execute_on_cloud(nodes.get_ips(), task)
+        task_result = self.execute_on_cloud(nodes.hosts, task)
         LOG.debug('Hostnames of cloud nodes: %s',
                   [r.payload['stdout'] for r in task_result])
 
@@ -562,8 +563,7 @@ class FuelManagement(cloud_management.CloudManagement,
         :param task: Ansible task
         :return: Ansible execution result (list of records)
         """
-        return self.master_node_executor.execute(
-            [self.master_node_address], task)
+        return self.master_node_executor.execute([self._master_host], task)
 
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.

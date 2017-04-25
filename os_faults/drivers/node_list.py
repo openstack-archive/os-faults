@@ -17,6 +17,28 @@ from os_faults.api import node_discover
 from os_faults import utils
 
 
+AUTH_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'username': {'type': 'string'},
+        'password': {'type': 'string'},
+        'sudo': {'type': 'boolean'},
+        'private_key_file': {'type': 'string'},
+        'jump': {
+            'type': 'object',
+            'properties': {
+                'host': {'type': 'string'},
+                'username': {'type': 'string'},
+                'private_key_file': {'type': 'string'},
+            },
+            'required': ['host'],
+            'additionalProperties': False,
+        },
+    },
+    'additionalProperties': False,
+}
+
+
 class NodeListDiscover(node_discover.NodeDiscover):
     """Node list.
 
@@ -33,12 +55,37 @@ class NodeListDiscover(node_discover.NodeDiscover):
             mac: aa:bb:cc:dd:ee:01
             fqdn: node1.local
             libvirt_name: node1
-          - ip: 10.0.0.52
+          - ip: 192.168.1.50
             mac: aa:bb:cc:dd:ee:02
             fqdn: node2.local
+            auth:
+              username: user1
+              password: secret1
+              sudo: False
+              jump:
+                host: 10.0.0.52
+                username: ubuntu
+                private_key_file: /path/to/file
           - ip: 10.0.0.53
             mac: aa:bb:cc:dd:ee:03
             fqdn: node3.local
+
+    node parameters:
+
+    - **ip** - ip/host of the node
+    - **mac** - MAC address of the node (optional).
+      MAC address is used for libvirt driver.
+    - **fqdn** - FQDN of the node (optional).
+      FQDN is used for filtering only.
+    - **auth** - SSH related parameters (optional):
+        - **username** - SSH username (optional)
+        - **password** - SSH password (optional)
+        - **private_key_file** - SSH key file (optional)
+        - **jump** - SSH proxy parameters (optional):
+            - **host** - SSH proxy host
+            - **username** - SSH proxy user
+            - **private_key_file** - SSH proxy key file (optional)
+
     """
 
     NAME = 'node_list'
@@ -50,12 +97,10 @@ class NodeListDiscover(node_discover.NodeDiscover):
             'type': 'object',
             'properties': {
                 'ip': {'type': 'string'},
-                'mac': {
-                    'type': 'string',
-                    'pattern': utils.MACADDR_REGEXP,
-                },
+                'mac': {'type': 'string', 'pattern': utils.MACADDR_REGEXP},
                 'fqdn': {'type': 'string'},
                 'libvirt_name': {'type': 'string'},
+                'auth': AUTH_SCHEMA,
             },
             'required': ['ip'],
             'additionalProperties': False,

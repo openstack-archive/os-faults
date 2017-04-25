@@ -88,27 +88,16 @@ class ServiceAsProcess(service.Service):
         self.port = self.config.get('port')
 
     def _run_task(self, task, nodes):
-        ips = nodes.get_ips()
-        if not ips:
+        if len(nodes) == 0:
             raise error.ServiceError('Node collection is empty')
 
-        results = self.cloud_management.execute_on_cloud(ips, task)
-        err = False
-        for result in results:
-            if result.status != executor.STATUS_OK:
-                LOG.error(
-                    'Task {} failed on node {}'.format(task, result.host))
-                err = True
-        if err:
-            raise error.ServiceError('Task failed on some nodes')
-        return results
+        return self.cloud_management.execute_on_cloud(nodes.hosts, task)
 
     def discover_nodes(self):
         nodes = self.cloud_management.get_nodes()
-        ips = nodes.get_ips()
         cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(self.grep)
         results = self.cloud_management.execute_on_cloud(
-            ips, {'command': cmd}, False)
+            nodes.hosts, {'command': cmd}, False)
         success_ips = [r.host for r in results
                        if r.status == executor.STATUS_OK]
         hosts = [h for h in nodes.hosts if h.ip in success_ips]

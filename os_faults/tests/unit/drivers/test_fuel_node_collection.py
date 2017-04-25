@@ -43,13 +43,11 @@ class FuelNodeCollectionTestCase(test.TestCase):
     def test_connect(self):
         self.node_collection.connect(network_name='storage')
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
-            {'fuel_network_mgmt': {'operation': 'up',
-                                   'network_name': 'storage'}})
+            self.hosts, {'fuel_network_mgmt': {'operation': 'up',
+                                               'network_name': 'storage'}})
 
     def test_disconnect(self):
         self.node_collection.disconnect(network_name='storage')
         self.mock_cloud_management.execute_on_cloud.assert_called_once_with(
-            ['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
-            {'fuel_network_mgmt': {'operation': 'down',
-                                   'network_name': 'storage'}})
+            self.hosts, {'fuel_network_mgmt': {'operation': 'down',
+                                               'network_name': 'storage'}})
