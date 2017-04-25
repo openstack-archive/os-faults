@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 import os
 
 import appdirs
@@ -119,15 +120,13 @@ CONFIG_SCHEMA = {
 }
 
 
-def _read_config(config_filename):
-    os_faults_config = config_filename or os.environ.get('OS_FAULTS_CONFIG')
-    if os_faults_config:
-        CONFIG_FILES.insert(0, os_faults_config)
+def get_default_config_file():
+    if 'OS_FAULTS_CONFIG' in os.environ:
+        return os.environ['OS_FAULTS_CONFIG']
 
     for config_file in CONFIG_FILES:
         if os.path.exists(config_file):
-            with open(config_file) as fd:
-                return yaml.safe_load(fd.read())
+            return config_file
 
     msg = 'Config file is not found on any of paths: {}'.format(CONFIG_FILES)
     raise error.OSFError(msg)
@@ -144,10 +143,12 @@ def connect(cloud_config=None, config_filename=None):
 
     :param cloud_config: dict with cloud and power management params
     :param config_filename: name of the file where to read config from
-    :return: CloudManagement object
+    :returns: CloudManagement object
     """
     if cloud_config is None:
-        cloud_config = _read_config(config_filename)
+        config_filename = config_filename or get_default_config_file()
+        with open(config_filename) as fd:
+            cloud_config = yaml.safe_load(fd.read())
 
     jsonschema.validate(cloud_config, CONFIG_SCHEMA)
 
@@ -182,6 +183,42 @@ def connect(cloud_config=None, config_filename=None):
         cloud_management.add_power_management(power_management)
 
     return cloud_management
+
+
+def discover(cloud_config):
+    """Connect to the cloud and discover nodes and services
+
+    :param cloud_config: dict with cloud and power management params
+    :returns: config dict with discovered nodes/services
+    """
+
+    cloud_config = copy.deepcopy(cloud_config)
+    cloud_management = connect(cloud_config)
+
+    # discover nodes
+    hosts = []
+    for host in cloud_management.get_nodes().hosts:
+        hosts.append({'ip': host.ip, 'mac': host.mac, 'fqdn': host.fqdn})
+        LOG.info('Found node: %s' % str(host))
+    cloud_config['node_discover'] = {'driver': 'node_list', 'args': hosts}
+
+    # discover services
+    cloud_config['services'] = {}
+    for service_name in cloud_management.list_supported_services():
+        service = cloud_management.get_service(service_name)
+        ips = service.get_nodes().get_ips()
+        cloud_config['services'][service_name] = {
+            'driver': service.NAME,
+            'args': service.config
+        }
+        if ips:
+            cloud_config['services'][service_name]['hosts'] = ips
+            LOG.info('Found service "%s" on hosts: %s' % (
+                service_name, str(ips)))
+        else:
+            LOG.warning('Service "%s" is not found' % service_name)
+
+    return cloud_config
 
 
 def human_api(distractor, command):

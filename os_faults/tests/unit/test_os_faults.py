@@ -18,7 +18,10 @@ import yaml
 
 import os_faults
 from os_faults.ansible import executor
+from os_faults.api import cloud_management
 from os_faults.api import error
+from os_faults.api import node_collection
+from os_faults.api import service
 from os_faults.drivers import devstack
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
@@ -219,3 +222,77 @@ class OSFaultsTestCase(test.TestCase):
 
         self.assertRaises(error.OSFError, os_faults.register_ansible_modules,
                           ['/my/bad/path/'])
+
+    @mock.patch('os_faults.connect')
+    def test_discover(self, mock_connect):
+        cloud_config = {
+            'cloud_management': {
+                'driver': 'devstack',
+                'args': {
+                    'address': 'devstack.local',
+                    'username': 'developer',
+                    'private_key_file': '/my/path/pk.key',
+                }
+            }
+        }
+        cloud_management_mock = mock.create_autospec(
+            cloud_management.CloudManagement)
+        mock_connect.return_value = cloud_management_mock
+        cloud_management_mock.get_nodes.return_value.hosts = [
+            node_collection.Host(
+                ip='10.0.0.2', mac='09:7b:74:90:63:c1', fqdn='node1.local'),
+            node_collection.Host(
+                ip='10.0.0.3', mac='09:7b:74:90:63:c2', fqdn='node2.local')]
+        cloud_management_mock.list_supported_services.return_value = [
+            'srv1', 'srv2']
+
+        def mock_service(name, config, ips):
+            m = mock.create_autospec(service.Service)
+            m.NAME = name
+            m.config = config
+            m.get_nodes.return_value.get_ips.return_value = ips
+            return m
+
+        srv1 = mock_service('process', {'grep': 'srv1'}, [])
+        srv2 = mock_service('linux_service',
+                            {'grep': 'srv2', 'linux_service': 'srv2'},
+                            ['10.0.0.2'])
+        services = {'srv1': srv1, 'srv2': srv2}
+        cloud_management_mock.get_service.side_effect = services.get
+
+        discovered_config = os_faults.discover(cloud_config)
+        self.assertEqual({
+            'cloud_management': {
+                'driver': 'devstack',
+                'args': {
+                    'address': 'devstack.local',
+                    'private_key_file': '/my/path/pk.key',
+                    'username': 'developer'
+                }
+            },
+            'node_discover': {
+                'driver': 'node_list',
+                'args': [
+                    {
+                        'fqdn': 'node1.local',
+                        'ip': '10.0.0.2',
+                        'mac': '09:7b:74:90:63:c1'
+                    }, {
+                        'fqdn': 'node2.local',
+                        'ip': '10.0.0.3',
+                        'mac': '09:7b:74:90:63:c2'
+                    }
+                ]
+            },
+            'services': {
+                'srv1': {
+                    'driver': 'process',
+                    'args': {'grep': 'srv1'},
+                },
+                'srv2': {
+                    'driver': 'linux_service',
+                    'args': {'grep': 'srv2', 'linux_service': 'srv2'},
+                    'hosts': ['10.0.0.2']
+                }
+            }
+        }, discovered_config)
