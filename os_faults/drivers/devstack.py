@@ -247,11 +247,9 @@ class DevStackManagement(cloud_management.CloudManagement,
     def verify(self):
         """Verify connection to the cloud."""
         nodes = self.get_nodes()
-        task = {'shell': 'screen -ls | grep -P "\\d+\\.stack"'}
-        results = self.execute_on_cloud(nodes.hosts, task)
-        hostnames = [result.host for result in results]
-        LOG.debug('DevStack hostnames: %s', hostnames)
-        LOG.info('Connected to cloud successfully')
+        if nodes:
+            LOG.debug('DevStack nodes: %s', nodes)
+            LOG.info('Connected to cloud successfully')
 
     def execute_on_cloud(self, hosts, task, raise_on_error=True):
         """Execute task on specified hosts within the cloud.
