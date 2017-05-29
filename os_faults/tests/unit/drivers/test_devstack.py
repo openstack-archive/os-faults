@@ -68,8 +68,6 @@ class DevStackManagementTestCase(test.TestCase):
         ansible_runner_inst.execute.assert_has_calls([
             mock.call([self.host],
                       {'command': 'cat /sys/class/net/eth0/address'}),
-            mock.call([self.discoverd_host],
-                      {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -98,16 +96,9 @@ class DevStackManagementTestCase(test.TestCase):
             node_collection.Host('10.0.0.3'),
             node_collection.Host('10.0.0.4')
         ]
-        discoverd_hosts = [
-            node_collection.Host('10.0.0.2', mac='mac1', fqdn=''),
-            node_collection.Host('10.0.0.3', mac='mac2', fqdn=''),
-            node_collection.Host('10.0.0.4', mac='mac3', fqdn='')
-        ]
 
         ansible_runner_inst.execute.assert_has_calls([
             mock.call(hosts, {'command': 'cat /sys/class/net/eth0/address'}),
-            mock.call(discoverd_hosts,
-                      {'shell': 'screen -ls | grep -P "\\d+\\.stack"'})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
