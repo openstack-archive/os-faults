@@ -1,0 +1,8 @@
+Code-Review+2: Anton Studenov <tohin1332@gmail.com>
+Workflow+1: Anton Studenov <tohin1332@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 02 Jun 2017 15:24:54 +0000
+Reviewed-on: https://review.openstack.org/470325
+Project: openstack/os-faults
+Branch: refs/heads/master
