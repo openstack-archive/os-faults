@@ -53,7 +53,7 @@ class ServiceInScreen(service.ServiceAsProcess):
 
     - **window_name** - name of a service
     - **grep** - regexp for grep to find process PID
-    - **port** - tuple with two values - potocol, port number (optional)
+    - **port** - tuple with two values - protocol, port number (optional)
 
     """
     NAME = 'screen'
@@ -97,7 +97,7 @@ class DevStackManagement(cloud_management.CloudManagement,
     """Devstack driver.
 
     This driver requires devstack installed in screen mode (USE_SCREEN=True).
-    Supports discovering of node MAC addreses.
+    Supports discovering of node MAC addresses.
 
     **Example configuration:**
 
@@ -122,7 +122,7 @@ class DevStackManagement(cloud_management.CloudManagement,
     - **password** - password for all nodes (optional)
     - **private_key_file** - path to key file (optional)
     - **slaves** - list of ips for additional nodes (optional)
-    - **iface** - network interface name to retrive mac address (optional)
+    - **iface** - network interface name to retrieve mac address (optional)
     - **serial** - how many hosts Ansible should manage at a single time.
       (optional) default: 10
     """
