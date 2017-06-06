@@ -23,6 +23,7 @@ from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
 from os_faults.drivers import devstack
+from os_faults.drivers import devstack_systemd
 from os_faults.drivers import fuel
 from os_faults.drivers import ipmi
 from os_faults.drivers import libvirt_driver
@@ -64,6 +65,21 @@ class OSFaultsTestCase(test.TestCase):
         }
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackManagement)
+
+    def test_connect_devstack_systemd(self):
+        cloud_config = {
+            'cloud_management': {
+                'driver': 'devstack_systemd',
+                'args': {
+                    'address': 'devstack.local',
+                    'username': 'developer',
+                    'private_key_file': '/my/path/pk.key',
+                }
+            }
+        }
+        destructor = os_faults.connect(cloud_config)
+        self.assertIsInstance(destructor,
+                              devstack_systemd.DevStackSystemdManagement)
 
     def test_config_with_services(self):
         self.cloud_config['services'] = {
