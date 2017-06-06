@@ -7,6 +7,8 @@ Cloud management
 
 .. cloud_driver_doc:: devstack
 
+.. cloud_driver_doc:: devstack_systemd
+
 .. cloud_driver_doc:: fuel
 
 .. cloud_driver_doc:: tcpcloud
@@ -34,6 +36,8 @@ Service drivers
 .. driver_doc:: linux_service
 
 .. driver_doc:: screen
+
+.. driver_doc:: systemd_service
 
 .. driver_doc:: salt_service
 
