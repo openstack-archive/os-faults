@@ -7,6 +7,8 @@ Cloud management
 
 .. cloud_driver_doc:: devstack
 
+.. devstack_systemd:: devstack_systemd
+
 .. cloud_driver_doc:: fuel
 
 .. cloud_driver_doc:: tcpcloud
