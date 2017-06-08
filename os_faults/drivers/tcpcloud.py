@@ -43,7 +43,7 @@ SALT_START = SALT_CALL + 'service.start {service}'
 class SaltService(service.ServiceAsProcess):
     """Salt service
 
-    Service that can be controled by `salt service.*` commands.
+    Service that can be controlled by `salt service.*` commands.
 
     **Example configuration:**
 
@@ -61,7 +61,7 @@ class SaltService(service.ServiceAsProcess):
 
     - **salt_service** - name of a service
     - **grep** - regexp for grep to find process PID
-    - **port** - tuple with two values - potocol, port number (optional)
+    - **port** - tuple with two values - protocol, port number (optional)
 
     """
 
@@ -123,7 +123,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
     - **slave_password** - password for salt minions (optional) *password*
       will be used if *slave_password* not specified
     - **master_sudo** - Use sudo on salt config node (optional)
-    - **slave_sudo** - Use sudi on salt minion nodes (optional)
+    - **slave_sudo** - Use sudo on salt minion nodes (optional)
     - **slave_name_regexp** - regexp for minion FQDNs (optional)
     - **slave_direct_ssh** - if *False* then salt master is used as ssh proxy
       (optional)
