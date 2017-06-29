@@ -31,6 +31,7 @@ extensions = [
     #'sphinx.ext.intersphinx',
     'sphinxcontrib.programoutput',
     'ext.driver_doc',
+    'openstackdocstheme',
 ]
 
 if on_zuul:
@@ -74,11 +75,18 @@ modindex_common_prefix = ['os_faults.']
 # html_theme_path = ["."]
 # html_theme = '_theme'
 # html_static_path = ['static']
+html_theme = 'openstackdocs'
+
 if not on_zuul:
     html_theme = "sphinx_rtd_theme"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
+
+# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# using the given strftime format.
+# html_last_updated_fmt = '%b %d, %Y'
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass
@@ -92,3 +100,8 @@ latex_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 #intersphinx_mapping = {'http://docs.python.org/': None}
+
+# -- Options for openstackdocstheme -------------------------------------------
+repository_name = 'openstack/os-faults'
+bug_project = 'os-faults'
+bug_tag = ''
