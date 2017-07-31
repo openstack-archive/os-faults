@@ -215,3 +215,55 @@ class LinuxService(ServiceAsProcess):
         self.restart_cmd = 'service {} restart'.format(self.linux_service)
         self.terminate_cmd = 'service {} stop'.format(self.linux_service)
         self.start_cmd = 'service {} start'.format(self.linux_service)
+
+
+class SystemdService(ServiceAsProcess):
+    """Systemd service.
+
+    Service as Systemd unit and can be controlled by `systemctl` CLI tool.
+
+    **Example configuration:**
+
+    .. code-block:: yaml
+
+        services:
+          app:
+            driver: systemd_service
+            args:
+              systemd_service: app
+              grep: my_app
+              port: ['tcp', 4242]
+
+    parameters:
+
+    - **systemd_service** - name of a service in systemd
+    - **grep** - regexp for grep to find process PID
+    - **port** - tuple with two values - protocol, port number (optional)
+
+    """
+    NAME = 'systemd_service'
+    DESCRIPTION = 'Service in Systemd'
+    CONFIG_SCHEMA = {
+        'type': 'object',
+        'properties': {
+            'systemd_service': {'type': 'string'},
+            'grep': {'type': 'string'},
+            'port': PORT_SCHEMA,
+            'start_cmd': {'type': 'string'},
+            'terminate_cmd': {'type': 'string'},
+            'restart_cmd': {'type': 'string'},
+        },
+        'required': ['grep', 'systemd_service'],
+        'additionalProperties': False,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(SystemdService, self).__init__(*args, **kwargs)
+        self.systemd_service = self.config['systemd_service']
+
+        self.restart_cmd = 'sudo systemctl restart {}'.format(
+            self.systemd_service)
+        self.terminate_cmd = 'sudo systemctl stop {}'.format(
+            self.systemd_service)
+        self.start_cmd = 'sudo systemctl start {}'.format(
+            self.systemd_service)
