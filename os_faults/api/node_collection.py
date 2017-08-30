@@ -213,3 +213,16 @@ class NodeCollection(utils.ReprMixin):
         :param network_name: name of network
         """
         raise NotImplementedError
+
+    @public
+    def stress(self, target, duration=None):
+        """Stress node OS and hardware
+
+        """
+        duration = duration or 10  # defaults to 10 seconds
+        LOG.info('Stress %s for %ss on nodes %s', target, duration, self)
+        task = {'stress': {
+            'target': target,
+            'duration': duration,
+        }}
+        self.cloud_management.execute_on_cloud(self.hosts, task)
