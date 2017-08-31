@@ -74,8 +74,8 @@ class DevStackSystemdManagement(devstack.DevStackManagement):
         'rabbitmq': {
             'driver': 'systemd_service',
             'args': {
-                'grep': 'rabbitmq-server',
-                'systemd_service': 'rabbit-server',
+                'grep': 'rabbitmq_server',
+                'systemd_service': 'rabbitmq-server',
             }
         },
         'nova-api': {
@@ -95,7 +95,7 @@ class DevStackSystemdManagement(devstack.DevStackManagement):
         'nova-compute': {
             'driver': 'systemd_service',
             'args': {
-                'grep': 'n-cpu',
+                'grep': 'nova-compute',
                 'systemd_service': 'devstack@n-cpu',
             }
         },
