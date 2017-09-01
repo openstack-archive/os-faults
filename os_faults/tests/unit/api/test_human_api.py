@@ -124,6 +124,54 @@ class TestHumanAPI(test.TestCase):
         destructor.get_nodes.assert_called_once_with(fqdns=['node-2.local'])
         getattr(nodes, action).assert_called_once()
 
+    @ddt.data('cpu', 'memory', 'disk', 'kernel')
+    def test_stress_by_fqdn(self, target):
+        action = 'stress'
+        duration = 20
+        destructor = mock.MagicMock()
+        nodes = mock.MagicMock(node_collection.NodeCollection)
+        destructor.get_nodes = mock.MagicMock(return_value=nodes)
+
+        command = 'stress %s for %d seconds on node-2.local node' % (
+            target, duration)
+        human.execute(destructor, command)
+
+        destructor.get_nodes.assert_called_once_with(fqdns=['node-2.local'])
+        getattr(nodes, action).assert_called_once_with(
+            target=target, duration=duration)
+
+    @ddt.data('cpu', 'memory', 'disk', 'kernel')
+    def test_stress_target(self, target):
+        action = 'stress'
+        duration = 20
+        destructor = mock.MagicMock()
+        nodes = mock.MagicMock(node_collection.NodeCollection)
+        destructor.get_nodes = mock.MagicMock(return_value=nodes)
+
+        command = 'stress %s for %d seconds on nodes' % (target, duration)
+        human.execute(destructor, command)
+
+        destructor.get_nodes.assert_called_once_with()
+
+        getattr(nodes, action).assert_called_once_with(
+            target=target, duration=duration)
+
+    @ddt.data(('CPU', 'cpu', 10, 'keystone'),
+              ('disk', 'disk', 20, 'nova-api'))
+    @ddt.unpack
+    def test_stress_by_service_on_fqdn_node(self, user_target, cmd_target,
+                                            duration, service_name):
+        action = 'stress'
+        nodes = mock.MagicMock(node_collection.NodeCollection)
+        self.service.get_nodes.return_value = nodes
+
+        command = 'stress %s for %d seconds on all nodes with %s service' % (
+            user_target, duration, service_name)
+        human.execute(self.destructor, command)
+
+        getattr(nodes, action).assert_called_once_with(
+            target=cmd_target, duration=duration)
+
     @ddt.data(('Disconnect', 'disconnect'),
               ('Connect', 'connect'))
     @ddt.unpack

@@ -30,6 +30,8 @@ Human API understands commands like these (examples):
  * unfreeze <service> service [on (random|one|single|<fqdn> node[s])]
  * reboot [random|one|single|<fqdn>] node[s] [with <service> service]
  * reset [random|one|single|<fqdn>] node[s] [with <service> service]
+ * stress [cpu|memory|disk|kernel for <T> seconds] on
+   [random|one|single|<fqdn>] node[s] [with <service> service]
  * disconnect <name> network on [random|one|single|<fqdn>] node[s]
    [with <service> service]
  * connect <name> network on [random|one|single|<fqdn>] node[s]
@@ -44,7 +46,8 @@ def list_actions(klazz):
                              hasattr(o, '__public__'))))
 
 RANDOMNESS = {'one', 'random', 'some', 'single'}
-RANDOMNESS_PATTERN = '|'.join(RANDOMNESS)
+ANYTHING = {'all'}
+NODE_ALIASES_PATTERN = '|'.join(RANDOMNESS | ANYTHING)
 SERVICE_ACTIONS = list_actions(service_pkg.Service)
 SERVICE_ACTIONS_PATTERN = '|'.join(SERVICE_ACTIONS)
 NODE_ACTIONS = list_actions(node_collection_pkg.NodeCollection)
@@ -58,10 +61,12 @@ PATTERNS = [
                SERVICE_ACTIONS_PATTERN),
     re.compile('(?P<action>%s)'
                '(\s+(?P<network>\w+)\s+network\s+on)?'
+               '(\s+(?P<target>\w+)'
+               '(\s+for\s+(?P<duration>\d+)\s+seconds)(\s+on)?)?'
                '(\s+(?P<node>%s|\S+))?'
                '\s+nodes?'
                '(\s+with\s+(?P<service>\S+)\s+service)?' %
-               (NODE_ACTIONS_PATTERN, RANDOMNESS_PATTERN)),
+               (NODE_ACTIONS_PATTERN, NODE_ALIASES_PATTERN)),
 ]
 
 
@@ -82,6 +87,7 @@ def execute(destructor, command):
     service_name = groups.get('service')
     node_name = groups.get('node')
     network_name = groups.get('network')
+    target = groups.get('target')
     duration = groups.get('duration')
 
     if service_name:
@@ -92,7 +98,7 @@ def execute(destructor, command):
             kwargs = {}
             if node_name in RANDOMNESS:
                 kwargs['nodes'] = service.get_nodes().pick()
-            elif node_name:
+            elif node_name and node_name not in ANYTHING:
                 kwargs['nodes'] = destructor.get_nodes(fqdns=[node_name])
 
             if duration:
@@ -110,15 +116,24 @@ def execute(destructor, command):
             kwargs = {}
             if network_name:
                 kwargs['network_name'] = network_name
+            if target:
+                kwargs['target'] = target
+                kwargs['duration'] = int(duration)
 
             fn = getattr(nodes, action)
             fn(**kwargs)
     else:  # nodes operation
-        nodes = destructor.get_nodes(fqdns=[node_name])
+        if node_name and node_name not in ANYTHING:
+            nodes = destructor.get_nodes(fqdns=[node_name])
+        else:
+            nodes = destructor.get_nodes()
 
         kwargs = {}
         if network_name:
             kwargs['network_name'] = network_name
+        if target:
+            kwargs['target'] = target
+            kwargs['duration'] = int(duration)
 
         fn = getattr(nodes, action)
         fn(**kwargs)
