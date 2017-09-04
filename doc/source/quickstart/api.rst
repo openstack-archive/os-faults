@@ -16,8 +16,8 @@ Simplified API is used to inject faults in a human-friendly form.
 .. code-block:: python
 
     import os_faults
-    destructor = os_faults.connect(config_filename='os-faults.yaml')
-    os_faults.human_api(destructor, 'restart keystone service')
+    cloud_management = os_faults.connect(config_filename='os-faults.yaml')
+    os_faults.human_api(cloud_management, 'restart keystone service')
 
 
 **Service-oriented** command performs specified `action` against `service` on
@@ -62,8 +62,8 @@ Get a service and restart it:
 
 .. code-block:: python
 
-    destructor = os_faults.connect(cloud_config)
-    service = destructor.get_service(name='glance-api')
+    cloud_management = os_faults.connect(cloud_config)
+    service = cloud_management.get_service(name='glance-api')
     service.restart()
 
 Available actions:
@@ -81,7 +81,7 @@ Get all nodes in the cloud and reboot them:
 
 .. code-block:: python
 
-    nodes = destructor.get_nodes()
+    nodes = cloud_management.get_nodes()
     nodes.reboot()
 
 Available actions:
@@ -108,7 +108,7 @@ Get nodes where l3-agent runs and disable the management network on them:
 .. code-block:: python
 
     fqdns = neutron.l3_agent_list_hosting_router(router_id)
-    nodes = destructor.get_nodes(fqdns=fqdns)
+    nodes = cloud_management.get_nodes(fqdns=fqdns)
     nodes.disconnect(network_name='management')
 
 4. Operate with services
@@ -118,6 +118,6 @@ Restart a service on a single node:
 
 .. code-block:: python
 
-    service = destructor.get_service(name='keystone')
+    service = cloud_management.get_service(name='keystone')
     nodes = service.get_nodes().pick()
     service.restart(nodes)

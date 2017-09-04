@@ -42,13 +42,13 @@ def main():
     }
 
     logging.info('Create connection to the cluster')
-    destructor = os_faults.connect(cloud_config)
+    cloud_management = os_faults.connect(cloud_config)
 
     logging.info('Verify connection to the cluster')
-    destructor.verify()
+    cloud_management.verify()
 
     logging.info('Get all cluster nodes')
-    nodes = destructor.get_nodes()
+    nodes = cloud_management.get_nodes()
     logging.info('All cluster nodes: %s', nodes)
 
     computes = nodes.filter(role='compute')

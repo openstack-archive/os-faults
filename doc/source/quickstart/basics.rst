@@ -47,8 +47,8 @@ Establish a connection to the cloud and verify it:
 .. code-block:: python
 
     import os_faults
-    destructor = os_faults.connect(config_filename='os-faults.yaml')
-    destructor.verify()
+    cloud_management = os_faults.connect(config_filename='os-faults.yaml')
+    cloud_management.verify()
 
 
 or via CLI::
@@ -60,7 +60,7 @@ Make some destructive actions:
 
 .. code-block:: python
 
-    destructor.get_service(name='keystone').restart()
+    cloud_management.get_service(name='keystone').restart()
 
 
 or via CLI::

@@ -28,13 +28,13 @@ def main():
     }
 
     logging.info('# Create connection to the cloud')
-    destructor = os_faults.connect(cloud_config)
+    cloud_management = os_faults.connect(cloud_config)
 
     logging.info('# Verify connection to the cloud')
-    destructor.verify()
+    cloud_management.verify()
 
     logging.info('# Restart Keystone service on all nodes')
-    service = destructor.get_service(name='keystone')
+    service = cloud_management.get_service(name='keystone')
     service.restart()
 
 
