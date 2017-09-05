@@ -21,3 +21,26 @@ PORT_SCHEMA = {
     'minItems': 2,
     'maxItems': 2,
 }
+
+AUTH_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'username': {'type': 'string'},
+        'password': {'type': 'string'},
+        'sudo': {'type': 'boolean'},  # deprecated, use `become`
+        'private_key_file': {'type': 'string'},
+        'become': {'type': 'boolean'},
+        'become_password': {'type': 'string'},
+        'jump': {
+            'type': 'object',
+            'properties': {
+                'host': {'type': 'string'},
+                'username': {'type': 'string'},
+                'private_key_file': {'type': 'string'},
+            },
+            'required': ['host'],
+            'additionalProperties': False,
+        },
+    },
+    'additionalProperties': False,
+}
