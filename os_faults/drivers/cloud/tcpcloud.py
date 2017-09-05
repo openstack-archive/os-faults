@@ -19,7 +19,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
-from os_faults.common import service
+from os_faults.drivers import service
 from os_faults import error
 
 LOG = logging.getLogger(__name__)

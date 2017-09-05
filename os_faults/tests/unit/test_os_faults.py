@@ -22,12 +22,12 @@ from os_faults.api import cloud_management
 from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
-from os_faults.drivers import devstack
-from os_faults.drivers import devstack_systemd
-from os_faults.drivers import fuel
-from os_faults.drivers import ipmi
-from os_faults.drivers import libvirt_driver
-from os_faults.drivers import node_list
+from os_faults.drivers.cloud import devstack
+from os_faults.drivers.cloud import devstack_systemd
+from os_faults.drivers.cloud import fuel
+from os_faults.drivers.nodes import node_list
+from os_faults.drivers.power import ipmi
+from os_faults.drivers.power import libvirt
 from os_faults.tests.unit import test
 
 
@@ -129,7 +129,7 @@ class OSFaultsTestCase(test.TestCase):
         self.assertIsInstance(destructor.node_discover, fuel.FuelManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
         self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                              libvirt_driver.LibvirtDriver)
+                              libvirt.LibvirtDriver)
 
     def test_connect_fuel_with_ipmi_libvirt_and_node_list(self):
         cloud_config = {
@@ -181,7 +181,7 @@ class OSFaultsTestCase(test.TestCase):
         self.assertIsInstance(destructor.power_manager.power_drivers[0],
                               ipmi.IPMIDriver)
         self.assertIsInstance(destructor.power_manager.power_drivers[1],
-                              libvirt_driver.LibvirtDriver)
+                              libvirt.LibvirtDriver)
 
     def test_connect_driver_not_found(self):
         cloud_config = {
@@ -207,7 +207,7 @@ class OSFaultsTestCase(test.TestCase):
             self.assertIsInstance(destructor, fuel.FuelManagement)
             self.assertEqual(1, len(destructor.power_manager.power_drivers))
             self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                                  libvirt_driver.LibvirtDriver)
+                                  libvirt.LibvirtDriver)
 
     @mock.patch.dict(os.environ, {'OS_FAULTS_CONFIG': '/my/conf.yaml'})
     @mock.patch('os.path.exists', return_value=True)
@@ -219,7 +219,7 @@ class OSFaultsTestCase(test.TestCase):
             self.assertIsInstance(destructor, fuel.FuelManagement)
             self.assertEqual(1, len(destructor.power_manager.power_drivers))
             self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                                  libvirt_driver.LibvirtDriver)
+                                  libvirt.LibvirtDriver)
             mock_os_faults_open.assert_called_once_with('/my/conf.yaml')
 
     @mock.patch('os.path.exists', return_value=False)

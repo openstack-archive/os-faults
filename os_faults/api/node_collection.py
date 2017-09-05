@@ -16,7 +16,7 @@ import random
 import warnings
 
 from os_faults.api import error
-from os_faults.api.util import public
+from os_faults.api.utils import public
 from os_faults import utils
 
 LOG = logging.getLogger(__name__)

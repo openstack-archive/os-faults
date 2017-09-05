@@ -16,7 +16,7 @@ import abc
 import six
 
 from os_faults.api import base_driver
-from os_faults.api.util import public
+from os_faults.api.utils import public
 
 
 @six.add_metaclass(abc.ABCMeta)

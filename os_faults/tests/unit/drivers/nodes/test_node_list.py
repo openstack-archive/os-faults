@@ -12,7 +12,7 @@
 # limitations under the License.
 
 from os_faults.api import node_collection
-from os_faults.drivers import node_list
+from os_faults.drivers.nodes import node_list
 from os_faults.tests.unit import test
 
 

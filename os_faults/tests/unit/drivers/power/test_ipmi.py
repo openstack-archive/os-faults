@@ -17,7 +17,7 @@ from pyghmi import exceptions as pyghmi_exc
 
 import os_faults
 from os_faults.api import node_collection
-from os_faults.drivers import ipmi
+from os_faults.drivers.power import ipmi
 from os_faults import error
 from os_faults.tests.unit import test
 
@@ -124,7 +124,7 @@ class IPMIDriverTestCase(test.TestCase):
                           self.driver._run_set_power_cmd,
                           self.host, 'off', expected_state='off')
 
-    @mock.patch('os_faults.drivers.ipmi.IPMIDriver._run_set_power_cmd')
+    @mock.patch('os_faults.drivers.power.ipmi.IPMIDriver._run_set_power_cmd')
     @ddt.data(('poweroff', 'off', 'off'),
               ('poweron', 'on', 'on'),
               ('reset', 'boot'),

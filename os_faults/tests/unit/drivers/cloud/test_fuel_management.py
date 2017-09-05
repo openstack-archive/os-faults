@@ -17,7 +17,7 @@ import mock
 from os_faults.ansible import executor
 from os_faults.api import error
 from os_faults.api import node_collection
-from os_faults.drivers import fuel
+from os_faults.drivers.cloud import fuel
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
 

@@ -11,7 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 
-def public(funcobj):
-    funcobj.__public__ = True
-    return funcobj
+
+def public(func):
+    func.__public__ = True
+    return func
+
+
+def is_public(obj):
+    return ((inspect.isfunction(obj) or inspect.ismethod(obj))
+            and hasattr(obj, '__public__'))

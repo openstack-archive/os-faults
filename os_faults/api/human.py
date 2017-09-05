@@ -16,6 +16,7 @@ import re
 from os_faults.api import error
 from os_faults.api import node_collection as node_collection_pkg
 from os_faults.api import service as service_pkg
+from os_faults.api import utils
 
 """
 Human API understands commands like these (examples):
@@ -42,8 +43,7 @@ Human API understands commands like these (examples):
 def list_actions(klazz):
     return set(m[0].replace('_', ' ') for m in inspect.getmembers(
         klazz,
-        predicate=lambda o: ((inspect.isfunction(o) or inspect.ismethod(o)) and
-                             hasattr(o, '__public__'))))
+        predicate=utils.is_public))
 
 RANDOMNESS = {'one', 'random', 'some', 'single'}
 ANYTHING = {'all'}

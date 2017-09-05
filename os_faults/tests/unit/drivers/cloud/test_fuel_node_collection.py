@@ -16,7 +16,7 @@ import copy
 import mock
 
 from os_faults.api import node_collection
-from os_faults.drivers import fuel
+from os_faults.drivers.cloud import fuel
 from os_faults.tests.unit import test
 
 

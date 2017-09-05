@@ -13,7 +13,7 @@
 
 import logging
 
-from os_faults.drivers import devstack
+from os_faults.drivers.cloud import devstack
 
 LOG = logging.getLogger(__name__)
 

@@ -17,7 +17,7 @@ import ddt
 import mock
 
 from os_faults.api import node_collection
-from os_faults.drivers import devstack
+from os_faults.drivers.cloud import devstack
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
 

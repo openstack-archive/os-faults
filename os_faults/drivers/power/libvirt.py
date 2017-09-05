@@ -13,6 +13,8 @@
 
 import logging
 
+from oslo_utils import importutils
+
 from os_faults.api import error
 from os_faults.api import power_management
 
@@ -59,12 +61,11 @@ class LibvirtDriver(power_management.PowerDriver):
 
     def _get_connection(self):
         if self._cached_conn is None:
-            try:
-                import libvirt
-            except ImportError:
+            libvirt_module = importutils.try_import('libvirt')
+            if not libvirt_module:
                 raise error.OSFError('libvirt-python is required '
                                      'to use LibvirtDriver')
-            self._cached_conn = libvirt.open(self.connection_uri)
+            self._cached_conn = libvirt_module.open(self.connection_uri)
 
         return self._cached_conn
 

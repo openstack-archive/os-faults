@@ -15,12 +15,12 @@ import ddt
 import mock
 
 from os_faults.api import node_collection
-from os_faults.drivers import libvirt_driver
+from os_faults.drivers.power import libvirt
 from os_faults import error
 from os_faults.tests.unit import test
 
 
-DRIVER_PATH = 'os_faults.drivers.libvirt_driver'
+DRIVER_PATH = 'os_faults.drivers.power.libvirt'
 
 
 @ddt.ddt
@@ -30,7 +30,7 @@ class LibvirtDriverTestCase(test.TestCase):
         super(LibvirtDriverTestCase, self).setUp()
 
         self.params = {'connection_uri': 'fake_connection_uri'}
-        self.driver = libvirt_driver.LibvirtDriver(self.params)
+        self.driver = libvirt.LibvirtDriver(self.params)
         self.host = node_collection.Host(
             ip='10.0.0.2', mac='00:00:00:00:00:00', fqdn='node1.com')
 
