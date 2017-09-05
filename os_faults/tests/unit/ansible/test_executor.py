@@ -133,7 +133,16 @@ class AnsibleRunnerTestCase(test.TestCase):
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=executor.SSH_COMMON_ARGS,
              ssh_extra_args=None, verbosity=100),
-        dict(conn_pass='foobar', become_pass='foobar'),
+        dict(conn_pass='foobar', become_pass=None),
+    ), (
+        dict(remote_user='root', password='foobar', become_password='secret'),
+        dict(become=None, become_method='sudo', become_user='root',
+             check=False, connection='smart', forks=100,
+             private_key_file=None,
+             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
+             ssh_common_args=executor.SSH_COMMON_ARGS,
+             ssh_extra_args=None, verbosity=100),
+        dict(conn_pass='foobar', become_pass='secret'),
     ), (
         dict(remote_user='root', jump_host='jhost.com',
              private_key_file='/path/my.key'),
@@ -279,6 +288,7 @@ class AnsibleRunnerTestCase(test.TestCase):
                     'ansible_user': 'foo',
                     'ansible_ssh_pass': 'bar',
                     'ansible_become': True,
+                    'ansible_become_password': None,
                     'ansible_ssh_private_key_file': None,
                     'ansible_ssh_common_args': None,
                 },
@@ -286,6 +296,7 @@ class AnsibleRunnerTestCase(test.TestCase):
                     'ansible_user': None,
                     'ansible_ssh_pass': None,
                     'ansible_become': None,
+                    'ansible_become_password': None,
                     'ansible_ssh_private_key_file': None,
                     'ansible_ssh_common_args':
                         '-o UserKnownHostsFile=/dev/null '

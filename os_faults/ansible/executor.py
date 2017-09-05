@@ -125,7 +125,7 @@ Options = collections.namedtuple(
 class AnsibleRunner(object):
     def __init__(self, remote_user='root', password=None, forks=100,
                  jump_host=None, jump_user=None, private_key_file=None,
-                 become=None, serial=None):
+                 become=None, become_password=None, serial=None):
         super(AnsibleRunner, self).__init__()
 
         ssh_common_args = SSH_COMMON_ARGS
@@ -135,7 +135,7 @@ class AnsibleRunner(object):
                 jump_user=jump_user or remote_user,
                 private_key_file=private_key_file)
 
-        self.passwords = dict(conn_pass=password, become_pass=password)
+        self.passwords = dict(conn_pass=password, become_pass=become_password)
         self.options = Options(
             connection='smart',
             module_path=os.pathsep.join(get_module_paths()),
@@ -275,7 +275,8 @@ class AnsibleRunner(object):
         return {
             'ansible_user': host.auth.get('username'),
             'ansible_ssh_pass': host.auth.get('password'),
-            'ansible_become': host.auth.get('sudo'),
+            'ansible_become': host.auth.get('become') or host.auth.get('sudo'),
+            'ansible_become_password': host.auth.get('become_password'),
             'ansible_ssh_private_key_file': host.auth.get('private_key_file'),
             'ansible_ssh_common_args': ssh_common_args,
         }
