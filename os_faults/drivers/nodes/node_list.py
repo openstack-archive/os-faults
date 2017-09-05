@@ -14,31 +14,8 @@
 
 from os_faults.api import node_collection
 from os_faults.api import node_discover
+from os_faults.drivers import auth_schema
 from os_faults import utils
-
-
-AUTH_SCHEMA = {
-    'type': 'object',
-    'properties': {
-        'username': {'type': 'string'},
-        'password': {'type': 'string'},
-        'sudo': {'type': 'boolean'},
-        'private_key_file': {'type': 'string'},
-        'become': {'type': 'boolean'},
-        'become_password': {'type': 'string'},
-        'jump': {
-            'type': 'object',
-            'properties': {
-                'host': {'type': 'string'},
-                'username': {'type': 'string'},
-                'private_key_file': {'type': 'string'},
-            },
-            'required': ['host'],
-            'additionalProperties': False,
-        },
-    },
-    'additionalProperties': False,
-}
 
 
 class NodeListDiscover(node_discover.NodeDiscover):
@@ -106,7 +83,7 @@ class NodeListDiscover(node_discover.NodeDiscover):
                 'mac': {'type': 'string', 'pattern': utils.MACADDR_REGEXP},
                 'fqdn': {'type': 'string'},
                 'libvirt_name': {'type': 'string'},
-                'auth': AUTH_SCHEMA,
+                'auth': auth_schema.AUTH_SCHEMA,
             },
             'required': ['ip'],
             'additionalProperties': False,

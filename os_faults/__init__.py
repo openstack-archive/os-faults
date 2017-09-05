@@ -90,7 +90,7 @@ CONFIG_SCHEMA = {
                 'driver': {'type': 'string'},
                 'args': {'type': 'object'},
             },
-            'required': ['driver', 'args'],
+            'required': ['driver'],
             'additionalProperties': False,
         },
         'power_management': {
@@ -134,8 +134,11 @@ def get_default_config_file():
 
 def _init_driver(params):
     driver_cls = registry.get_driver(params['driver'])
-    jsonschema.validate(params['args'], driver_cls.CONFIG_SCHEMA)
-    return driver_cls(params['args'])
+
+    args = params.get('args') or {}  # driver may have no arguments
+    if args:
+        jsonschema.validate(args, driver_cls.CONFIG_SCHEMA)
+    return driver_cls(args)
 
 
 def connect(cloud_config=None, config_filename=None):
