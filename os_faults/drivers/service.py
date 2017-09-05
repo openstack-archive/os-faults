@@ -87,9 +87,14 @@ class ServiceAsProcess(service.Service):
         self.restart_cmd = self.config.get('restart_cmd')
         self.port = self.config.get('port')
 
-    def _run_task(self, task, nodes):
+    def _run_task(self, nodes, task, message):
+        nodes = nodes if nodes is not None else self.get_nodes()
         if len(nodes) == 0:
-            raise error.ServiceError('Node collection is empty')
+            raise error.ServiceError(
+                'Service %s is not found on any nodes' % self.service_name)
+
+        LOG.info('%s service %s on nodes: %s',
+                 message, self.service_name, nodes.get_ips())
 
         return self.cloud_management.execute_on_cloud(nodes.hosts, task)
 
@@ -101,73 +106,62 @@ class ServiceAsProcess(service.Service):
         success_ips = [r.host for r in results
                        if r.status == executor.STATUS_OK]
         hosts = [h for h in nodes.hosts if h.ip in success_ips]
+        LOG.debug('Service %s is discovered on nodes %s',
+                  self.service_name, hosts)
         return self.node_cls(cloud_management=self.cloud_management,
                              hosts=hosts)
 
     @utils.require_variables('restart_cmd')
     def restart(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Restart '%s' service on nodes: %s", self.service_name,
-                 nodes.get_ips())
-        self._run_task({'shell': self.restart_cmd}, nodes)
+        self._run_task(nodes, {'shell': self.restart_cmd}, 'Restart')
 
     @utils.require_variables('terminate_cmd')
     def terminate(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Terminate '%s' service on nodes: %s", self.service_name,
-                 nodes.get_ips())
-        self._run_task({'shell': self.terminate_cmd}, nodes)
+        self._run_task(nodes, {'shell': self.terminate_cmd}, 'Terminate')
 
     @utils.require_variables('start_cmd')
     def start(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Start '%s' service on nodes: %s", self.service_name,
-                 nodes.get_ips())
-        self._run_task({'shell': self.start_cmd}, nodes)
+        self._run_task(nodes, {'shell': self.start_cmd}, 'Start')
 
     def kill(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Kill '%s' service on nodes: %s", self.service_name,
-                 nodes.get_ips())
-        cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGKILL}}
-        self._run_task(cmd, nodes)
+        task = {'kill': {'grep': self.grep, 'sig': signal.SIGKILL}}
+        self._run_task(nodes, task, 'Kill')
 
     def freeze(self, nodes=None, sec=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
         if sec:
-            cmd = {'freeze': {'grep': self.grep, 'sec': sec}}
+            task = {'freeze': {'grep': self.grep, 'sec': sec}}
         else:
-            cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGSTOP}}
-        LOG.info("Freeze '%s' service %son nodes: %s", self.service_name,
-                 ('for %s sec ' % sec) if sec else '', nodes.get_ips())
-        self._run_task(cmd, nodes)
+            task = {'kill': {'grep': self.grep, 'sig': signal.SIGSTOP}}
+        message = "Freeze %s" % (('for %s sec ' % sec) if sec else '')
+        self._run_task(nodes, task, message)
 
     def unfreeze(self, nodes=None):
-        nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Unfreeze '%s' service on nodes: %s", self.service_name,
-                 nodes.get_ips())
-        cmd = {'kill': {'grep': self.grep, 'sig': signal.SIGCONT}}
-        self._run_task(cmd, nodes)
+        task = {'kill': {'grep': self.grep, 'sig': signal.SIGCONT}}
+        self._run_task(nodes, task, 'Unfreeze')
 
     @utils.require_variables('port')
     def plug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Open port %d for '%s' service on nodes: %s",
-                 self.port[1], self.service_name, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.port[0],
-                                     'port': self.port[1],
-                                     'action': 'unblock',
-                                     'service': self.service_name}}, nodes)
+        message = "Open port %d for" % self.port[1]
+        task = {
+            'iptables': {
+                'protocol': self.port[0], 'port': self.port[1],
+                'action': 'unblock', 'service': self.service_name
+            }
+        }
+        self._run_task(nodes, task, message)
 
     @utils.require_variables('port')
     def unplug(self, nodes=None):
         nodes = nodes if nodes is not None else self.get_nodes()
-        LOG.info("Close port %d for '%s' service on nodes: %s",
-                 self.port[1], self.service_name, nodes.get_ips())
-        self._run_task({'iptables': {'protocol': self.port[0],
-                                     'port': self.port[1],
-                                     'action': 'block',
-                                     'service': self.service_name}}, nodes)
+        message = "Close port %d for" % self.port[1]
+        task = {
+            'iptables': {
+                'protocol': self.port[0], 'port': self.port[1],
+                'action': 'block', 'service': self.service_name
+            }
+        }
+        self._run_task(nodes, task, message)
 
 
 class LinuxService(ServiceAsProcess):

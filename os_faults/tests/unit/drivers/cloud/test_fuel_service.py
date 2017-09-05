@@ -327,7 +327,8 @@ class FuelServiceTestCase(test.TestCase):
 
         service = fuel_managment.get_service('keystone')
         exception = self.assertRaises(error.ServiceError, service.restart)
-        self.assertEqual('Node collection is empty', str(exception))
+        self.assertEqual('Service keystone is not found on any nodes',
+                         str(exception))
 
         get_nodes_cmd = 'bash -c "ps ax | grep -v grep | grep \'{}\'"'.format(
             service.grep)
