@@ -17,7 +17,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
-from os_faults.drivers import service
+from os_faults.drivers.services import process
 
 LOG = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class DevStackNode(node_collection.NodeCollection):
         raise NotImplementedError
 
 
-class ServiceInScreen(service.ServiceAsProcess):
+class ServiceInScreen(process.ServiceAsProcess):
     """Service in Screen
 
     This driver controls service that is started in a window of
@@ -63,7 +63,7 @@ class ServiceInScreen(service.ServiceAsProcess):
         'properties': {
             'window_name': {'type': 'string'},
             'grep': {'type': 'string'},
-            'port': service.PORT_SCHEMA,
+            'port': process.PORT_SCHEMA,
         },
         'required': ['grep', 'window_name'],
         'additionalProperties': False,

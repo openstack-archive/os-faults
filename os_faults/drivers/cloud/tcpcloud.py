@@ -19,7 +19,6 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
-from os_faults.drivers import service
 from os_faults import error
 
 LOG = logging.getLogger(__name__)
@@ -32,59 +31,6 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
 
     def disconnect(self, network_name):
         raise NotImplementedError
-
-
-SALT_CALL = 'salt-call --local --retcode-passthrough '
-SALT_RESTART = SALT_CALL + 'service.restart {service}'
-SALT_TERMINATE = SALT_CALL + 'service.stop {service}'
-SALT_START = SALT_CALL + 'service.start {service}'
-
-
-class SaltService(service.ServiceAsProcess):
-    """Salt service
-
-    Service that can be controlled by `salt service.*` commands.
-
-    **Example configuration:**
-
-    .. code-block:: yaml
-
-        services:
-          app:
-            driver: salt_service
-            args:
-              salt_service: app
-              grep: my_app
-              port: ['tcp', 4242]
-
-    parameters:
-
-    - **salt_service** - name of a service
-    - **grep** - regexp for grep to find process PID
-    - **port** - tuple with two values - protocol, port number (optional)
-
-    """
-
-    NAME = 'salt_service'
-    DESCRIPTION = 'Service in salt'
-    CONFIG_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'salt_service': {'type': 'string'},
-            'grep': {'type': 'string'},
-            'port': service.PORT_SCHEMA,
-        },
-        'required': ['grep', 'salt_service'],
-        'additionalProperties': False,
-    }
-
-    def __init__(self, *args, **kwargs):
-        super(SaltService, self).__init__(*args, **kwargs)
-        self.salt_service = self.config['salt_service']
-
-        self.restart_cmd = SALT_RESTART.format(service=self.salt_service)
-        self.terminate_cmd = SALT_TERMINATE.format(service=self.salt_service)
-        self.start_cmd = SALT_START.format(service=self.salt_service)
 
 
 class TCPCloudManagement(cloud_management.CloudManagement,
