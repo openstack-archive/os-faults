@@ -1,0 +1,11 @@
+Code-Review+2: Kyrylo Romanenko <kromanenko@mirantis.com>
+Code-Review+1: Alina Nesterova <anesterova@mirantis.com>
+Code-Review+1: Anna Babich <ababich@mirantis.com>
+Code-Review+2: Maksym Shalamov <mshalamov@mirantis.com>
+Workflow+1: Maksym Shalamov <mshalamov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 22 Sep 2017 12:12:06 +0000
+Reviewed-on: https://review.openstack.org/505441
+Project: openstack/os-faults
+Branch: refs/heads/master
