@@ -11,12 +11,15 @@
 # under the License.
 
 import inspect
+import logging
 import re
 
 from os_faults.api import error
 from os_faults.api import node_collection as node_collection_pkg
 from os_faults.api import service as service_pkg
 from os_faults.api import utils
+
+LOG = logging.getLogger(__name__)
 
 """
 Human API understands commands like these (examples):
@@ -137,3 +140,5 @@ def execute(destructor, command):
 
         fn = getattr(nodes, action)
         fn(**kwargs)
+
+    LOG.info('Command `%s` is executed successfully', command)
