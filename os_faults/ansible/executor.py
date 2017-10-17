@@ -17,11 +17,17 @@ import logging
 import os
 
 from ansible.executor import task_queue_manager
-from ansible import inventory
 from ansible.parsing import dataloader
 from ansible.playbook import play
 from ansible.plugins import callback as callback_pkg
-from ansible.vars import VariableManager
+
+try:
+    from ansible.inventory.manager import InventoryManager as Inventory
+    from ansible.vars.manager import VariableManager
+except ImportError:
+    # pre-2.4 Ansible
+    from ansible.inventory import Inventory
+    from ansible.vars import VariableManager
 
 from os_faults.api import error
 
@@ -160,9 +166,9 @@ class AnsibleRunner(object):
 
         loader = dataloader.DataLoader()
         variable_manager = VariableManager()
-        inventory_inst = inventory.Inventory(loader=loader,
-                                             variable_manager=variable_manager,
-                                             host_list=host_list)
+        inventory_inst = Inventory(loader=loader,
+                                   variable_manager=variable_manager,
+                                   host_list=host_list)
         variable_manager.set_inventory(inventory_inst)
 
         for host, variables in host_vars.items():

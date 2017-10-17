@@ -194,7 +194,7 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('ansible.inventory.Inventory')
+    @mock.patch('os_faults.ansible.executor.Inventory')
     @mock.patch('os_faults.ansible.executor.VariableManager')
     @mock.patch('ansible.parsing.dataloader.DataLoader')
     def test__run_play(self, mock_dataloader, mock_vmanager, mock_inventory,
@@ -227,7 +227,7 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('ansible.inventory.Inventory')
+    @mock.patch('os_faults.ansible.executor.Inventory')
     @mock.patch('os_faults.ansible.executor.VariableManager')
     @mock.patch('ansible.parsing.dataloader.DataLoader')
     def test__run_play_no_host_vars(
