@@ -17,11 +17,19 @@ import logging
 import os
 
 from ansible.executor import task_queue_manager
-from ansible import inventory
 from ansible.parsing import dataloader
 from ansible.playbook import play
 from ansible.plugins import callback as callback_pkg
-from ansible.vars import VariableManager
+
+try:
+    from ansible.inventory.manager import InventoryManager as Inventory
+    from ansible.vars.manager import VariableManager
+    PRE_24_ANSIBLE = False
+except ImportError:
+    # pre-2.4 Ansible
+    from ansible.inventory import Inventory
+    from ansible.vars import VariableManager
+    PRE_24_ANSIBLE = True
 
 from os_faults.api import error
 
@@ -159,11 +167,20 @@ class AnsibleRunner(object):
         host_list = play_source['hosts']
 
         loader = dataloader.DataLoader()
-        variable_manager = VariableManager()
-        inventory_inst = inventory.Inventory(loader=loader,
-                                             variable_manager=variable_manager,
-                                             host_list=host_list)
-        variable_manager.set_inventory(inventory_inst)
+
+        # FIXME(jpena): we need to behave differently if we are using
+        # Ansible >= 2.4.0.0. Remove when only versions > 2.4 are supported
+        if PRE_24_ANSIBLE:
+            variable_manager = VariableManager()
+            inventory_inst = Inventory(loader=loader,
+                                       variable_manager=variable_manager,
+                                       host_list=host_list)
+            variable_manager.set_inventory(inventory_inst)
+        else:
+            inventory_inst = Inventory(loader=loader,
+                                       sources=','.join(host_list))
+            variable_manager = VariableManager(loader=loader,
+                                               inventory=inventory_inst)
 
         for host, variables in host_vars.items():
             host_inst = inventory_inst.get_host(host)
