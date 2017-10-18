@@ -119,7 +119,7 @@ class AnsibleRunnerTestCase(test.TestCase):
     @ddt.data((
         {},
         dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', forks=100,
+             check=False, connection='smart', diff=None, forks=100,
              private_key_file=None,
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=executor.SSH_COMMON_ARGS,
@@ -128,7 +128,7 @@ class AnsibleRunnerTestCase(test.TestCase):
     ), (
         dict(remote_user='root', password='foobar'),
         dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', forks=100,
+             check=False, connection='smart', diff=None, forks=100,
              private_key_file=None,
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=executor.SSH_COMMON_ARGS,
@@ -137,7 +137,7 @@ class AnsibleRunnerTestCase(test.TestCase):
     ), (
         dict(remote_user='root', password='foobar', become_password='secret'),
         dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', forks=100,
+             check=False, connection='smart', diff=None, forks=100,
              private_key_file=None,
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=executor.SSH_COMMON_ARGS,
@@ -147,7 +147,7 @@ class AnsibleRunnerTestCase(test.TestCase):
         dict(remote_user='root', jump_host='jhost.com',
              private_key_file='/path/my.key'),
         dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', forks=100,
+             check=False, connection='smart', diff=None, forks=100,
              private_key_file='/path/my.key',
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
@@ -166,7 +166,7 @@ class AnsibleRunnerTestCase(test.TestCase):
         dict(remote_user='root', jump_host='jhost.com', jump_user='juser',
              private_key_file='/path/my.key'),
         dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', forks=100,
+             check=False, connection='smart', diff=None, forks=100,
              private_key_file='/path/my.key',
              remote_user='root', scp_extra_args=None, sftp_extra_args=None,
              ssh_common_args=('-o UserKnownHostsFile=/dev/null '
@@ -194,7 +194,7 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('ansible.inventory.Inventory')
+    @mock.patch('os_faults.ansible.executor.Inventory')
     @mock.patch('os_faults.ansible.executor.VariableManager')
     @mock.patch('ansible.parsing.dataloader.DataLoader')
     def test__run_play(self, mock_dataloader, mock_vmanager, mock_inventory,
@@ -227,7 +227,7 @@ class AnsibleRunnerTestCase(test.TestCase):
 
     @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
     @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('ansible.inventory.Inventory')
+    @mock.patch('os_faults.ansible.executor.Inventory')
     @mock.patch('os_faults.ansible.executor.VariableManager')
     @mock.patch('ansible.parsing.dataloader.DataLoader')
     def test__run_play_no_host_vars(
