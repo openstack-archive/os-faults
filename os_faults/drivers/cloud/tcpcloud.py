@@ -125,6 +125,13 @@ class TCPCloudManagement(cloud_management.CloudManagement,
                 'salt_service': 'glance-api',
             }
         },
+        'glance-glare': {
+            'driver': 'salt_service',
+            'args': {
+                'grep': 'glance-glare',
+                'salt_service': 'glance-glare',
+            }
+        },
         'glance-registry': {
             'driver': 'salt_service',
             'args': {
