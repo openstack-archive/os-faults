@@ -1,0 +1,12 @@
+cloud_management:
+  driver: universal
+node_discover:
+  driver: node_list
+  args:
+    - ip: localhost
+services:
+  memcached:
+    args:
+      grep: memcached
+      service_name: memcached
+    driver: system_service
