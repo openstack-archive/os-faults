@@ -121,6 +121,18 @@ def add_module_paths(paths):
         MODULE_PATHS.update(dirs)
 
 
+def make_module_path_option():
+    if PRE_24_ANSIBLE:
+        # it was a string of colon-separated directories
+        module_path = os.pathsep.join(get_module_paths())
+    else:
+        # now it is a list of strings (MUST have > 1 element)
+        module_path = list(get_module_paths())
+        if len(module_path) == 1:
+            module_path += [module_path[0]]
+    return module_path
+
+
 Options = collections.namedtuple(
     'Options',
     ['connection', 'module_path', 'forks',
@@ -146,7 +158,7 @@ class AnsibleRunner(object):
         self.passwords = dict(conn_pass=password, become_pass=become_password)
         self.options = Options(
             connection='smart',
-            module_path=os.pathsep.join(get_module_paths()),
+            module_path=make_module_path_option(),
             forks=forks, remote_user=remote_user,
             private_key_file=private_key_file,
             ssh_common_args=ssh_common_args, ssh_extra_args=None,

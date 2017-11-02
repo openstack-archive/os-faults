@@ -186,8 +186,7 @@ class AnsibleRunnerTestCase(test.TestCase):
     def test___init__options(self, config, options_args, passwords,
                              mock_options):
         runner = executor.AnsibleRunner(**config)
-        module_path = executor.resolve_relative_path(
-            'os_faults/ansible/modules')
+        module_path = executor.make_module_path_option()
         mock_options.assert_called_once_with(module_path=module_path,
                                              **options_args)
         self.assertEqual(passwords, runner.passwords)
@@ -403,3 +402,24 @@ class AnsibleRunnerTestCase(test.TestCase):
             mock.call('Execution completed with 1 result(s):'),
             mock.call(result),
         ))
+
+    @mock.patch('os_faults.executor.get_module_paths')
+    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', False)
+    def test_make_module_path_option_ansible_24(self, mock_mp):
+        mock_mp.return_value = ['/path/one', 'path/two']
+        self.assertEqual(['/path/one', 'path/two'],
+                         executor.make_module_path_option())
+
+    @mock.patch('os_faults.executor.get_module_paths')
+    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', False)
+    def test_make_module_path_option_ansible_24_one_item(self, mock_mp):
+        mock_mp.return_value = ['/path/one']
+        self.assertEqual(['/path/one', '/path/one'],
+                         executor.make_module_path_option())
+
+    @mock.patch('os_faults.executor.get_module_paths')
+    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', True)
+    def test_make_module_path_option_ansible_pre24(self, mock_mp):
+        mock_mp.return_value = ['/path/one', 'path/two']
+        self.assertEqual('/path/one:path/two',
+                         executor.make_module_path_option())
