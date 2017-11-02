@@ -1,0 +1,30 @@
+- project:
+    name: openstack/os-faults
+    check:
+      jobs:
+        - os-faults-integration-py27
+        - os-faults-integration-py35
+    gate:
+      jobs:
+        - os-faults-integration-py27
+        - os-faults-integration-py35
+
+- job:
+    name: os-faults-integration-py27
+    parent: openstack-tox
+    description: |
+      Run integration tests under Python 2.7
+
+      To run tests manually use ``tox -e integration-py27`` command.
+    vars:
+      tox_envlist: integration-py27
+
+- job:
+    name: os-faults-integration-py35
+    parent: openstack-tox
+    description: |
+      Run integration tests under Python 3.5
+
+      To run tests manually use ``tox -e integration-py35`` command.
+    vars:
+      tox_envlist: integration-py35
