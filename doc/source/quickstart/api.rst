@@ -8,10 +8,10 @@ The library operates with 2 types of objects:
     * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 
-Simplified API
---------------
+Human API
+---------
 
-Simplified API is used to inject faults in a human-friendly form.
+Human API is used to specify faults as normal English sentences.
 
 .. code-block:: python
 

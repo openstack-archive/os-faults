@@ -11,3 +11,4 @@ This section describes how to start using os-faults.
    basics
    api
    config_spec
+   rally
