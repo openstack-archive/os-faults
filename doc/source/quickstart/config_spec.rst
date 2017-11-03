@@ -55,7 +55,7 @@ Example configuration:
 cloud_management
 ----------------
 
-This parameter specifies cloud managment driver and its argumanets.
+This parameter specifies cloud management driver and its arguments.
 ``cloud_management`` is responsible for configuring connection to nodes
 and contains arguments such as SSH username/password/key/proxy.
 

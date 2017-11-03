@@ -15,7 +15,7 @@ from os_faults.drivers.services import process
 
 
 class SystemdService(process.ServiceAsProcess):
-    """Systemd service.
+    """Systemd service (**deprecated**, use `system_service` instead).
 
     Service as Systemd unit and can be controlled by `systemctl` CLI tool.
 

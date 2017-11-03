@@ -44,9 +44,9 @@ class FuelNodeCollection(node_collection.NodeCollection):
 
 class FuelManagement(cloud_management.CloudManagement,
                      node_discover.NodeDiscover):
-    """Fuel driver.
+    """OpenStack Fuel driver.
 
-    Cloud deployed by fuel. Supports discovering of slave nodes.
+    Cloud deployed by Fuel. Supports discovering of slave nodes.
 
     **Example configuration:**
 

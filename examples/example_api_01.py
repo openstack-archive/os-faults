@@ -37,18 +37,18 @@ def main():
     }
 
     logging.info('# Create connection to the cloud')
-    destructor = os_faults.connect(cloud_config)
+    cloud_management = os_faults.connect(cloud_config)
 
     logging.info('# Verify connection to the cloud')
-    destructor.verify()
+    cloud_management.verify()
 
     # os_faults library operate with 2 types of objects:
     # service - is software that runs in the cloud, e.g. keystone, mysql,
     #           rabbitmq, nova-api, glance-api
     # nodes   - nodes that host the cloud, e.g. hardware server with hostname
 
-    logging.info('# Get nodes where Keystone service runs')
-    service = destructor.get_service(name='keystone')
+    logging.info('# Get nodes where Keystone service is running')
+    service = cloud_management.get_service(name='keystone')
     nodes = service.get_nodes()
     logging.info('Nodes: %s', nodes)
 
@@ -60,14 +60,14 @@ def main():
     one.reset()
 
     logging.info('# Get all nodes in the cloud')
-    nodes = destructor.get_nodes()
+    nodes = cloud_management.get_nodes()
     logging.info('All cloud nodes: %s', nodes)
 
     logging.info('# Reset all these nodes')
     nodes.reset()
 
     logging.info('# Get node by FQDN: node-2.domain.tld')
-    nodes = destructor.get_nodes(fqdns=['node-2.domain.tld'])
+    nodes = cloud_management.get_nodes(fqdns=['node-2.domain.tld'])
     logging.info('Node node-2.domain.tld: %s', nodes)
 
     logging.info('# Disable public network on node-2.domain.tld')
@@ -77,7 +77,7 @@ def main():
     nodes.connect(network_name='public')
 
     logging.info('# Kill Glance API service on a single node')
-    service = destructor.get_service(name='glance-api')
+    service = cloud_management.get_service(name='glance-api')
     nodes = service.get_nodes().pick()
     service.kill(nodes)
 

@@ -94,7 +94,7 @@ class ServiceInScreen(process.ServiceAsProcess):
 
 class DevStackManagement(cloud_management.CloudManagement,
                          node_discover.NodeDiscover):
-    """Devstack driver.
+    """Devstack driver (**deprecated**).
 
     This driver requires devstack installed in screen mode (USE_SCREEN=True).
     Supports discovering of node MAC addresses.

@@ -48,8 +48,8 @@ def main(debug):
 def verify(config):
     """Verify connection to the cloud"""
     config = config or os_faults.get_default_config_file()
-    destructor = os_faults.connect(config_filename=config)
-    destructor.verify()
+    cloud_management = os_faults.connect(config_filename=config)
+    cloud_management.verify()
 
 
 @main.command()
@@ -71,9 +71,9 @@ def discover(config, output):
 def nodes(config):
     """List cloud nodes"""
     config = config or os_faults.get_default_config_file()
-    destructor = os_faults.connect(config_filename=config)
+    cloud_management = os_faults.connect(config_filename=config)
     hosts = [{'ip': host.ip, 'mac': host.mac, 'fqdn': host.fqdn}
-             for host in destructor.get_nodes().hosts]
+             for host in cloud_management.get_nodes().hosts]
     click.echo(yaml.safe_dump(hosts, default_flow_style=False), nl=False)
 
 

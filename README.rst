@@ -18,7 +18,7 @@ IPMI driver).
 Installation
 ------------
 
-Reqular installation::
+Regular installation::
 
     pip install os-faults
 
@@ -31,18 +31,73 @@ please use the following command to install os-faults with extra dependencies::
 Configuration
 -------------
 
-The cloud deployment configuration schema is an extension to the cloud config
-used by the `os-client-config <https://github.com/openstack/os-client-config>`_
-library:
+The cloud deployment configuration is specified in JSON/YAML format or Python dictionary.
+
+The library operates with 2 types of objects:
+ * `service` - is a software that runs in the cloud, e.g. `nova-api`
+ * `nodes` - nodes that host the cloud, e.g. a server with a hostname
+
+
+Example 1. DevStack
+~~~~~~~~~~~~~~~~~~~
+
+Connection to DevStack can be specified using the following YAML file:
+
+.. code-block:: yaml
+
+    cloud_management:
+      driver: devstack
+      args:
+        address: devstack.local
+        username: stack
+        private_key_file: cloud_key
+        iface: enp0s8
+
+OS-Faults library will connect to DevStack by address `devstack.local` with user `stack`
+and SSH key located in file `cloud_key`. Default networking interface is specified with
+parameter `iface`. Note that user should have sudo permissions (by default DevStack user has them).
+
+DevStack driver is responsible for service discovery. For more details please refer
+to driver documentation: http://os-faults.readthedocs.io/en/latest/drivers.html#devstack-systemd-devstackmanagement
+
+Example 2. An OpenStack with services and power management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An arbitrary OpenStack can be handled too with help of `universal` driver.
+In this example os-faults is used as Python library.
 
 .. code-block:: python
 
     cloud_config = {
         'cloud_management': {
-            'driver': 'devstack',
-            'args': {
-                'address': 'devstack.local',
-                'username': 'root',
+            'driver': 'universal',
+        },
+        'node_discover': {
+            'driver': 'node_list',
+            'args': [
+                {
+                    'ip': '192.168.5.127',
+                    'auth': {
+                        'username': 'root',
+                        'private_key_file': 'openstack_key',
+                    }
+                },
+                {
+                    'ip': '192.168.5.128',
+                    'auth': {
+                        'username': 'root',
+                        'private_key_file': 'openstack_key',
+                    }
+                }
+            ]
+        },
+        'services': {
+            'memcached': {
+                'driver': 'system_service',
+                'args': {
+                    'service_name': 'memcached',
+                    'grep': 'memcached',
+                }
             }
         },
         'power_managements': [
@@ -52,52 +107,41 @@ library:
                     'connection_uri': 'qemu+unix:///system',
                 }
             },
-            {
-                'driver': 'ipmi',
-                'args': {
-                    'mac_to_bmc': {
-                        'aa:bb:cc:dd:ee:01': {
-                            'address': '55.55.55.55',
-                            'username': 'foo',
-                            'password': 'bar',
-                        }
-                    }
-                }
-            }
         ]
     }
 
-Establish a connection to the cloud and verify it:
+The config contains all OpenStack nodes with credentials and all
+services. OS-Faults will automatically figure out the mapping between services
+and nodes. Power management configuration is flexible and supports
+mixed bare-metal / virtualized deployments.
+
+First let's establish a connection to the cloud and verify it:
 
 .. code-block:: python
 
-    destructor = os_faults.connect(cloud_config)
-    destructor.verify()
+    cloud_management = os_faults.connect(cloud_config)
+    cloud_management.verify()
 
-The library can also read configuration from a file and the file can be in the
-following three formats: os-faults.{json,yaml,yml}. The configuration file can
-be specified in the `OS_FAULTS_CONFIG` environment variable or can be read from
-one of the default locations:
+The library can also read configuration from a file in YAML or JSON format.
+The configuration file can be specified in the `OS_FAULTS_CONFIG` environment
+variable. By default the library searches for file `os-faults.{json,yaml,yml}`
+in one of locations:
  * current directory
  * ~/.config/os-faults
  * /etc/openstack
 
-Make some destructive actions:
+Now let's make some destructive action:
 
 .. code-block:: python
 
-    destructor.get_service(name='keystone').restart()
+    cloud_management.get_service(name='memcached').kill()
 
 
-The library operates with 2 types of objects:
- * `service` - is a software that runs in the cloud, e.g. `nova-api`
- * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
+Human API
+---------
 
-
-Simplified API
---------------
-
-Simplified API is used to inject faults in a human-friendly form.
+Human API is simplified and self-descriptive. It includes multiple commands
+that are written like normal English sentences.
 
 **Service-oriented** command performs specified `action` against `service` on
 all, on one random node or on the node specified by FQDN::
@@ -106,7 +150,7 @@ all, on one random node or on the node specified by FQDN::
 
 Examples:
     * `Restart Keystone service` - restarts Keystone service on all nodes.
-    * `kill nova-api service on one node` - restarts Nova API on one
+    * `kill nova-api service on one node` - kills Nova API on one
       randomly-picked node.
 
 **Node-oriented** command performs specified `action` on node specified by FQDN
@@ -116,7 +160,7 @@ or set of service's nodes::
 
 Examples:
     * `Reboot one node with mysql` - reboots one random node with MySQL.
-    * `Reset node-2.domain.tld node` - reset node `node-2.domain.tld`.
+    * `Reset node-2.domain.tld node` - resets node `node-2.domain.tld`.
 
 **Network-oriented** command is a subset of node-oriented and performs network
 management operation on selected nodes::
@@ -141,8 +185,8 @@ Get a service and restart it:
 
 .. code-block:: python
 
-    destructor = os_faults.connect(cloud_config)
-    service = destructor.get_service(name='glance-api')
+    cloud_management = os_faults.connect(cloud_config)
+    service = cloud_management.get_service(name='glance-api')
     service.restart()
 
 Available actions:
@@ -160,14 +204,13 @@ Get all nodes in the cloud and reboot them:
 
 .. code-block:: python
 
-    nodes = destructor.get_nodes()
+    nodes = cloud_management.get_nodes()
     nodes.reboot()
 
 Available actions:
  * `reboot` - reboot all nodes gracefully
  * `poweroff` - power off all nodes abruptly
  * `reset` - reset (cold restart) all nodes
- * `oom` - fill all node's RAM
  * `disconnect` - disable network with the specified name on all nodes
  * `connect` - enable network with the specified name on all nodes
 
@@ -187,7 +230,7 @@ Get nodes where l3-agent runs and disable the management network on them:
 .. code-block:: python
 
     fqdns = neutron.l3_agent_list_hosting_router(router_id)
-    nodes = destructor.get_nodes(fqdns=fqdns)
+    nodes = cloud_management.get_nodes(fqdns=fqdns)
     nodes.disconnect(network_name='management')
 
 4. Operate with services
@@ -197,6 +240,6 @@ Restart a service on a single node:
 
 .. code-block:: python
 
-    service = destructor.get_service(name='keystone')
+    service = cloud_management.get_service(name='keystone')
     nodes = service.get_nodes().pick()
     service.restart(nodes)

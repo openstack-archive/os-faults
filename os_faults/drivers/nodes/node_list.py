@@ -63,7 +63,6 @@ class NodeListDiscover(node_discover.NodeDiscover):
             auth:
               username: user1
               password: secret1
-              sudo: False
               jump:
                 host: 10.0.0.52
                 username: ubuntu

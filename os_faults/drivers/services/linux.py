@@ -15,7 +15,7 @@ from os_faults.drivers.services import process
 
 
 class LinuxService(process.ServiceAsProcess):
-    """Linux service
+    """Linux service (**deprecated**, use `system_service` instead)
 
     Service that is defined in init.d and can be controlled by `service`
     CLI tool.

@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+# Distribute SSH keys on all nodes deployed by OpenStack Fuel
+
 KEY_FILE_NAME="${HOME}/.ssh/os_faults"
 HOST=${1:-fuel.local}
 USERNAME=${2:-root}

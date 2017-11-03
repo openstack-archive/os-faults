@@ -6,18 +6,17 @@ Basics
 Configuration file
 ------------------
 
-The cloud deployment configuration schema is an extension to the cloud config
-used by the `os-client-config <https://github.com/openstack/os-client-config>`_
-library:
+The cloud deployment configuration schema has simple YAML/JSON format:
 
 .. code-block:: yaml
 
     cloud_management:
       driver: devstack
       args:
-        address: 192.168.1.240
-        username: ubuntu
-        iface: enp0s3
+        address: devstack.local
+        username: stack
+        private_key_file: cloud_key
+        iface: enp0s8
 
     power_managements:
     - driver: libvirt
@@ -47,8 +46,8 @@ Establish a connection to the cloud and verify it:
 .. code-block:: python
 
     import os_faults
-    destructor = os_faults.connect(config_filename='os-faults.yaml')
-    destructor.verify()
+    cloud_management = os_faults.connect(config_filename='os-faults.yaml')
+    cloud_management.verify()
 
 
 or via CLI::
@@ -60,9 +59,11 @@ Make some destructive actions:
 
 .. code-block:: python
 
-    destructor.get_service(name='keystone').restart()
+    cloud_management.get_service(name='keystone').restart()
 
 
 or via CLI::
 
     $ os-inject-fault -c os-faults.yaml restart keystone service
+
+

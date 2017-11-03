@@ -5,13 +5,15 @@ Drivers
 Cloud management
 ----------------
 
-.. cloud_driver_doc:: devstack
-
 .. cloud_driver_doc:: devstack_systemd
+
+.. cloud_driver_doc:: universal
 
 .. cloud_driver_doc:: fuel
 
 .. cloud_driver_doc:: tcpcloud
+
+.. cloud_driver_doc:: devstack
 
 
 Power management
@@ -32,6 +34,8 @@ Service drivers
 ---------------
 
 .. driver_doc:: process
+
+.. driver_doc:: system_service
 
 .. driver_doc:: linux_service
 

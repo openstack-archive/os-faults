@@ -36,7 +36,7 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
     parameters can be shared or overridden by corresponding parameters
     from node discovery.
 
-    **Example single node configuration:**
+    **Example of single node configuration:**
 
     .. code-block:: yaml
 
@@ -52,7 +52,7 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
             iface: eth1
             serial: 10
 
-    **Example multi-node configuration:**
+    **Example of multi-node configuration:**
 
     Note that in this configuration a node discovery driver is required.
 

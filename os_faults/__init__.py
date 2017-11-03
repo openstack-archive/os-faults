@@ -142,7 +142,7 @@ def _init_driver(params):
 
 
 def connect(cloud_config=None, config_filename=None):
-    """Connect to the cloud
+    """Connects to the cloud
 
     :param cloud_config: dict with cloud and power management params
     :param config_filename: name of the file where to read config from
@@ -224,13 +224,14 @@ def discover(cloud_config):
     return cloud_config
 
 
-def human_api(distractor, command):
-    """Execute high-level text command with specified destructor
+def human_api(cloud_management, command):
+    """Executes a command written as English sentence
 
-    :param destructor: library instance as returned by :connect: function
+    :param cloud_management: library instance as returned by :connect:
+           function
     :param command: text command
     """
-    human.execute(distractor, command)
+    human.execute(cloud_management, command)
 
 
 def register_ansible_modules(paths):
@@ -238,6 +239,6 @@ def register_ansible_modules(paths):
 
     Allows to use custom ansible modules in NodeCollection.run_task method
 
-    :param path: list of paths to folders with ansible modules
+    :param paths: list of paths to folders with ansible modules
     """
     executor.add_module_paths(paths)
