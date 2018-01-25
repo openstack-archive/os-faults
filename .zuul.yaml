@@ -1,5 +1,4 @@
 - project:
-    name: openstack/os-faults
     check:
       jobs:
         - os-faults-integration-py27
