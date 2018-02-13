@@ -379,7 +379,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         cmd = "salt -E '{}' {} --out=yaml".format(
             self.slave_name_regexp, command)
         result = self._execute_on_master_node({'command': cmd})
-        return yaml.load(result[0].payload['stdout'])
+        return yaml.safe_load(result[0].payload['stdout'])
 
     def discover_hosts(self):
         if not self.cached_cloud_hosts:
