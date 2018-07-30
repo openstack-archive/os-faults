@@ -61,7 +61,7 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
         cloud_management:
           driver: universal
 
-        node_discovery:
+        node_discover:
           driver: node_list
           args:
             - ip: 192.168.5.149
