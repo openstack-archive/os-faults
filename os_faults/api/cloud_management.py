@@ -30,6 +30,7 @@ LOG = logging.getLogger(__name__)
 @six.add_metaclass(abc.ABCMeta)
 class CloudManagement(base_driver.BaseDriver):
     SERVICES = {}
+    CONTAINERS = {}
     SUPPORTED_NETWORKS = []
     NODE_CLS = node_collection.NodeCollection
 
@@ -37,6 +38,7 @@ class CloudManagement(base_driver.BaseDriver):
         self.power_manager = power_management.PowerManager()
         self.node_discover = None
         self.services = copy.deepcopy(self.SERVICES)
+        self.containers = copy.deepcopy(self.CONTAINERS)
 
     def add_power_management(self, driver):
         self.power_manager.add_driver(driver)
@@ -47,10 +49,19 @@ class CloudManagement(base_driver.BaseDriver):
     def update_services(self, services):
         self.services.update(services)
 
+    def update_containers(self, containers):
+        self.containers.update(containers)
+
     def validate_services(self):
         for service_name, serive_conf in self.services.items():
             serive_cls = registry.get_driver(serive_conf["driver"])
             jsonschema.validate(serive_conf['args'], serive_cls.CONFIG_SCHEMA)
+
+    def validate_containers(self):
+        for container_name, container_conf in self.containers.items():
+            container_cls = registry.get_driver(container_conf["driver"])
+            jsonschema.validate(container_conf['args'],
+                                container_cls.CONFIG_SCHEMA)
 
     @abc.abstractmethod
     def verify(self):
@@ -95,6 +106,23 @@ class CloudManagement(base_driver.BaseDriver):
         klazz = registry.get_driver(config["driver"])
         return klazz(node_cls=self.NODE_CLS, cloud_management=self,
                      service_name=name, config=config["args"],
+                     hosts=config.get('hosts'))
+
+    def get_container(self, name):
+        """Get container with specified name
+
+        :param name: name of the container
+        :return: Container
+        """
+        if name not in self.containers:
+            raise error.ContainerError(
+                '{} driver does not support {!r} container'.format(
+                    self.NAME.title(), name))
+
+        config = self.containers[name]
+        klazz = registry.get_driver(config["driver"])
+        return klazz(node_cls=self.NODE_CLS, cloud_management=self,
+                     container_name=name, config=config["args"],
                      hosts=config.get('hosts'))
 
     @abc.abstractmethod

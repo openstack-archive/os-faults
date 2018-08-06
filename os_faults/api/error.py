@@ -32,6 +32,10 @@ class ServiceError(OSFError):
     """Base Error class for Service API"""
 
 
+class ContainerError(OSFError):
+    """Base Error class for Container API"""
+
+
 class NodeCollectionError(OSFError):
     """Base Error class for NodeCollection API"""
 
