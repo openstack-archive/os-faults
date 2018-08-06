@@ -7,7 +7,7 @@ OS-Faults
 The library does destructive actions inside an OpenStack cloud. It provides
 an abstraction layer over different types of cloud deployments. The actions
 are implemented as drivers (e.g. DevStack driver, Fuel driver, Libvirt driver,
-IPMI driver).
+IPMI driver, Universal driver).
 
 * Free software: Apache license
 * Documentation: http://os-faults.readthedocs.io
@@ -197,7 +197,23 @@ Available actions:
  * `unplug` - unplug Service out of network
  * `plug` - plug Service into network
 
-2. Node actions
+2. Container actions
+~~~~~~~~~~~~~~~~~~~~
+
+Get a container and restart it:
+
+.. code-block:: python
+
+    cloud_management = os_faults.connect(cloud_config)
+    container = cloud_management.get_container(name='neutron-api')
+    container.restart()
+
+Available actions:
+ * `start` - start Container
+ * `terminate` - terminate Container gracefully
+ * `restart` - restart Container
+
+3. Node actions
 ~~~~~~~~~~~~~~~
 
 Get all nodes in the cloud and reboot them:
@@ -214,7 +230,7 @@ Available actions:
  * `disconnect` - disable network with the specified name on all nodes
  * `connect` - enable network with the specified name on all nodes
 
-3. Operate with nodes
+4. Operate with nodes
 ~~~~~~~~~~~~~~~~~~~~~
 
 Get all nodes where a service runs, pick one of them and reset:
@@ -233,7 +249,7 @@ Get nodes where l3-agent runs and disable the management network on them:
     nodes = cloud_management.get_nodes(fqdns=fqdns)
     nodes.disconnect(network_name='management')
 
-4. Operate with services
+5. Operate with services
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Restart a service on a single node:
