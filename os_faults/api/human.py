@@ -17,6 +17,7 @@ import re
 from os_faults.api import error
 from os_faults.api import node_collection as node_collection_pkg
 from os_faults.api import service as service_pkg
+from os_faults.api import container as container_pkg
 from os_faults.api import utils
 
 LOG = logging.getLogger(__name__)
@@ -53,6 +54,8 @@ ANYTHING = {'all'}
 NODE_ALIASES_PATTERN = '|'.join(RANDOMNESS | ANYTHING)
 SERVICE_ACTIONS = list_actions(service_pkg.Service)
 SERVICE_ACTIONS_PATTERN = '|'.join(SERVICE_ACTIONS)
+CONTAINER_ACTIONS = list_actions(container_pkg.Container)
+CONTAINER_ACTIONS_PATTERN = '|'.join(CONTAINER_ACTIONS)
 NODE_ACTIONS = list_actions(node_collection_pkg.NodeCollection)
 NODE_ACTIONS_PATTERN = '|'.join(NODE_ACTIONS)
 
@@ -62,6 +65,11 @@ PATTERNS = [
                '(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
                '(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
                SERVICE_ACTIONS_PATTERN),
+    re.compile('(?P<action>%s)'
+               '\s+(?P<container>\S+)\s+container'
+               '(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
+               '(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
+               CONTAINER_ACTIONS_PATTERN),
     re.compile('(?P<action>%s)'
                '(\s+(?P<network>\w+)\s+network\s+on)?'
                '(\s+(?P<target>\w+)'
@@ -88,6 +96,7 @@ def execute(destructor, command):
 
     action = groups.get('action').replace(' ', '_')
     service_name = groups.get('service')
+    container_name = groups.get('container')
     node_name = groups.get('node')
     network_name = groups.get('network')
     target = groups.get('target')
@@ -112,6 +121,38 @@ def execute(destructor, command):
 
         else:  # node actions
             nodes = service.get_nodes()
+
+            if node_name in RANDOMNESS:
+                nodes = nodes.pick()
+
+            kwargs = {}
+            if network_name:
+                kwargs['network_name'] = network_name
+            if target:
+                kwargs['target'] = target
+                kwargs['duration'] = int(duration)
+
+            fn = getattr(nodes, action)
+            fn(**kwargs)
+    elif container_name:
+        container = destructor.get_container(name=container_name)
+
+        if action in CONTAINER_ACTIONS:
+
+            kwargs = {}
+            if node_name in RANDOMNESS:
+                kwargs['nodes'] = container.get_nodes().pick()
+            elif node_name and node_name not in ANYTHING:
+                kwargs['nodes'] = destructor.get_nodes(fqdns=[node_name])
+
+            if duration:
+                kwargs['sec'] = int(duration)
+
+            fn = getattr(container, action)
+            fn(**kwargs)
+
+        else:  # node actions
+            nodes = container.get_nodes()
 
             if node_name in RANDOMNESS:
                 nodes = nodes.pick()

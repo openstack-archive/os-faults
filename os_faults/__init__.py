@@ -163,6 +163,11 @@ def connect(cloud_config=None, config_filename=None):
         cloud_management.update_services(services)
     cloud_management.validate_services()
 
+    containers = cloud_config.get('containers')
+    if containers:
+        cloud_management.update_containers(containers)
+    cloud_management.validate_containers()
+
     node_discover_conf = cloud_config.get('node_discover')
     if node_discover_conf:
         node_discover = _init_driver(node_discover_conf)
