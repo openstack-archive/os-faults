@@ -35,6 +35,7 @@ The cloud deployment configuration is specified in JSON/YAML format or Python di
 
 The library operates with 2 types of objects:
  * `service` - is a software that runs in the cloud, e.g. `nova-api`
+ * `container` - is a software that runs in the cloud, e.g. `neutron_api`
  * `nodes` - nodes that host the cloud, e.g. a server with a hostname
 
 
@@ -60,7 +61,7 @@ parameter `iface`. Note that user should have sudo permissions (by default DevSt
 DevStack driver is responsible for service discovery. For more details please refer
 to driver documentation: http://os-faults.readthedocs.io/en/latest/drivers.html#devstack-systemd-devstackmanagement
 
-Example 2. An OpenStack with services and power management
+Example 2. An OpenStack with services, containers and power management
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An arbitrary OpenStack can be handled too with help of `universal` driver.
@@ -100,6 +101,14 @@ In this example os-faults is used as Python library.
                 }
             }
         },
+        'containers': {
+            'neutron_api': {
+                'driver': 'docker_container',
+                'args': {
+                    'container_name': 'neutron_api',
+                }
+            }
+        },
         'power_managements': [
             {
                 'driver': 'libvirt',
@@ -111,9 +120,9 @@ In this example os-faults is used as Python library.
     }
 
 The config contains all OpenStack nodes with credentials and all
-services. OS-Faults will automatically figure out the mapping between services
-and nodes. Power management configuration is flexible and supports
-mixed bare-metal / virtualized deployments.
+services/containers. OS-Faults will automatically figure out the mapping
+between services/containers and nodes. Power management configuration is
+flexible and supports mixed bare-metal / virtualized deployments.
 
 First let's establish a connection to the cloud and verify it:
 
@@ -135,6 +144,7 @@ Now let's make some destructive action:
 .. code-block:: python
 
     cloud_management.get_service(name='memcached').kill()
+    cloud_management.get_container(name='neutron_api').restart()
 
 
 Human API
@@ -152,6 +162,17 @@ Examples:
     * `Restart Keystone service` - restarts Keystone service on all nodes.
     * `kill nova-api service on one node` - kills Nova API on one
       randomly-picked node.
+
+**Container-oriented** command performs specified `action` against `container`
+on all, on one random node or on the node specified by FQDN::
+
+    <action> <container> container [on (random|one|single|<fqdn> node[s])]
+
+Examples:
+    * `Restart neutron_ovs_agent container` - restarts neutron_ovs_agent
+      container on all nodes.
+    * `Terminate neutron_api container on one node` - stops Neutron API
+      container on one randomly-picked node.
 
 **Node-oriented** command performs specified `action` on node specified by FQDN
 or set of service's nodes::
@@ -205,7 +226,7 @@ Get a container and restart it:
 .. code-block:: python
 
     cloud_management = os_faults.connect(cloud_config)
-    container = cloud_management.get_container(name='neutron-api')
+    container = cloud_management.get_container(name='neutron_api')
     container.restart()
 
 Available actions:
@@ -259,3 +280,14 @@ Restart a service on a single node:
     service = cloud_management.get_service(name='keystone')
     nodes = service.get_nodes().pick()
     service.restart(nodes)
+
+6. Operate with containers
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Terminate a container on a random node:
+
+.. code-block:: python
+
+    container = cloud_management.get_container(name='neutron_ovs_agent')
+    nodes = container.get_nodes().pick()
+    container.restart(nodes)

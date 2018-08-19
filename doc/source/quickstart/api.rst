@@ -5,6 +5,7 @@ API
 The library operates with 2 types of objects:
 
     * `service` - is a software that runs in the cloud, e.g. `nova-api`
+    * `containers` - is a software that runs in the cloud, e.g. `neutron-api`
     * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 
@@ -74,7 +75,23 @@ Available actions:
  * `unplug` - unplug Service out of network
  * `plug` - plug Service into network
 
-2. Node actions
+2. Container actions
+~~~~~~~~~~~~~~~~~~~~
+
+Get a container and restart it:
+
+.. code-block:: python
+
+    cloud_management = os_faults.connect(cloud_config)
+    container = cloud_management.get_container(name='neutron_api')
+    container.restart()
+
+Available actions:
+ * `start` - start Container
+ * `terminate` - terminate Container gracefully
+ * `restart` - restart Container
+
+3. Node actions
 ~~~~~~~~~~~~~~~
 
 Get all nodes in the cloud and reboot them:
@@ -92,7 +109,7 @@ Available actions:
  * `disconnect` - disable network with the specified name on all nodes
  * `connect` - enable network with the specified name on all nodes
 
-3. Operate with nodes
+4. Operate with nodes
 ~~~~~~~~~~~~~~~~~~~~~
 
 Get all nodes where a service runs, pick one of them and reset:
@@ -111,7 +128,7 @@ Get nodes where l3-agent runs and disable the management network on them:
     nodes = cloud_management.get_nodes(fqdns=fqdns)
     nodes.disconnect(network_name='management')
 
-4. Operate with services
+5. Operate with services
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Restart a service on a single node:

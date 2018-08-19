@@ -8,6 +8,7 @@ Configuration file contains the following parameters:
     * power_managements
     * node_discover
     * services
+    * containers
 
 Each parameter specifies a driver or a list of drivers.
 
@@ -50,6 +51,12 @@ Example configuration:
           window_name: g-api
         hosts:
         - 192.168.1.240
+
+    containers:
+      neutron_api:
+        driver: docker_container
+        args:
+          container_name: neutron_api
 
 
 cloud_management
@@ -156,3 +163,29 @@ discovering is disabled for this service and hosts specified in ``hosts`` will
 be used, otherwise, service will be searched across all nodes.
 
 List of supported drivers for services: :ref:`Service drivers`
+
+
+containers
+----------
+
+This parameter specifies list of containers and their types. This parameter
+allows updating/adding containers which are embedded in ``cloud_management``
+driver.
+
+.. code-block:: yaml
+
+    containers:
+      neutron_api:                     # name of the container
+        driver: docker_container       # name of the container driver
+        args:                          # arguments for the driver
+          container_name: neutron_api
+        hosts:                         # list of hosts where this container running
+        - 192.168.1.240
+
+
+Container driver contains optional ``hosts`` parameter which controls discovering
+of hosts where the container is running. If ``hosts`` specified, then container
+discovering is disabled for this container and hosts specified in ``hosts`` will
+be used, otherwise, container will be searched across all nodes.
+
+List of supported drivers for containers: :ref:`Container drivers`
