@@ -1,0 +1,8 @@
+Code-Review+2: Ilya Shakhat <shakhat@gmail.com>
+Workflow+1: Ilya Shakhat <shakhat@gmail.com>
+Verified+2: Zuul
+Submitted-by: Zuul
+Submitted-at: Tue, 21 Aug 2018 07:39:30 +0000
+Reviewed-on: https://review.openstack.org/593378
+Project: openstack/os-faults
+Branch: refs/heads/master
