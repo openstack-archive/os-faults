@@ -1,4 +1,8 @@
 - project:
+    templates:
+      - docs-on-readthedocs
+    vars:
+      rtd_webhook_id: '47124'
     check:
       jobs:
         - os-faults-integration-py27
