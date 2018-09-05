@@ -1,4 +1,9 @@
 - project:
+    templates:
+      - docs-on-readthedocs
+      - publish-to-pypi
+    vars:
+      rtd_webhook_id: '47124'
     check:
       jobs:
         - os-faults-integration-py27
