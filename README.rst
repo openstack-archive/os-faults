@@ -18,6 +18,13 @@ IPMI driver, Universal driver).
 Installation
 ------------
 
+Requirements
+~~~~~~~~~~~~
+
+Ansible is required and should be installed manually system-wide or in virtual
+environment. Please refer to [https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html]
+for installation instructions.
+
 Regular installation::
 
     pip install os-faults
@@ -291,3 +298,22 @@ Terminate a container on a random node:
     container = cloud_management.get_container(name='neutron_ovs_agent')
     nodes = container.get_nodes().pick()
     container.restart(nodes)
+
+
+License notes
+-------------
+
+Ansible is distributed under GPL-3.0 license and thus all programs
+that link with its code are subject to GPL restrictions [1].
+However these restrictions are not applied to os-faults library
+since it invokes Ansible as process [2][3].
+
+Ansible modules are provided with Apache license (compatible to GPL) [4].
+Those modules import part of Ansible runtime (modules API) and executed
+on remote hosts. os-faults library does not import these module
+neither static nor dynamic.
+
+ [1] https://www.gnu.org/licenses/gpl-faq.html#GPLModuleLicense
+ [2] https://www.gnu.org/licenses/gpl-faq.html#GPLPlugins
+ [3] https://www.gnu.org/licenses/gpl-faq.html#MereAggregation
+ [4] https://www.apache.org/licenses/GPL-compatibility.html
