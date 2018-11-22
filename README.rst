@@ -62,7 +62,7 @@ DevStack driver is responsible for service discovery. For more details please re
 to driver documentation: http://os-faults.readthedocs.io/en/latest/drivers.html#devstack-systemd-devstackmanagement
 
 Example 2. An OpenStack with services, containers and power management
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An arbitrary OpenStack can be handled too with help of `universal` driver.
 In this example os-faults is used as Python library.
@@ -135,9 +135,10 @@ The library can also read configuration from a file in YAML or JSON format.
 The configuration file can be specified in the `OS_FAULTS_CONFIG` environment
 variable. By default the library searches for file `os-faults.{json,yaml,yml}`
 in one of locations:
- * current directory
- * ~/.config/os-faults
- * /etc/openstack
+
+  * current directory
+  * ~/.config/os-faults
+  * /etc/openstack
 
 Now let's make some destructive action:
 
