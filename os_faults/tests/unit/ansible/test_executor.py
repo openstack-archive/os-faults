@@ -19,87 +19,6 @@ from os_faults.api import node_collection
 from os_faults.tests.unit import test
 
 
-class MyCallbackTestCase(test.TestCase):
-
-    def test__store(self,):
-        ex = executor.MyCallback(mock.Mock())
-
-        my_host = 'my_host'
-        my_task = 'my_task'
-        my_result = 'my_result'
-        r = mock.Mock()
-        r._host.get_name.return_value = my_host
-        r._task.get_name.return_value = my_task
-        r._result = my_result
-        stat = 'OK'
-
-        ex._store(r, stat)
-        ex.storage.append.assert_called_once_with(
-            executor.AnsibleExecutionRecord(host=my_host, status=stat,
-                                            task=my_task, payload=my_result))
-
-    @mock.patch('ansible.plugins.callback.CallbackBase.v2_runner_on_failed')
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_failed_super(self, mock_store, mock_callback):
-        ex = executor.MyCallback(mock.Mock())
-        result = mock.Mock()
-        ex.v2_runner_on_failed(result)
-        mock_callback.assert_called_once_with(result)
-
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_failed(self, mock_store):
-        result = mock.Mock()
-        ex = executor.MyCallback(mock.Mock())
-        ex.v2_runner_on_failed(result)
-        mock_store.assert_called_once_with(result, executor.STATUS_FAILED)
-
-    @mock.patch('ansible.plugins.callback.CallbackBase.v2_runner_on_ok')
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_ok_super(self, mock_store, mock_callback):
-        ex = executor.MyCallback(mock.Mock())
-        result = mock.Mock()
-        ex.v2_runner_on_ok(result)
-        mock_callback.assert_called_once_with(result)
-
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_ok(self, mock_store):
-        result = mock.Mock()
-        ex = executor.MyCallback(mock.Mock())
-        ex.v2_runner_on_ok(result)
-        mock_store.assert_called_once_with(result, executor.STATUS_OK)
-
-    @mock.patch('ansible.plugins.callback.CallbackBase.v2_runner_on_skipped')
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_skipped_super(self, mock_store, mock_callback):
-        ex = executor.MyCallback(mock.Mock())
-        result = mock.Mock()
-        ex.v2_runner_on_skipped(result)
-        mock_callback.assert_called_once_with(result)
-
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_skipped(self, mock_store):
-        result = mock.Mock()
-        ex = executor.MyCallback(mock.Mock())
-        ex.v2_runner_on_skipped(result)
-        mock_store.assert_called_once_with(result, executor.STATUS_SKIPPED)
-
-    @mock.patch(
-        'ansible.plugins.callback.CallbackBase.v2_runner_on_unreachable')
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_unreachable_super(self, mock_store, mock_callback):
-        ex = executor.MyCallback(mock.Mock())
-        result = mock.Mock()
-        ex.v2_runner_on_unreachable(result)
-        mock_callback.assert_called_once_with(result)
-
-    @mock.patch('os_faults.ansible.executor.MyCallback._store')
-    def test_v2_runner_on_unreachable(self, mock_store):
-        result = mock.Mock()
-        ex = executor.MyCallback(mock.Mock())
-        ex.v2_runner_on_unreachable(result)
-        mock_store.assert_called_once_with(result, executor.STATUS_UNREACHABLE)
-
-
 @ddt.ddt
 class AnsibleRunnerTestCase(test.TestCase):
 
@@ -190,59 +109,6 @@ class AnsibleRunnerTestCase(test.TestCase):
         mock_options.assert_called_once_with(module_path=module_path,
                                              **options_args)
         self.assertEqual(passwords, runner.passwords)
-
-    @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
-    @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('os_faults.ansible.executor.Inventory')
-    @mock.patch('os_faults.ansible.executor.VariableManager')
-    @mock.patch('ansible.parsing.dataloader.DataLoader')
-    def test__run_play(self, mock_dataloader, mock_vmanager, mock_inventory,
-                       mock_play_load, mock_taskqm):
-        mock_play_load.return_value = 'my_load'
-        variable_manager = mock_vmanager.return_value
-        host_inst = mock_inventory.return_value.get_host.return_value
-        host_vars = {
-            '0.0.0.0': {
-                'ansible_user': 'foo',
-                'ansible_ssh_pass': 'bar',
-                'ansible_become': True,
-                'ansible_ssh_private_key_file': None,
-                'ansible_ssh_common_args': '-o Option=yes',
-            }
-        }
-        ex = executor.AnsibleRunner()
-        ex._run_play({'hosts': ['0.0.0.0']}, host_vars)
-
-        mock_taskqm.assert_called_once()
-        self.assertEqual(mock_taskqm.mock_calls[1], mock.call().run('my_load'))
-        self.assertEqual(mock_taskqm.mock_calls[2], mock.call().cleanup())
-
-        variable_manager.set_host_variable.assert_has_calls((
-            mock.call(host_inst, 'ansible_user', 'foo'),
-            mock.call(host_inst, 'ansible_ssh_pass', 'bar'),
-            mock.call(host_inst, 'ansible_become', True),
-            mock.call(host_inst, 'ansible_ssh_common_args', '-o Option=yes'),
-        ), any_order=True)
-
-    @mock.patch.object(executor.task_queue_manager, 'TaskQueueManager')
-    @mock.patch('ansible.playbook.play.Play.load')
-    @mock.patch('os_faults.ansible.executor.Inventory')
-    @mock.patch('os_faults.ansible.executor.VariableManager')
-    @mock.patch('ansible.parsing.dataloader.DataLoader')
-    def test__run_play_no_host_vars(
-            self, mock_dataloader, mock_vmanager, mock_inventory,
-            mock_play_load, mock_taskqm):
-        mock_play_load.return_value = 'my_load'
-        variable_manager = mock_vmanager.return_value
-        host_vars = {}
-        ex = executor.AnsibleRunner()
-        ex._run_play({'hosts': ['0.0.0.0']}, host_vars)
-
-        mock_taskqm.assert_called_once()
-        self.assertEqual(mock_taskqm.mock_calls[1], mock.call().run('my_load'))
-        self.assertEqual(mock_taskqm.mock_calls[2], mock.call().cleanup())
-
-        self.assertEqual(0, variable_manager.set_host_variable.call_count)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner._run_play')
     def test_run_playbook(self, mock_run_play):
@@ -404,22 +270,13 @@ class AnsibleRunnerTestCase(test.TestCase):
         ))
 
     @mock.patch('os_faults.executor.get_module_paths')
-    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', False)
     def test_make_module_path_option_ansible_24(self, mock_mp):
         mock_mp.return_value = ['/path/one', 'path/two']
         self.assertEqual(['/path/one', 'path/two'],
                          executor.make_module_path_option())
 
     @mock.patch('os_faults.executor.get_module_paths')
-    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', False)
     def test_make_module_path_option_ansible_24_one_item(self, mock_mp):
         mock_mp.return_value = ['/path/one']
         self.assertEqual(['/path/one', '/path/one'],
-                         executor.make_module_path_option())
-
-    @mock.patch('os_faults.executor.get_module_paths')
-    @mock.patch('os_faults.executor.PRE_24_ANSIBLE', True)
-    def test_make_module_path_option_ansible_pre24(self, mock_mp):
-        mock_mp.return_value = ['/path/one', 'path/two']
-        self.assertEqual('/path/one:path/two',
                          executor.make_module_path_option())

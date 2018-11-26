@@ -11,25 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import collections
 import copy
+import json
 import logging
 import os
+import shlex
+import tempfile
 
-from ansible.executor import task_queue_manager
-from ansible.parsing import dataloader
-from ansible.playbook import play
-from ansible.plugins import callback as callback_pkg
-
-try:
-    from ansible.inventory.manager import InventoryManager as Inventory
-    from ansible.vars.manager import VariableManager
-    PRE_24_ANSIBLE = False
-except ImportError:
-    # pre-2.4 Ansible
-    from ansible.inventory import Inventory
-    from ansible.vars import VariableManager
-    PRE_24_ANSIBLE = True
+from oslo_concurrency import processutils
+import yaml
 
 from os_faults.api import error
 
@@ -61,37 +54,13 @@ AnsibleExecutionRecord = collections.namedtuple(
     'AnsibleExecutionRecord', ['host', 'status', 'task', 'payload'])
 
 
-class MyCallback(callback_pkg.CallbackBase):
-
-    CALLBACK_VERSION = 2.0
-    CALLBACK_TYPE = 'stdout'
-    CALLBACK_NAME = 'myown'
-
-    def __init__(self, storage, display=None):
-        super(MyCallback, self).__init__(display)
-        self.storage = storage
-
-    def _store(self, result, status):
-        record = AnsibleExecutionRecord(
-            host=result._host.get_name(), status=status,
-            task=result._task.get_name(), payload=result._result)
-        self.storage.append(record)
-
-    def v2_runner_on_failed(self, result, ignore_errors=False):
-        super(MyCallback, self).v2_runner_on_failed(result)
-        self._store(result, STATUS_FAILED)
-
-    def v2_runner_on_ok(self, result):
-        super(MyCallback, self).v2_runner_on_ok(result)
-        self._store(result, STATUS_OK)
-
-    def v2_runner_on_skipped(self, result):
-        super(MyCallback, self).v2_runner_on_skipped(result)
-        self._store(result, STATUS_SKIPPED)
-
-    def v2_runner_on_unreachable(self, result):
-        super(MyCallback, self).v2_runner_on_unreachable(result)
-        self._store(result, STATUS_UNREACHABLE)
+def find_ansible():
+    stdout, stderr = processutils.execute(
+        *shlex.split('which ansible-playbook'), check_exit_code=[0, 1])
+    if not stdout:
+        raise AnsibleExecutionException(
+            'Ansible executable is not found in $PATH')
+    return stdout[:-1]
 
 
 def resolve_relative_path(file_name):
@@ -122,14 +91,10 @@ def add_module_paths(paths):
 
 
 def make_module_path_option():
-    if PRE_24_ANSIBLE:
-        # it was a string of colon-separated directories
-        module_path = os.pathsep.join(get_module_paths())
-    else:
-        # now it is a list of strings (MUST have > 1 element)
-        module_path = list(get_module_paths())
-        if len(module_path) == 1:
-            module_path += [module_path[0]]
+    # now it is a list of strings (MUST have > 1 element)
+    module_path = list(get_module_paths())
+    if len(module_path) == 1:
+        module_path += [module_path[0]]
     return module_path
 
 
@@ -166,6 +131,7 @@ class AnsibleRunner(object):
             become=become, become_method='sudo', become_user='root',
             verbosity=100, check=False, diff=None)
         self.serial = serial or 10
+        self.ansible = find_ansible()
 
     @staticmethod
     def _build_proxy_arg(jump_user, jump_host, private_key_file=None):
@@ -176,55 +142,67 @@ class AnsibleRunner(object):
                        host=jump_host, ssh_args=SSH_COMMON_ARGS))
 
     def _run_play(self, play_source, host_vars):
-        host_list = play_source['hosts']
-
-        loader = dataloader.DataLoader()
-
-        # FIXME(jpena): we need to behave differently if we are using
-        # Ansible >= 2.4.0.0. Remove when only versions > 2.4 are supported
-        if PRE_24_ANSIBLE:
-            variable_manager = VariableManager()
-            inventory_inst = Inventory(loader=loader,
-                                       variable_manager=variable_manager,
-                                       host_list=host_list)
-            variable_manager.set_inventory(inventory_inst)
-        else:
-            inventory_inst = Inventory(loader=loader,
-                                       sources=','.join(host_list) + ',')
-            variable_manager = VariableManager(loader=loader,
-                                               inventory=inventory_inst)
+        inventory = {}
 
         for host, variables in host_vars.items():
-            host_inst = inventory_inst.get_host(host)
+            host_vars = {}
+
             for var_name, value in variables.items():
                 if value is not None:
-                    variable_manager.set_host_variable(
-                        host_inst, var_name, value)
+                    host_vars[var_name] = value
+            inventory[host] = host_vars
 
-        storage = []
-        callback = MyCallback(storage)
+            inventory[host]['ansible_ssh_common_args'] = (
+                self.options.ssh_common_args)
+            inventory[host]['ansible_connection'] = self.options.connection
 
-        tqm = task_queue_manager.TaskQueueManager(
-            inventory=inventory_inst,
-            variable_manager=variable_manager,
-            loader=loader,
-            options=self.options,
-            passwords=self.passwords,
-            stdout_callback=callback,
-        )
+        full_inventory = {'all': {'hosts': inventory}}
 
-        # create play
-        play_inst = play.Play().load(play_source,
-                                     variable_manager=variable_manager,
-                                     loader=loader)
+        temp_dir = tempfile.mkdtemp(prefix='os-faults')
+        inventory_file_name = os.path.join(temp_dir, 'inventory')
+        playbook_file_name = os.path.join(temp_dir, 'playbook')
 
-        # actually run it
-        try:
-            tqm.run(play_inst)
-        finally:
-            tqm.cleanup()
+        with open(inventory_file_name, 'w') as fd:
+            print(yaml.safe_dump(full_inventory, default_flow_style=False),
+                  file=fd)
 
-        return storage
+        play = {
+            'hosts': 'all',
+            'gather_facts': 'no',
+            'tasks': play_source['tasks'],
+        }
+
+        with open(playbook_file_name, 'w') as fd:
+            print(yaml.safe_dump([play], default_flow_style=False), file=fd)
+
+        cmd = ('%(ansible)s --module-path %(module_path)s '
+               '-i %(inventory)s %(playbook)s' %
+               {'ansible': self.ansible,
+                'module_path': ':'.join(self.options.module_path),
+                'inventory': inventory_file_name,
+                'playbook': playbook_file_name})
+
+        logging.info('Executing %s' % cmd)
+        command_stdout, command_stderr = processutils.execute(
+            *shlex.split(cmd),
+            env_variables={'ANSIBLE_STDOUT_CALLBACK': 'json'},
+            check_exit_code=False)
+
+        d = json.loads(command_stdout[command_stdout.find('{'):])
+        h = d['plays'][0]['tasks'][0]['hosts']
+        recs = []
+        for h, hv in h.items():
+            if hv.get('unreachable'):
+                status = STATUS_UNREACHABLE
+            elif hv.get('failed'):
+                status = STATUS_FAILED
+            else:
+                status = STATUS_OK
+            r = AnsibleExecutionRecord(host=h, status=status, task='',
+                                       payload=hv)
+            recs.append(r)
+
+        return recs
 
     def run_playbook(self, playbook, host_vars):
         result = []
