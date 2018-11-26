@@ -20,14 +20,15 @@ from oslo_concurrency import processutils
 from os_faults.tests.unit import test
 
 
-CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'os-faults.yaml')
 LOG = logging.getLogger(__name__)
 
 
-class TestOSInjectFault(test.TestCase):
+class TestOSInjectFaultUniversalDriver(test.TestCase):
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__),
+                               'os-faults-universal.yaml')
 
     def test_connect(self):
-        cmd = 'os-inject-fault -c %s -v' % CONFIG_FILE
+        cmd = 'os-inject-fault -c %s -v' % self.CONFIG_FILE
 
         command_stdout, command_stderr = processutils.execute(
             *shlex.split(cmd))
@@ -35,14 +36,13 @@ class TestOSInjectFault(test.TestCase):
         success = re.search('Connected to cloud successfully', command_stderr)
         self.assertTrue(success)
 
-
-class TestOSFaults(test.TestCase):
-
-    def test_connect(self):
-        cmd = 'os-faults verify -c %s' % CONFIG_FILE
+    def test_restart_etcd(self):
+        cmd = 'os-inject-fault -c %s restart etcd service' % self.CONFIG_FILE
 
         command_stdout, command_stderr = processutils.execute(
             *shlex.split(cmd))
 
-        success = re.search('Connected to cloud successfully', command_stderr)
+        print('stdout', command_stdout)
+        print('stderr', command_stderr)
+        success = re.search('successfully', command_stderr)
         self.assertTrue(success)
