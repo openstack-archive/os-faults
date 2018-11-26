@@ -35,6 +35,16 @@ class TestOSInjectFault(test.TestCase):
         success = re.search('Connected to cloud successfully', command_stderr)
         self.assertTrue(success)
 
+    def test_restart_etcd(self):
+        cmd = 'os-inject-fault -c %s restart etcd service' % CONFIG_FILE
+
+        command_stdout, command_stderr = processutils.execute(
+            *shlex.split(cmd))
+
+        success = re.search('successfully', command_stderr)
+        self.assertTrue(success)
+
+
 
 class TestOSFaults(test.TestCase):
 

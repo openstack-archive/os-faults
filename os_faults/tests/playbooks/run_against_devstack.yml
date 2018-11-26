@@ -1,0 +1,26 @@
+---
+
+- hosts: all
+  roles:
+    - orchestrate-devstack
+
+
+- hosts: all
+  tasks:
+    - name: list all files in /opt/stack
+      command: "ls -al /opt/stack"
+
+    - name: Run integration tests
+      command: "tox -e {{tox_envlist}}"
+      args:
+        chdir: "/opt/stack/os-faults"
+
+    - name: list all files in os-faults
+      command: "ls -al /opt/stack/os-faults"
+
+
+
+- hosts: all
+  roles:
+    - fetch-tox-output
+

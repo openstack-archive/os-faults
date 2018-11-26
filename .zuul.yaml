@@ -7,12 +7,24 @@
       rtd_webhook_id: '47124'
     check:
       jobs:
+        - os-faults-devstack
         - os-faults-integration-py27
         - os-faults-integration-py35
     gate:
       jobs:
         - os-faults-integration-py27
         - os-faults-integration-py35
+
+- job:
+    name: os-faults-devstack
+    parent: devstack-minimal
+    description: |
+      Run os-faults against DevStack
+    run: os_faults/tests/playbooks/run_against_devstack.yml
+    required-projects:
+      - openstack/os-faults
+    vars:
+      tox_envlist: integration-py27
 
 - job:
     name: os-faults-integration-py27
