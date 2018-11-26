@@ -1,0 +1,8 @@
+---
+
+- hosts: all
+  tasks:
+    - name: Run integration tests
+      command: "tox -e {{tox_envlist}}"
+      args:
+        chdir: "{{devstack_base_dir}}/os-faults"
