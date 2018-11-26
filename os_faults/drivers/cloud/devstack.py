@@ -17,13 +17,12 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
-from os_faults.drivers.services import process
+from os_faults.drivers import shared_schemas
 
 LOG = logging.getLogger(__name__)
 
 
 class DevStackNode(node_collection.NodeCollection):
-
     def connect(self, network_name):
         raise NotImplementedError
 
@@ -31,72 +30,11 @@ class DevStackNode(node_collection.NodeCollection):
         raise NotImplementedError
 
 
-class ServiceInScreen(process.ServiceAsProcess):
-    """Service in Screen
-
-    This driver controls service that is started in a window of
-    `screen` tool.
-
-    **Example configuration:**
-
-    .. code-block:: yaml
-
-        services:
-          app:
-            driver: screen
-            args:
-              window_name: app
-              grep: my_app
-              port: ['tcp', 4242]
-
-    parameters:
-
-    - **window_name** - name of a service
-    - **grep** - regexp for grep to find process PID
-    - **port** - tuple with two values - protocol, port number (optional)
-
-    """
-    NAME = 'screen'
-    DESCRIPTION = 'Service in screen'
-    CONFIG_SCHEMA = {
-        'type': 'object',
-        'properties': {
-            'window_name': {'type': 'string'},
-            'grep': {'type': 'string'},
-            'port': process.PORT_SCHEMA,
-        },
-        'required': ['grep', 'window_name'],
-        'additionalProperties': False,
-    }
-
-    def __init__(self, *args, **kwargs):
-        super(ServiceInScreen, self).__init__(*args, **kwargs)
-        self.window_name = self.config['window_name']
-
-        # sends ctr+c, arrow up key, enter key
-        self.restart_cmd = (
-            "screen -S stack -p {window_name} -X "
-            "stuff $'\\003'$'\\033[A'$(printf \\\\r)").format(
-                window_name=self.window_name)
-
-        # sends ctr+c
-        self.terminate_cmd = (
-            "screen -S stack -p {window_name} -X "
-            "stuff $'\\003'").format(
-                window_name=self.window_name)
-
-        # sends arrow up key, enter key
-        self.start_cmd = (
-            "screen -S stack -p {window_name} -X "
-            "stuff $'\\033[A'$(printf \\\\r)").format(
-                window_name=self.window_name)
-
-
 class DevStackManagement(cloud_management.CloudManagement,
                          node_discover.NodeDiscover):
-    """Devstack driver (**deprecated**).
+    """Driver for DevStack.
 
-    This driver requires devstack installed in screen mode (USE_SCREEN=True).
+    This driver requires DevStack installed with Systemd (USE_SCREEN=False).
     Supports discovering of node MAC addresses.
 
     **Example configuration:**
@@ -107,9 +45,10 @@ class DevStackManagement(cloud_management.CloudManagement,
           driver: devstack
           args:
             address: 192.168.1.10
-            username: ubuntu
-            password: ubuntu_pass
-            private_key_file: ~/.ssh/id_rsa_devstack
+            auth:
+              username: ubuntu
+              password: ubuntu_pass
+              private_key_file: ~/.ssh/id_rsa_devstack
             slaves:
             - 192.168.1.11
             - 192.168.1.12
@@ -128,77 +67,134 @@ class DevStackManagement(cloud_management.CloudManagement,
     """
 
     NAME = 'devstack'
-    DESCRIPTION = 'DevStack management driver'
+    DESCRIPTION = 'DevStack management driver using Systemd'
     NODE_CLS = DevStackNode
     SERVICES = {
-        'keystone': {
-            'driver': 'process',
+        'cinder-api': {
+            'driver': 'system_service',
             'args': {
-                'grep': 'keystone-',
-                'restart_cmd': 'sudo service apache2 restart',
-                'terminate_cmd': 'sudo service apache2 stop',
-                'start_cmd': 'sudo service apache2 start',
+                'grep': 'cinder-api',
+                'service_name': 'devstack@c-api',
             }
         },
-        'mysql': {
-            'driver': 'process',
+        'cinder-scheduler': {
+            'driver': 'system_service',
             'args': {
-                'grep': 'mysqld',
-                'restart_cmd': 'sudo service mysql restart',
-                'terminate_cmd': 'sudo service mysql stop',
-                'start_cmd': 'sudo service mysql start',
-                'port': ['tcp', 3307],
+                'grep': 'cinder-schedule',
+                'service_name': 'devstack@c-sch',
             }
         },
-        'rabbitmq': {
-            'driver': 'process',
+        'cinder-volume': {
+            'driver': 'system_service',
             'args': {
-                'grep': 'rabbitmq-server',
-                'restart_cmd': 'sudo service rabbitmq-server restart',
-                'terminate_cmd': 'sudo service rabbitmq-server stop',
-                'start_cmd': 'sudo service rabbitmq-server start',
-            }
-        },
-        'nova-api': {
-            'driver': 'screen',
-            'args': {
-                'grep': 'nova-api',
-                'window_name': 'n-api',
+                'grep': 'cinder-volume',
+                'service_name': 'devstack@c-vol',
             }
         },
         'glance-api': {
-            'driver': 'screen',
+            'driver': 'system_service',
             'args': {
                 'grep': 'glance-api',
-                'window_name': 'g-api',
+                'service_name': 'devstack@g-api',
+            }
+        },
+        'heat-api': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'heat-api',
+                'service_name': 'devstack@h-api',
+            }
+        },
+        'heat-engine': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'heat-engine',
+                'service_name': 'devstack@h-eng',
+            }
+        },
+        'keystone': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'keystone',
+                'service_name': 'devstack@keystone',
+            }
+        },
+        'mysql': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'mysqld',
+                'service_name': 'mariadb',
+                'port': ['tcp', 3307],
+            }
+        },
+        'neutron-dhcp-agent': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'neutron-dhcp-agent',
+                'service_name': 'devstack@q-dhcp',
+            }
+        },
+        'neutron-l3-agent': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'neutron-l3-agent',
+                'service_name': 'devstack@q-l3',
+            }
+        },
+        'neutron-meta-agent': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'neutron-meta-agent',
+                'service_name': 'devstack@q-meta',
+            }
+        },
+        'neutron-openvswitch-agent': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'neutron-openvswitch-agent',
+                'service_name': 'devstack@q-agt',
+            }
+        },
+        'neutron-server': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'neutron-server',
+                'service_name': 'devstack@q-svc',
+            }
+        },
+        'nova-api': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'nova-api',
+                'service_name': 'devstack@n-api',
             }
         },
         'nova-compute': {
-            'driver': 'screen',
+            'driver': 'system_service',
             'args': {
                 'grep': 'nova-compute',
-                'window_name': 'n-cpu',
+                'service_name': 'devstack@n-cpu',
             }
         },
         'nova-scheduler': {
-            'driver': 'screen',
+            'driver': 'system_service',
             'args': {
                 'grep': 'nova-scheduler',
-                'window_name': 'n-sch',
+                'service_name': 'devstack@n-sch',
             }
         },
-        'ironic-api': {
-            'driver': 'screen',
+        'placement-api': {
+            'driver': 'system_service',
             'args': {
-                'grep': 'ironic-api',
-                'window_name': 'ir-api',
+                'grep': 'placement',
+                'service_name': 'devstack@placement-api',
             }
         },
-        'ironic-conductor': {
-            'driver': 'screen',
+        'rabbitmq': {
+            'driver': 'system_service',
             'args': {
-                'grep': 'ironic-conductor',
-                'window_name': 'ir-cond',
+                'grep': 'rabbitmq_server',
+                'service_name': 'rabbitmq-server',
             }
         },
     }
@@ -208,9 +204,7 @@ class DevStackManagement(cloud_management.CloudManagement,
         '$schema': 'http://json-schema.org/draft-04/schema#',
         'properties': {
             'address': {'type': 'string'},
-            'username': {'type': 'string'},
-            'password': {'type': 'string'},
-            'private_key_file': {'type': 'string'},
+            'auth': shared_schemas.AUTH_SCHEMA,
             'slaves': {
                 'type': 'array',
                 'items': {'type': 'string'},
@@ -218,7 +212,7 @@ class DevStackManagement(cloud_management.CloudManagement,
             'iface': {'type': 'string'},
             'serial': {'type': 'integer', 'minimum': 1},
         },
-        'required': ['address', 'username'],
+        'required': ['address', 'auth'],
         'additionalProperties': False,
     }
 
@@ -226,22 +220,21 @@ class DevStackManagement(cloud_management.CloudManagement,
         super(DevStackManagement, self).__init__()
         self.node_discover = self  # supports discovering
 
-        self.address = cloud_management_params['address']
-        self.username = cloud_management_params['username']
-        self.private_key_file = cloud_management_params.get('private_key_file')
-        self.slaves = cloud_management_params.get('slaves', [])
+        address = cloud_management_params['address']
+        auth = cloud_management_params['auth']
+        slaves = cloud_management_params.get('slaves', [])
         self.iface = cloud_management_params.get('iface', 'eth0')
-        self.serial = cloud_management_params.get('serial')
 
         self.cloud_executor = executor.AnsibleRunner(
-            remote_user=self.username, private_key_file=self.private_key_file,
-            password=cloud_management_params.get('password'),
-            become=False, serial=self.serial)
+            remote_user=auth['username'],
+            private_key_file=auth.get('private_key_file'),
+            password=auth.get('password'),
+            serial=(cloud_management_params.get('serial')))
 
-        self.hosts = [node_collection.Host(ip=self.address)]
-        if self.slaves:
+        self.hosts = [node_collection.Host(ip=address)]
+        if slaves:
             self.hosts.extend([node_collection.Host(ip=h)
-                               for h in self.slaves])
+                               for h in slaves])
         self.nodes = None
 
     def verify(self):

@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import copy
-
 import ddt
 import mock
 
@@ -47,7 +46,7 @@ class DevStackManagementTestCase(test.TestCase):
 
     def setUp(self):
         super(DevStackManagementTestCase, self).setUp()
-        self.conf = {'address': '10.0.0.2', 'username': 'root'}
+        self.conf = {'address': '10.0.0.2', 'auth': {'username': 'root'}}
         self.host = node_collection.Host('10.0.0.2')
         self.discoverd_host = node_collection.Host(ip='10.0.0.2',
                                                    mac='09:7b:74:90:63:c1',
@@ -206,7 +205,7 @@ class DevStackServiceTestCase(test.TestCase):
 
     def setUp(self):
         super(DevStackServiceTestCase, self).setUp()
-        self.conf = {'address': '10.0.0.2', 'username': 'root'}
+        self.conf = {'address': '10.0.0.2', 'auth': {'username': 'stack'}}
         self.host = node_collection.Host('10.0.0.2')
         self.discoverd_host = node_collection.Host(ip='10.0.0.2',
                                                    mac='09:7b:74:90:63:c1',
@@ -223,7 +222,8 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackManagement(
+            self.conf)
 
         service = devstack_management.get_service(service_name)
         service.restart()
@@ -234,7 +234,6 @@ class DevStackServiceTestCase(test.TestCase):
             mock.call(
                 [self.host], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call([self.discoverd_host], {'command': cmd}, []),
-            mock.call([self.discoverd_host], {'shell': service.restart_cmd})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -248,7 +247,8 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackManagement(
+            self.conf)
 
         service = devstack_management.get_service(service_name)
         service.terminate()
@@ -259,7 +259,6 @@ class DevStackServiceTestCase(test.TestCase):
             mock.call(
                 [self.host], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call([self.discoverd_host], {'command': cmd}, []),
-            mock.call([self.discoverd_host], {'shell': service.terminate_cmd})
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -273,7 +272,8 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackManagement(
+            self.conf)
 
         service = devstack_management.get_service(service_name)
         service.start()
@@ -284,5 +284,4 @@ class DevStackServiceTestCase(test.TestCase):
             mock.call(
                 [self.host], {'command': 'cat /sys/class/net/eth0/address'}),
             mock.call([self.discoverd_host], {'command': cmd}, []),
-            mock.call([self.discoverd_host], {'shell': service.start_cmd})
         ])

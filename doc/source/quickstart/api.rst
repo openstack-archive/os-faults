@@ -2,10 +2,10 @@
 API
 ===
 
-The library operates with 2 types of objects:
+The library operates with different types of objects:
 
     * `service` - is a software that runs in the cloud, e.g. `nova-api`
-    * `containers` - is a software that runs in the cloud, e.g. `neutron-api`
+    * `containers` - is a container that runs in the cloud, e.g. `neutron-api`
     * `nodes` - nodes that host the cloud, e.g. a hardware server with a hostname
 
 

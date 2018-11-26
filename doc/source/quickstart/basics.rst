@@ -13,9 +13,10 @@ The cloud deployment configuration schema has simple YAML/JSON format:
     cloud_management:
       driver: devstack
       args:
-        address: devstack.local
-        username: stack
-        private_key_file: cloud_key
+        address: 192.168.1.240
+        auth:
+          username: stack
+          private_key_file: cloud_key
         iface: enp0s8
 
     power_managements:
@@ -24,22 +25,22 @@ The cloud deployment configuration schema has simple YAML/JSON format:
         connection_uri: qemu+ssh://ubuntu@10.0.1.50/system
 
 
-By default, the library reads configuration from a file and the file can be in
-the following three formats: ``os-faults.{json,yaml,yml}``. The configuration
-file will be searched in the default locations:
+By default, the library reads configuration from a file with one of
+the following names: ``os-faults.{json,yaml,yml}``. The configuration
+file is searched in one of default locations:
 
     * current directory
     * ~/.config/os-faults
     * /etc/openstack
 
-Also, the configuration file can be specified in the ``OS_FAULTS_CONFIG``
-environment variable::
+Also, the name of the configuration file can be specified in the
+``OS_FAULTS_CONFIG`` environment variable::
 
     $ export OS_FAULTS_CONFIG=/home/alex/my-os-faults-config.yaml
 
 
-Running
--------
+Execution
+---------
 
 Establish a connection to the cloud and verify it:
 
@@ -55,7 +56,7 @@ or via CLI::
     $ os-faults verify -c os-faults.yaml
 
 
-Make some destructive actions:
+Make some destructive action:
 
 .. code-block:: python
 

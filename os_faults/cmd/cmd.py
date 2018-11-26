@@ -97,6 +97,8 @@ def _list_items(group, items):
         textwrap.wrap(', '.join(sorted(items)),
                       subsequent_indent=' ' * (len(group) + 8),
                       break_on_hyphens=False))
+    if not s:
+        s = '/no built-in support/'
     return '      %s: %s' % (group, s)
 
 
@@ -106,7 +108,7 @@ def _make_epilog():
     networks_strings = []
     driver_descriptions = []
 
-    for driver_name, driver in drivers.items():
+    for driver_name, driver in sorted(drivers.items(), key=lambda x: x[0]):
         driver_descriptions.append(
             '  %s - %s' % (driver_name, driver.get_driver_description()))
 

@@ -261,10 +261,10 @@ class TCPCloudManagementTestCase(test.TestCase):
 
 
 @ddt.ddt
-class TcpServiceTestCase(test.TestCase):
+class TCPCloudServiceTestCase(test.TestCase):
 
     def setUp(self):
-        super(TcpServiceTestCase, self).setUp()
+        super(TCPCloudServiceTestCase, self).setUp()
         self.fake_ansible_result = fakes.FakeAnsibleResult(
             payload={
                 'stdout': 'cmp01.mk20.local:\n'
