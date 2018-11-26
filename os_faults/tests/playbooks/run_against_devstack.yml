@@ -1,0 +1,12 @@
+---
+
+- hosts: all
+  tasks:
+    - name: list all files
+      command: "ls -al /opt/stack"
+
+    - name: Run integration tests
+      command: "tox -e {{tox_envlist}}"
+      args:
+        chdir: "/opt/stack/os-faults"
+
