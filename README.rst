@@ -57,8 +57,9 @@ Connection to DevStack can be specified using the following YAML file:
       driver: devstack
       args:
         address: devstack.local
-        username: stack
-        private_key_file: cloud_key
+        auth:
+          username: stack
+          private_key_file: cloud_key
         iface: enp0s8
 
 OS-Faults library will connect to DevStack by address `devstack.local` with user `stack`

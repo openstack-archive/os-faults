@@ -20,8 +20,9 @@ Example configuration:
       driver: devstack
       args:
         address: 192.168.1.240
-        username: ubuntu
-        iface: enp0s3
+        auth:
+          username: ubuntu
+          iface: enp0s3
 
     power_managements:
     - driver: libvirt
@@ -72,12 +73,13 @@ and contains arguments such as SSH username/password/key/proxy.
       driver: devstack  # name of the driver
       args:             # arguments for the driver
         address: 192.168.1.240
-        username: ubuntu
-        iface: enp0s3
+        auth:
+          username: ubuntu
+          iface: enp0s3
 
 
-Also, such drivers can support discovering of cloud nodes. For example,
-``fuel``, ``tcpcloud`` drives allow discovering information about nodes
+Drivers can support discovering of cloud nodes. For example,
+``tcpcloud`` drives allow discovering information about nodes
 through master/config node of the cloud.
 
 List of supported drivers for cloud_management: :ref:`Cloud management`

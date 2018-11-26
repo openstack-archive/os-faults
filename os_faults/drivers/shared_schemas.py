@@ -27,9 +27,7 @@ AUTH_SCHEMA = {
     'properties': {
         'username': {'type': 'string'},
         'password': {'type': 'string'},
-        'sudo': {'type': 'boolean'},  # deprecated, use `become`
         'private_key_file': {'type': 'string'},
-        'become': {'type': 'boolean'},
         'become_password': {'type': 'string'},
         'jump': {
             'type': 'object',

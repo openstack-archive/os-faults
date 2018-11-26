@@ -10,11 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
-
 import jsonschema
 import mock
-import yaml
 
 import os_faults
 from os_faults.ansible import executor
@@ -23,10 +20,7 @@ from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
 from os_faults.drivers.cloud import devstack
-from os_faults.drivers.cloud import devstack_systemd
-from os_faults.drivers.cloud import fuel
-from os_faults.drivers.nodes import node_list
-from os_faults.drivers.power import ipmi
+from os_faults.drivers.cloud import universal
 from os_faults.drivers.power import libvirt
 from os_faults.tests.unit import test
 
@@ -37,11 +31,13 @@ class OSFaultsTestCase(test.TestCase):
         super(OSFaultsTestCase, self).setUp()
         self.cloud_config = {
             'cloud_management': {
-                'driver': 'fuel',
+                'driver': 'universal',
                 'args': {
                     'address': '10.30.00.5',
-                    'username': 'root',
-                    'private_key_file': '/my/path/pk.key',
+                    'auth': {
+                        'username': 'root',
+                        'private_key_file': '/my/path/pk.key',
+                    },
                 }
             },
             'power_management': {
@@ -58,28 +54,15 @@ class OSFaultsTestCase(test.TestCase):
                 'driver': 'devstack',
                 'args': {
                     'address': 'devstack.local',
-                    'username': 'developer',
-                    'private_key_file': '/my/path/pk.key',
+                    'auth': {
+                        'username': 'developer',
+                        'private_key_file': '/my/path/pk.key',
+                    },
                 }
             }
         }
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackManagement)
-
-    def test_connect_devstack_systemd(self):
-        cloud_config = {
-            'cloud_management': {
-                'driver': 'devstack_systemd',
-                'args': {
-                    'address': 'devstack.local',
-                    'username': 'developer',
-                    'private_key_file': '/my/path/pk.key',
-                }
-            }
-        }
-        destructor = os_faults.connect(cloud_config)
-        self.assertIsInstance(destructor,
-                              devstack_systemd.DevStackSystemdManagement)
 
     def test_config_with_services(self):
         self.cloud_config['services'] = {
@@ -125,62 +108,9 @@ class OSFaultsTestCase(test.TestCase):
 
     def test_connect_fuel_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
-        self.assertIsInstance(destructor, fuel.FuelManagement)
-        self.assertIsInstance(destructor.node_discover, fuel.FuelManagement)
+        self.assertIsInstance(destructor, universal.UniversalCloudManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
         self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                              libvirt.LibvirtDriver)
-
-    def test_connect_fuel_with_ipmi_libvirt_and_node_list(self):
-        cloud_config = {
-            'node_discover': {
-                'driver': 'node_list',
-                'args': [
-                    {
-                        'ip': '10.0.0.11',
-                        'mac': '01:ab:cd:01:ab:cd',
-                        'fqdn': 'node-1'
-                    }, {
-                        'ip': '10.0.0.12',
-                        'mac': '02:ab:cd:02:ab:cd',
-                        'fqdn': 'node-2'},
-                ]
-            },
-            'cloud_management': {
-                'driver': 'fuel',
-                'args': {
-                    'address': '10.30.00.5',
-                    'username': 'root',
-                },
-            },
-            'power_managements': [
-                {
-                    'driver': 'ipmi',
-                    'args': {
-                        'mac_to_bmc': {
-                            '00:00:00:00:00:00': {
-                                'address': '55.55.55.55',
-                                'username': 'foo',
-                                'password': 'bar',
-                            }
-                        }
-                    }
-                }, {
-                    'driver': 'libvirt',
-                    'args': {
-                        'connection_uri': "qemu+ssh://user@10.30.20.21/system"
-                    }
-                }
-            ]
-        }
-        destructor = os_faults.connect(cloud_config)
-        self.assertIsInstance(destructor, fuel.FuelManagement)
-        self.assertIsInstance(destructor.node_discover,
-                              node_list.NodeListDiscover)
-        self.assertEqual(2, len(destructor.power_manager.power_drivers))
-        self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                              ipmi.IPMIDriver)
-        self.assertIsInstance(destructor.power_manager.power_drivers[1],
                               libvirt.LibvirtDriver)
 
     def test_connect_driver_not_found(self):
@@ -197,30 +127,6 @@ class OSFaultsTestCase(test.TestCase):
         cloud_config = {'foo': 'bar'}
         self.assertRaises(
             jsonschema.ValidationError, os_faults.connect, cloud_config)
-
-    @mock.patch('os.path.exists', return_value=True)
-    def test_connect_with_config_file(self, mock_os_path_exists):
-        mock_os_faults_open = mock.mock_open(
-            read_data=yaml.dump(self.cloud_config))
-        with mock.patch('os_faults.open', mock_os_faults_open, create=True):
-            destructor = os_faults.connect()
-            self.assertIsInstance(destructor, fuel.FuelManagement)
-            self.assertEqual(1, len(destructor.power_manager.power_drivers))
-            self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                                  libvirt.LibvirtDriver)
-
-    @mock.patch.dict(os.environ, {'OS_FAULTS_CONFIG': '/my/conf.yaml'})
-    @mock.patch('os.path.exists', return_value=True)
-    def test_connect_with_env_config(self, mock_os_path_exists):
-        mock_os_faults_open = mock.mock_open(
-            read_data=yaml.dump(self.cloud_config))
-        with mock.patch('os_faults.open', mock_os_faults_open, create=True):
-            destructor = os_faults.connect()
-            self.assertIsInstance(destructor, fuel.FuelManagement)
-            self.assertEqual(1, len(destructor.power_manager.power_drivers))
-            self.assertIsInstance(destructor.power_manager.power_drivers[0],
-                                  libvirt.LibvirtDriver)
-            mock_os_faults_open.assert_called_once_with('/my/conf.yaml')
 
     @mock.patch('os.path.exists', return_value=False)
     def test_connect_no_config_files(self, mock_os_path_exists):
