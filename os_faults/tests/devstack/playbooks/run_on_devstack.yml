@@ -1,0 +1,20 @@
+---
+
+- hosts: all
+  roles:
+    - orchestrate-devstack
+
+
+- hosts: all
+  tasks:
+    - name: Run integration tests
+      command: "tox -e {{tox_envlist}}"
+      args:
+        chdir: "/opt/stack/os-faults"
+
+
+- hosts: all
+  vars:
+    - log_path: "/opt/stack/os-faults/.tox/{{tox_envlist}}/log"
+  roles:
+    - fetch-tox-output
