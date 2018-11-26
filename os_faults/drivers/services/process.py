@@ -124,19 +124,39 @@ class ServiceAsProcess(service.Service):
         self._run_task(nodes, {'shell': self.start_cmd}, 'Start')
 
     def kill(self, nodes=None):
-        task = {'kill': {'grep': self.grep, 'sig': signal.SIGKILL}}
+        task = {
+            'kill': {
+                'grep': self.grep, 'sig': signal.SIGKILL
+            },
+            'become': 'yes',
+        }
         self._run_task(nodes, task, 'Kill')
 
     def freeze(self, nodes=None, sec=None):
         if sec:
-            task = {'freeze': {'grep': self.grep, 'sec': sec}}
+            task = {
+                'freeze': {
+                    'grep': self.grep, 'sec': sec
+                },
+                'become': 'yes',
+            }
         else:
-            task = {'kill': {'grep': self.grep, 'sig': signal.SIGSTOP}}
+            task = {
+                'kill': {
+                    'grep': self.grep, 'sig': signal.SIGSTOP
+                },
+                'become': 'yes',
+            }
         message = "Freeze %s" % (('for %s sec ' % sec) if sec else '')
         self._run_task(nodes, task, message)
 
     def unfreeze(self, nodes=None):
-        task = {'kill': {'grep': self.grep, 'sig': signal.SIGCONT}}
+        task = {
+            'kill': {
+                'grep': self.grep, 'sig': signal.SIGCONT
+            },
+            'become': 'yes',
+        }
         self._run_task(nodes, task, 'Unfreeze')
 
     @utils.require_variables('port')
@@ -147,7 +167,8 @@ class ServiceAsProcess(service.Service):
             'iptables': {
                 'protocol': self.port[0], 'port': self.port[1],
                 'action': 'unblock', 'service': self.service_name
-            }
+            },
+            'become': 'yes',
         }
         self._run_task(nodes, task, message)
 
@@ -159,6 +180,7 @@ class ServiceAsProcess(service.Service):
             'iptables': {
                 'protocol': self.port[0], 'port': self.port[1],
                 'action': 'block', 'service': self.service_name
-            }
+            },
+            'become': 'yes',
         }
         self._run_task(nodes, task, message)

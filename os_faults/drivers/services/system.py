@@ -63,6 +63,7 @@ class SystemService(process.ServiceAsProcess):
             'service': {
                 'name': self.service_name, 'state': 'started'
             },
+            'become': 'yes',
         }
         self._run_task(nodes, task, 'Start')
 
@@ -72,6 +73,7 @@ class SystemService(process.ServiceAsProcess):
                 'name': self.service_name, 'state': 'stopped',
                 'pattern': self.grep,
             },
+            'become': 'yes',
         }
         self._run_task(nodes, task, 'Terminate')
 
@@ -80,5 +82,6 @@ class SystemService(process.ServiceAsProcess):
             'service': {
                 'name': self.service_name, 'state': 'restarted'
             },
+            'become': 'yes',
         }
         self._run_task(nodes, task, 'Restart')

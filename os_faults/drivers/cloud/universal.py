@@ -47,7 +47,6 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
             auth:
               username: ubuntu
               private_key_file: devstack_key
-              become: true
               become_password: my_secret_password
             iface: eth1
             serial: 10
@@ -68,7 +67,6 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
               auth:
                 username: developer
                 private_key_file: cloud_key
-                become: true
                 become_password: my_secret_password
 
     parameters:
@@ -79,7 +77,6 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
         - **username** - SSH username (optional)
         - **password** - SSH password (optional)
         - **private_key_file** - SSH key file (optional)
-        - **become** - True if privilege escalation is used (optional)
         - **become_password** - privilege escalation password (optional)
         - **jump** - SSH proxy parameters (optional):
             - **host** - SSH proxy host

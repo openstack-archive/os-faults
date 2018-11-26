@@ -14,8 +14,9 @@ The cloud deployment configuration schema has simple YAML/JSON format:
       driver: devstack
       args:
         address: devstack.local
-        username: stack
-        private_key_file: cloud_key
+        auth:
+          username: stack
+          private_key_file: cloud_key
         iface: enp0s8
 
     power_managements:

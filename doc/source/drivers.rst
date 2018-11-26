@@ -5,7 +5,7 @@ Drivers
 Cloud management
 ----------------
 
-.. cloud_driver_doc:: devstack_systemd
+.. cloud_driver_doc:: devstack
 
 .. cloud_driver_doc:: universal
 
