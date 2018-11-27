@@ -22,9 +22,7 @@ AUTH_SCHEMA = {
     'properties': {
         'username': {'type': 'string'},
         'password': {'type': 'string'},
-        'sudo': {'type': 'boolean'},
         'private_key_file': {'type': 'string'},
-        'become': {'type': 'boolean'},
         'become_password': {'type': 'string'},
         'jump': {
             'type': 'object',
@@ -70,7 +68,6 @@ class NodeListDiscover(node_discover.NodeDiscover):
           - ip: 10.0.0.53
             mac: aa:bb:cc:dd:ee:03
             fqdn: node3.local
-            become: true
             become_password: my_secret_password
 
     node parameters:
@@ -84,7 +81,6 @@ class NodeListDiscover(node_discover.NodeDiscover):
         - **username** - SSH username (optional)
         - **password** - SSH password (optional)
         - **private_key_file** - SSH key file (optional)
-        - **become** - True if privilege escalation is used (optional)
         - **become_password** - privilege escalation password (optional)
         - **jump** - SSH proxy parameters (optional):
             - **host** - SSH proxy host

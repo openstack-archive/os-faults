@@ -59,4 +59,4 @@ More on reliability testing of OpenStack:
 .. _Fault Injection Hook: http://docs.xrally.xyz/projects/openstack/en/0.10.0/plugins/plugin_reference.html?highlight=fault_injection#fault-injection-hook-action
 .. _Reliability Test Plan: https://docs.openstack.org/performance-docs/latest/test_plans/reliability/version_2/plan.html
 .. _Keystone authentication with restart memcached report: https://docs.openstack.org/performance-docs/latest/test_results/reliability/version_2/reports/keystone/authenticate_with_restart_memcached_service_on_one_node/index.html
-.. _Introduction into reliability metrics: https://www.youtube.com/watch?v=9puoDd14IxU
+.. _Introduction into reliability metrics: https://youtu.be/MIj4clkKtfY
