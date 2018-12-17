@@ -93,15 +93,6 @@ CONFIG_SCHEMA = {
             'required': ['driver'],
             'additionalProperties': False,
         },
-        'power_management': {
-            'type': 'object',
-            'properties': {
-                'driver': {'type': 'string'},
-                'args': {'type': 'object'},
-            },
-            'required': ['driver', 'args'],
-            'additionalProperties': False,
-        },
         'power_managements': {
             'type': 'array',
             'items': {
@@ -178,17 +169,6 @@ def connect(cloud_config=None, config_filename=None):
         for pm_conf in power_managements_conf:
             pm = _init_driver(pm_conf)
             cloud_management.add_power_management(pm)
-
-    power_management_conf = cloud_config.get('power_management')
-    if power_management_conf:
-        if power_managements_conf:
-            raise error.OSFError('Please use only power_managements')
-        else:
-            LOG.warning('power_management is deprecated, use '
-                        'power_managements instead.')
-
-        power_management = _init_driver(power_management_conf)
-        cloud_management.add_power_management(power_management)
 
     return cloud_management
 
