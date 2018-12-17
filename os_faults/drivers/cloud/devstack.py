@@ -30,8 +30,8 @@ class DevStackNode(node_collection.NodeCollection):
         raise NotImplementedError
 
 
-class DevStackManagement(cloud_management.CloudManagement,
-                         node_discover.NodeDiscover):
+class DevStackCloudManagement(cloud_management.CloudManagement,
+                              node_discover.NodeDiscover):
     """Driver for DevStack.
 
     This driver requires DevStack installed with Systemd (USE_SCREEN=False).
@@ -220,7 +220,7 @@ class DevStackManagement(cloud_management.CloudManagement,
     }
 
     def __init__(self, cloud_management_params):
-        super(DevStackManagement, self).__init__()
+        super(DevStackCloudManagement, self).__init__()
         self.node_discover = self  # supports discovering
 
         address = cloud_management_params['address']

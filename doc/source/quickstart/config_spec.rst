@@ -79,7 +79,7 @@ and contains arguments such as SSH username/password/key/proxy.
 
 
 Drivers can support discovering of cloud nodes. For example,
-``tcpcloud`` drives allow discovering information about nodes
+``saltcloud`` drives allow discovering information about nodes
 through master/config node of the cloud.
 
 List of supported drivers for cloud_management: :ref:`Cloud management`

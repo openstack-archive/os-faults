@@ -61,7 +61,7 @@ class OSFaultsTestCase(test.TestCase):
             }
         }
         destructor = os_faults.connect(cloud_config)
-        self.assertIsInstance(destructor, devstack.DevStackManagement)
+        self.assertIsInstance(destructor, devstack.DevStackCloudManagement)
 
     def test_config_with_services(self):
         self.cloud_config['services'] = {
@@ -107,7 +107,7 @@ class OSFaultsTestCase(test.TestCase):
 
     def test_connect_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
-        self.assertIsInstance(destructor, devstack.DevStackManagement)
+        self.assertIsInstance(destructor, devstack.DevStackCloudManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
         self.assertIsInstance(destructor.power_manager.power_drivers[0],
                               libvirt.LibvirtDriver)
