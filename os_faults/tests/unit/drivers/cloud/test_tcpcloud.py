@@ -57,7 +57,9 @@ class TCPCloudManagementTestCase(test.TestCase):
 
         self.tcp_conf = {
             'address': 'tcp.local',
-            'username': 'root',
+            'auth': {
+                'username': 'root',
+            }
         }
         self.get_nodes_cmd = (
             "salt -E '^(?!cfg|mon)' network.interfaces --out=yaml")
@@ -74,55 +76,23 @@ class TCPCloudManagementTestCase(test.TestCase):
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     @ddt.data((
-        dict(address='tcp.local', username='root'),
-        (mock.call(become=None, private_key_file=None, remote_user='root',
-                   password=None),
-         mock.call(become=None, jump_host='tcp.local', jump_user='root',
-                   private_key_file=None, remote_user='root',
-                   password=None, serial=None))
+        dict(address='tcp.local', auth=dict(username='root')),
+        (mock.call(auth=dict(username='root')),
+         mock.call(auth=dict(jump=dict(username='root', host='tcp.local')),
+                   serial=None))
     ), (
-        dict(address='tcp.local', username='ubuntu',
-             slave_username='root', master_sudo=True,
-             private_key_file='/path/id_rsa'),
-        (mock.call(become=True, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu', password=None),
-         mock.call(become=None, jump_host='tcp.local', jump_user='ubuntu',
-                   private_key_file='/path/id_rsa', remote_user='root',
-                   password=None, serial=None))
-    ), (
-        dict(address='tcp.local', username='ubuntu',
-             slave_username='root', slave_sudo=True,
-             private_key_file='/path/id_rsa'),
-        (mock.call(become=None, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu', password=None),
-         mock.call(become=True, jump_host='tcp.local', jump_user='ubuntu',
-                   private_key_file='/path/id_rsa', remote_user='root',
-                   password=None, serial=None))
-    ), (
-        dict(address='tcp.local', username='ubuntu',
-             slave_username='root', slave_sudo=True,
-             private_key_file='/path/id_rsa',
-             slave_direct_ssh=True),
-        (mock.call(become=None, private_key_file='/path/id_rsa',
-                   remote_user='ubuntu', password=None),
-         mock.call(become=True, jump_host=None, jump_user=None,
-                   private_key_file='/path/id_rsa', remote_user='root',
-                   password=None, serial=None))
-    ), (
-        dict(address='tcp.local', username='root', password='root_pass'),
-        (mock.call(become=None, private_key_file=None, remote_user='root',
-                   password='root_pass'),
-         mock.call(become=None, jump_host='tcp.local', jump_user='root',
-                   private_key_file=None, remote_user='root',
-                   password='root_pass', serial=None))
-    ), (
-        dict(address='tcp.local', username='root',
-             slave_password='slave_pass', serial=42),
-        (mock.call(become=None, private_key_file=None, remote_user='root',
-                   password=None),
-         mock.call(become=None, jump_host='tcp.local', jump_user='root',
-                   private_key_file=None, remote_user='root',
-                   password='slave_pass', serial=42))
+        dict(address='tcp.local',
+             auth=dict(username='ubuntu',
+                       private_key_file='/path/id_rsa'),
+             slave_auth=dict(username='root',
+                             private_key_file='/path/id_rsa'),
+             master_sudo=True),
+        (mock.call(auth=dict(username='ubuntu',
+                             private_key_file='/path/id_rsa')),
+         mock.call(auth=dict(username='root',
+                             private_key_file='/path/id_rsa',
+                             jump=dict(username='root', host='tcp.local')),
+                   serial=None))
     ))
     @ddt.unpack
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):
@@ -288,7 +258,7 @@ class TCPCloudServiceTestCase(test.TestCase):
 
         self.tcp_conf = {
             'address': 'tcp.local',
-            'username': 'root',
+            'auth': {'username': 'root'},
         }
         self.get_nodes_cmd = (
             "salt -E '^(?!cfg|mon)' network.interfaces --out=yaml")

@@ -37,78 +37,63 @@ class AnsibleRunnerTestCase(test.TestCase):
     @mock.patch.object(executor, 'Options')
     @ddt.data((
         {},
-        dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', diff=None, forks=100,
-             private_key_file=None,
-             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-             ssh_common_args=executor.SSH_COMMON_ARGS,
-             ssh_extra_args=None, verbosity=100),
-        dict(conn_pass=None, become_pass=None),
+        {},
     ), (
-        dict(remote_user='root', password='foobar'),
-        dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', diff=None, forks=100,
-             private_key_file=None,
-             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-             ssh_common_args=executor.SSH_COMMON_ARGS,
-             ssh_extra_args=None, verbosity=100),
-        dict(conn_pass='foobar', become_pass=None),
+        dict(username='root', password='foobar'),
+        dict(ansible_user='root', ansible_ssh_pass='foobar',
+             ansible_become_user=None, ansible_become_pass=None,
+             ansible_become_method=None,
+             ansible_ssh_private_key_file=None,
+             ansible_ssh_common_args=executor.SSH_COMMON_ARGS),
     ), (
-        dict(remote_user='root', password='foobar', become_password='secret'),
-        dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', diff=None, forks=100,
-             private_key_file=None,
-             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-             ssh_common_args=executor.SSH_COMMON_ARGS,
-             ssh_extra_args=None, verbosity=100),
-        dict(conn_pass='foobar', become_pass='secret'),
+        dict(username='dev', password='foobar', become_password='secret'),
+        dict(ansible_user='dev', ansible_ssh_pass='foobar',
+             ansible_become_user=None, ansible_become_pass='secret',
+             ansible_become_method=None,
+             ansible_ssh_private_key_file=None,
+             ansible_ssh_common_args=executor.SSH_COMMON_ARGS),
     ), (
-        dict(remote_user='root', jump_host='jhost.com',
+        dict(username='dev', jump={'host': 'jhost.com'},
              private_key_file='/path/my.key'),
-        dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', diff=None, forks=100,
-             private_key_file='/path/my.key',
-             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-             ssh_common_args=('-o UserKnownHostsFile=/dev/null '
-                              '-o StrictHostKeyChecking=no '
-                              '-o ConnectTimeout=60 '
-                              '-o ProxyCommand='
-                              '"ssh -i /path/my.key '
-                              '-W %h:%p '
-                              '-o UserKnownHostsFile=/dev/null '
-                              '-o StrictHostKeyChecking=no '
-                              '-o ConnectTimeout=60 '
-                              'root@jhost.com"'),
-             ssh_extra_args=None, verbosity=100),
-        dict(conn_pass=None, become_pass=None),
+        dict(ansible_user='dev', ansible_ssh_pass=None,
+             ansible_become_user=None, ansible_become_pass=None,
+             ansible_become_method=None,
+             ansible_ssh_private_key_file='/path/my.key',
+             ansible_ssh_common_args=('-o UserKnownHostsFile=/dev/null '
+                                      '-o StrictHostKeyChecking=no '
+                                      '-o ConnectTimeout=60 '
+                                      '-o ProxyCommand='
+                                      '"ssh  '
+                                      '-W %h:%p '
+                                      '-o UserKnownHostsFile=/dev/null '
+                                      '-o StrictHostKeyChecking=no '
+                                      '-o ConnectTimeout=60 '
+                                      'dev@jhost.com"')),
     ), (
-        dict(remote_user='root', jump_host='jhost.com', jump_user='juser',
-             private_key_file='/path/my.key'),
-        dict(become=None, become_method='sudo', become_user='root',
-             check=False, connection='smart', diff=None, forks=100,
-             private_key_file='/path/my.key',
-             remote_user='root', scp_extra_args=None, sftp_extra_args=None,
-             ssh_common_args=('-o UserKnownHostsFile=/dev/null '
-                              '-o StrictHostKeyChecking=no '
-                              '-o ConnectTimeout=60 '
-                              '-o ProxyCommand='
-                              '"ssh -i /path/my.key '
-                              '-W %h:%p '
-                              '-o UserKnownHostsFile=/dev/null '
-                              '-o StrictHostKeyChecking=no '
-                              '-o ConnectTimeout=60 '
-                              'juser@jhost.com"'),
-             ssh_extra_args=None, verbosity=100),
-        dict(conn_pass=None, become_pass=None),
+        dict(username='dev', jump={'host': 'jhost.com', 'username': 'juser',
+                                   'private_key_file': '/path/my.key'}),
+        dict(ansible_user='dev', ansible_ssh_pass=None,
+             ansible_become_user=None, ansible_become_pass=None,
+             ansible_become_method=None,
+             ansible_ssh_private_key_file=None,
+             ansible_ssh_common_args=('-o UserKnownHostsFile=/dev/null '
+                                      '-o StrictHostKeyChecking=no '
+                                      '-o ConnectTimeout=60 '
+                                      '-o ProxyCommand='
+                                      '"ssh -i /path/my.key '
+                                      '-W %h:%p '
+                                      '-o UserKnownHostsFile=/dev/null '
+                                      '-o StrictHostKeyChecking=no '
+                                      '-o ConnectTimeout=60 '
+                                      'juser@jhost.com"')),
     ))
     @ddt.unpack
-    def test___init__options(self, config, options_args, passwords,
-                             mock_options):
-        runner = executor.AnsibleRunner(**config)
+    def test___init__options(self, auth, default_host_vars, mock_options):
+        runner = executor.AnsibleRunner(auth=auth)
         module_path = executor.make_module_path_option()
-        mock_options.assert_called_once_with(module_path=module_path,
-                                             **options_args)
-        self.assertEqual(passwords, runner.passwords)
+        mock_options.assert_called_once_with(
+            module_path=module_path, connection='smart', forks=100)
+        self.assertEqual(default_host_vars, runner.default_host_vars)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner._run_play')
     def test_run_playbook(self, mock_run_play):
@@ -137,7 +122,7 @@ class AnsibleRunnerTestCase(test.TestCase):
         my_hosts = [
             node_collection.Host('0.0.0.0', auth={'username': 'foo',
                                                   'password': 'bar',
-                                                  'sudo': True}),
+                                                  'become_username': 'root'}),
             node_collection.Host('255.255.255.255',
                                  auth={'jump': {'host': '192.168.1.100',
                                                 'username': 'foo'}})]
@@ -152,16 +137,18 @@ class AnsibleRunnerTestCase(test.TestCase):
                 '0.0.0.0': {
                     'ansible_user': 'foo',
                     'ansible_ssh_pass': 'bar',
-                    'ansible_become': True,
-                    'ansible_become_password': None,
+                    'ansible_become_method': None,
+                    'ansible_become_user': 'root',
+                    'ansible_become_pass': None,
                     'ansible_ssh_private_key_file': None,
-                    'ansible_ssh_common_args': None,
+                    'ansible_ssh_common_args': executor.SSH_COMMON_ARGS,
                 },
                 '255.255.255.255': {
                     'ansible_user': None,
                     'ansible_ssh_pass': None,
-                    'ansible_become': None,
-                    'ansible_become_password': None,
+                    'ansible_become_method': None,
+                    'ansible_become_user': None,
+                    'ansible_become_pass': None,
                     'ansible_ssh_private_key_file': None,
                     'ansible_ssh_common_args':
                         '-o UserKnownHostsFile=/dev/null '
