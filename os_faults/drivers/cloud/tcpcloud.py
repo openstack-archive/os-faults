@@ -25,7 +25,7 @@ from os_faults import error
 LOG = logging.getLogger(__name__)
 
 
-class TCPCloudNodeCollection(node_collection.NodeCollection):
+class SaltCloudNodeCollection(node_collection.NodeCollection):
 
     def connect(self, network_name):
         raise NotImplementedError
@@ -34,9 +34,9 @@ class TCPCloudNodeCollection(node_collection.NodeCollection):
         raise NotImplementedError
 
 
-class TCPCloudManagement(cloud_management.CloudManagement,
-                         node_discover.NodeDiscover):
-    """TCPCloud driver.
+class SaltCloudManagement(cloud_management.CloudManagement,
+                          node_discover.NodeDiscover):
+    """Driver for OpenStack cloud managed by Salt.
 
     Supports discovering of slave nodes.
 
@@ -45,7 +45,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
     .. code-block:: yaml
 
         cloud_management:
-          driver: tcpcloud
+          driver: saltcloud
           args:
             address: 192.168.1.10
             auth:
@@ -80,9 +80,9 @@ class TCPCloudManagement(cloud_management.CloudManagement,
       (optional) default: 10
     """
 
-    NAME = 'tcpcloud'
-    DESCRIPTION = 'TCPCloud management driver'
-    NODE_CLS = TCPCloudNodeCollection
+    NAME = 'saltcloud'
+    DESCRIPTION = 'SaltCloud management driver'
+    NODE_CLS = SaltCloudNodeCollection
     SERVICES = {
         'keystone': {
             'driver': 'salt_service',
@@ -322,7 +322,7 @@ class TCPCloudManagement(cloud_management.CloudManagement,
     }
 
     def __init__(self, cloud_management_params):
-        super(TCPCloudManagement, self).__init__()
+        super(SaltCloudManagement, self).__init__()
         self.node_discover = self  # supports discovering
 
         self.master_node_address = cloud_management_params['address']

@@ -9,7 +9,7 @@ Cloud management
 
 .. cloud_driver_doc:: devstack
 
-.. cloud_driver_doc:: tcpcloud
+.. cloud_driver_doc:: saltcloud
 
 
 Power management

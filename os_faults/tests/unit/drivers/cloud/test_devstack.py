@@ -26,7 +26,7 @@ class DevStackNodeTestCase(test.TestCase):
     def setUp(self):
         super(DevStackNodeTestCase, self).setUp()
         self.mock_cloud_management = mock.Mock(
-            spec=devstack.DevStackManagement)
+            spec=devstack.DevStackCloudManagement)
         self.host = node_collection.Host(
             ip='10.0.0.2', mac='09:7b:74:90:63:c1', fqdn='')
 
@@ -61,7 +61,7 @@ class DevStackManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''},
                                      host='10.0.0.2')],
         ]
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackCloudManagement(self.conf)
         devstack_management.verify()
 
         ansible_runner_inst.execute.assert_has_calls([
@@ -75,7 +75,7 @@ class DevStackManagementTestCase(test.TestCase):
         ansible_runner_inst.execute.side_effect = [
             [fakes.FakeAnsibleResult(payload={'stdout': '/root'})],
         ]
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackCloudManagement(self.conf)
         result = devstack_management.execute_on_cloud(
             ['10.0.0.2'], {'command': 'pwd'})
 
@@ -92,7 +92,7 @@ class DevStackManagementTestCase(test.TestCase):
                                      host='10.0.0.2')],
         ]
 
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackCloudManagement(self.conf)
         nodes = devstack_management.get_nodes()
         ansible_runner_inst.execute.assert_called_once_with(
             [self.host], {'command': 'cat /sys/class/net/eth0/address'})
@@ -104,7 +104,7 @@ class DevStackManagementTestCase(test.TestCase):
             nodes.hosts)
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    @ddt.data(*devstack.DevStackCloudManagement.SERVICES.keys())
     def test_get_service_nodes(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -113,7 +113,7 @@ class DevStackManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackCloudManagement(self.conf)
 
         service = devstack_management.get_service(service_name)
         nodes = service.get_nodes()
@@ -131,7 +131,7 @@ class DevStackManagementTestCase(test.TestCase):
             nodes.hosts)
 
     def test_validate_services(self):
-        devstack_management = devstack.DevStackManagement(self.conf)
+        devstack_management = devstack.DevStackCloudManagement(self.conf)
         devstack_management.validate_services()
 
 
@@ -147,7 +147,7 @@ class DevStackServiceTestCase(test.TestCase):
                                                    fqdn='')
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    @ddt.data(*devstack.DevStackCloudManagement.SERVICES.keys())
     def test_restart(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -157,7 +157,7 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(
+        devstack_management = devstack.DevStackCloudManagement(
             self.conf)
 
         service = devstack_management.get_service(service_name)
@@ -172,7 +172,7 @@ class DevStackServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    @ddt.data(*devstack.DevStackCloudManagement.SERVICES.keys())
     def test_terminate(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -182,7 +182,7 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(
+        devstack_management = devstack.DevStackCloudManagement(
             self.conf)
 
         service = devstack_management.get_service(service_name)
@@ -197,7 +197,7 @@ class DevStackServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*devstack.DevStackManagement.SERVICES.keys())
+    @ddt.data(*devstack.DevStackCloudManagement.SERVICES.keys())
     def test_start(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -207,7 +207,7 @@ class DevStackServiceTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}, host='10.0.0.2')]
         ]
 
-        devstack_management = devstack.DevStackManagement(
+        devstack_management = devstack.DevStackCloudManagement(
             self.conf)
 
         service = devstack_management.get_service(service_name)
