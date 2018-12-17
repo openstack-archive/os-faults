@@ -28,7 +28,9 @@ AUTH_SCHEMA = {
         'username': {'type': 'string'},
         'password': {'type': 'string'},
         'private_key_file': {'type': 'string'},
+        'become_username': {'type': 'string'},
         'become_password': {'type': 'string'},
+        'become_method': {'type': 'string'},
         'jump': {
             'type': 'object',
             'properties': {

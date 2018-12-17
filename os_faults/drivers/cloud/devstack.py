@@ -49,9 +49,6 @@ class DevStackManagement(cloud_management.CloudManagement,
               username: ubuntu
               password: ubuntu_pass
               private_key_file: ~/.ssh/id_rsa_devstack
-            slaves:
-            - 192.168.1.11
-            - 192.168.1.12
             iface: eth1
 
     parameters:
@@ -60,14 +57,11 @@ class DevStackManagement(cloud_management.CloudManagement,
     - **username** - username for all nodes
     - **password** - password for all nodes (optional)
     - **private_key_file** - path to key file (optional)
-    - **slaves** - list of ips for additional nodes (optional)
     - **iface** - network interface name to retrieve mac address (optional)
-    - **serial** - how many hosts Ansible should manage at a single time.
-      (optional) default: 10
     """
 
     NAME = 'devstack'
-    DESCRIPTION = 'DevStack management driver using Systemd'
+    DESCRIPTION = 'DevStack driver'
     NODE_CLS = DevStackNode
     SERVICES = {
         'cinder-api': {
@@ -89,6 +83,13 @@ class DevStackManagement(cloud_management.CloudManagement,
             'args': {
                 'grep': 'cinder-volume',
                 'service_name': 'devstack@c-vol',
+            }
+        },
+        'etcd': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'etcd',
+                'service_name': 'devstack@etcd',
             }
         },
         'glance-api': {
@@ -117,6 +118,13 @@ class DevStackManagement(cloud_management.CloudManagement,
             'args': {
                 'grep': 'keystone',
                 'service_name': 'devstack@keystone',
+            }
+        },
+        'memcached': {
+            'driver': 'system_service',
+            'args': {
+                'grep': 'memcached',
+                'service_name': 'memcached',
             }
         },
         'mysql': {
@@ -205,12 +213,7 @@ class DevStackManagement(cloud_management.CloudManagement,
         'properties': {
             'address': {'type': 'string'},
             'auth': shared_schemas.AUTH_SCHEMA,
-            'slaves': {
-                'type': 'array',
-                'items': {'type': 'string'},
-            },
             'iface': {'type': 'string'},
-            'serial': {'type': 'integer', 'minimum': 1},
         },
         'required': ['address', 'auth'],
         'additionalProperties': False,
@@ -222,19 +225,11 @@ class DevStackManagement(cloud_management.CloudManagement,
 
         address = cloud_management_params['address']
         auth = cloud_management_params['auth']
-        slaves = cloud_management_params.get('slaves', [])
         self.iface = cloud_management_params.get('iface', 'eth0')
 
-        self.cloud_executor = executor.AnsibleRunner(
-            remote_user=auth['username'],
-            private_key_file=auth.get('private_key_file'),
-            password=auth.get('password'),
-            serial=(cloud_management_params.get('serial')))
+        self.cloud_executor = executor.AnsibleRunner(auth=auth)
 
         self.hosts = [node_collection.Host(ip=address)]
-        if slaves:
-            self.hosts.extend([node_collection.Host(ip=h)
-                               for h in slaves])
         self.nodes = None
 
     def verify(self):

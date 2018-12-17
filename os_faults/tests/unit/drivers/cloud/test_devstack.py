@@ -70,37 +70,6 @@ class DevStackManagementTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    def test_verify_slaves(self, mock_ansible_runner):
-        self.conf['slaves'] = ['10.0.0.3', '10.0.0.4']
-        ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [
-            [fakes.FakeAnsibleResult(payload={'stdout': 'mac1'},
-                                     host='10.0.0.2'),
-             fakes.FakeAnsibleResult(payload={'stdout': 'mac2'},
-                                     host='10.0.0.3'),
-             fakes.FakeAnsibleResult(payload={'stdout': 'mac3'},
-                                     host='10.0.0.4')],
-            [fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.2'),
-             fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.3'),
-             fakes.FakeAnsibleResult(payload={'stdout': ''},
-                                     host='10.0.0.4')],
-        ]
-        devstack_management = devstack.DevStackManagement(self.conf)
-        devstack_management.verify()
-
-        hosts = [
-            node_collection.Host('10.0.0.2'),
-            node_collection.Host('10.0.0.3'),
-            node_collection.Host('10.0.0.4')
-        ]
-
-        ansible_runner_inst.execute.assert_has_calls([
-            mock.call(hosts, {'command': 'cat /sys/class/net/eth0/address'}),
-        ])
-
-    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
     def test_execute_on_cloud(self, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -131,40 +100,6 @@ class DevStackManagementTestCase(test.TestCase):
         self.assertIsInstance(nodes, devstack.DevStackNode)
         self.assertEqual(
             [node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
-                                  fqdn='')],
-            nodes.hosts)
-
-    @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    def test_get_nodes_with_slaves(self, mock_ansible_runner):
-        self.conf['slaves'] = ['10.0.0.3', '10.0.0.4']
-        self.conf['iface'] = 'eth1'
-        ansible_runner_inst = mock_ansible_runner.return_value
-        ansible_runner_inst.execute.side_effect = [
-            [fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c1'},
-                                     host='10.0.0.2'),
-             fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c2'},
-                                     host='10.0.0.3'),
-             fakes.FakeAnsibleResult(payload={'stdout': '09:7b:74:90:63:c3'},
-                                     host='10.0.0.4')],
-        ]
-        hosts = [
-            node_collection.Host('10.0.0.2'),
-            node_collection.Host('10.0.0.3'),
-            node_collection.Host('10.0.0.4')
-        ]
-        devstack_management = devstack.DevStackManagement(self.conf)
-        nodes = devstack_management.get_nodes()
-
-        ansible_runner_inst.execute.assert_called_once_with(
-            hosts, {'command': 'cat /sys/class/net/eth1/address'})
-
-        self.assertIsInstance(nodes, devstack.DevStackNode)
-        self.assertEqual(
-            [node_collection.Host(ip='10.0.0.2', mac='09:7b:74:90:63:c1',
-                                  fqdn=''),
-             node_collection.Host(ip='10.0.0.3', mac='09:7b:74:90:63:c2',
-                                  fqdn=''),
-             node_collection.Host(ip='10.0.0.4', mac='09:7b:74:90:63:c3',
                                   fqdn='')],
             nodes.hosts)
 

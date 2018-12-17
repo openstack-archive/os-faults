@@ -13,7 +13,6 @@
 
 import logging
 import random
-import warnings
 
 from os_faults.api import error
 from os_faults.api.utils import public

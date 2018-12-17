@@ -19,6 +19,7 @@ from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import node_collection
 from os_faults.api import node_discover
+from os_faults.drivers import shared_schemas
 from os_faults import error
 
 LOG = logging.getLogger(__name__)
@@ -47,13 +48,14 @@ class TCPCloudManagement(cloud_management.CloudManagement,
           driver: tcpcloud
           args:
             address: 192.168.1.10
-            username: root
-            password: root_pass
-            private_key_file: ~/.ssh/id_rsa_tcpcloud
-            slave_username: ubuntu
-            slave_password: ubuntu_pass
-            master_sudo: False
-            slave_sudo: True
+            auth:
+              username: root
+              password: root_pass
+              private_key_file: ~/.ssh/id_rsa_tcpcloud
+            slave_auth:
+              username: ubuntu
+              password: ubuntu_pass
+              become_username: root
             slave_name_regexp: ^(?!cfg|mon)
             slave_direct_ssh: True
             get_ips_cmd: pillar.get _param:single_address
@@ -308,13 +310,8 @@ class TCPCloudManagement(cloud_management.CloudManagement,
         '$schema': 'http://json-schema.org/draft-04/schema#',
         'properties': {
             'address': {'type': 'string'},
-            'username': {'type': 'string'},
-            'password': {'type': 'string'},
-            'private_key_file': {'type': 'string'},
-            'slave_username': {'type': 'string'},
-            'slave_password': {'type': 'string'},
-            'master_sudo': {'type': 'boolean'},
-            'slave_sudo': {'type': 'boolean'},
+            'auth': shared_schemas.AUTH_SCHEMA,
+            'slave_auth': shared_schemas.AUTH_SCHEMA,
             'slave_name_regexp': {'type': 'string'},
             'slave_direct_ssh': {'type': 'boolean'},
             'get_ips_cmd': {'type': 'string'},
@@ -330,10 +327,6 @@ class TCPCloudManagement(cloud_management.CloudManagement,
 
         self.master_node_address = cloud_management_params['address']
         self._master_host = node_collection.Host(ip=self.master_node_address)
-        self.username = cloud_management_params['username']
-        self.slave_username = cloud_management_params.get(
-            'slave_username', self.username)
-        self.private_key_file = cloud_management_params.get('private_key_file')
         self.slave_direct_ssh = cloud_management_params.get(
             'slave_direct_ssh', False)
         use_jump = not self.slave_direct_ssh
@@ -341,20 +334,21 @@ class TCPCloudManagement(cloud_management.CloudManagement,
             'get_ips_cmd', 'pillar.get _param:single_address')
         self.serial = cloud_management_params.get('serial')
 
-        password = cloud_management_params.get('password')
         self.master_node_executor = executor.AnsibleRunner(
-            remote_user=self.username,
-            password=password,
-            private_key_file=self.private_key_file,
-            become=cloud_management_params.get('master_sudo'))
+            auth=cloud_management_params.get('auth'))
+
+        slave_auth = cloud_management_params.get('slave_auth') or {}
+        if use_jump:
+            slave_auth['jump'] = {}
+            jump = slave_auth['jump']
+            jump['host'] = self.master_node_address
+            if not jump.get('username'):
+                jump['username'] = (
+                    slave_auth.get('username') or
+                    cloud_management_params['auth']['username'])
 
         self.cloud_executor = executor.AnsibleRunner(
-            remote_user=self.slave_username,
-            password=cloud_management_params.get('slave_password', password),
-            private_key_file=self.private_key_file,
-            jump_host=self.master_node_address if use_jump else None,
-            jump_user=self.username if use_jump else None,
-            become=cloud_management_params.get('slave_sudo'),
+            auth=slave_auth,
             serial=self.serial)
 
         # get all nodes except salt master (that has cfg* hostname) by default

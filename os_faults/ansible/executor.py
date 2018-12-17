@@ -28,6 +28,9 @@ from os_faults.api import error
 
 LOG = logging.getLogger(__name__)
 
+STDOUT_LIMIT = 4096  # Symbols count
+ANSIBLE_FORKS = 100
+
 STATUS_OK = 'OK'
 STATUS_FAILED = 'FAILED'
 STATUS_UNREACHABLE = 'UNREACHABLE'
@@ -38,8 +41,6 @@ DEFAULT_ERROR_STATUSES = {STATUS_FAILED, STATUS_UNREACHABLE}
 SSH_COMMON_ARGS = ('-o UserKnownHostsFile=/dev/null '
                    '-o StrictHostKeyChecking=no '
                    '-o ConnectTimeout=60')
-
-STDOUT_LIMIT = 4096  # Symbols count
 
 
 class AnsibleExecutionException(Exception):
@@ -100,36 +101,18 @@ def make_module_path_option():
 
 Options = collections.namedtuple(
     'Options',
-    ['connection', 'module_path', 'forks',
-     'remote_user', 'private_key_file',
-     'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
-     'scp_extra_args', 'become', 'become_method',
-     'become_user', 'verbosity', 'check', 'diff'])
+    ['connection', 'module_path', 'forks'])
 
 
 class AnsibleRunner(object):
-    def __init__(self, remote_user='root', password=None, forks=100,
-                 jump_host=None, jump_user=None, private_key_file=None,
-                 become=None, become_password=None, serial=None):
+    def __init__(self, auth=None, forks=ANSIBLE_FORKS, serial=None):
         super(AnsibleRunner, self).__init__()
 
-        ssh_common_args = SSH_COMMON_ARGS
-        if jump_host:
-            ssh_common_args += self._build_proxy_arg(
-                jump_host=jump_host,
-                jump_user=jump_user or remote_user,
-                private_key_file=private_key_file)
-
-        self.passwords = dict(conn_pass=password, become_pass=become_password)
+        self.default_host_vars = self._build_auth_host_vars(auth)
         self.options = Options(
             connection='smart',
             module_path=make_module_path_option(),
-            forks=forks, remote_user=remote_user,
-            private_key_file=private_key_file,
-            ssh_common_args=ssh_common_args, ssh_extra_args=None,
-            sftp_extra_args=None, scp_extra_args=None,
-            become=become, become_method='sudo', become_user='root',
-            verbosity=100, check=False, diff=None)
+            forks=forks)
         self.serial = serial or 10
         self.ansible = find_ansible()
 
@@ -145,15 +128,11 @@ class AnsibleRunner(object):
         inventory = {}
 
         for host, variables in host_vars.items():
-            host_vars = {}
+            host_vars = dict((k, v)
+                             for k, v in self.default_host_vars.items() if v)
+            host_vars.update(dict((k, v) for k, v in variables.items() if v))
 
-            for var_name, value in variables.items():
-                if value is not None:
-                    host_vars[var_name] = value
             inventory[host] = host_vars
-
-            inventory[host]['ansible_ssh_common_args'] = (
-                self.options.ssh_common_args)
             inventory[host]['ansible_connection'] = self.options.connection
 
         full_inventory = {'all': {'hosts': inventory}}
@@ -214,7 +193,7 @@ class AnsibleRunner(object):
 
         return result
 
-    def execute(self, hosts, task, raise_on_statuses=DEFAULT_ERROR_STATUSES):
+    def execute(self, hosts, task, raise_on_statuses=None):
         """Executes the task on every host from the list
 
         Raises exception if any of the commands fails with one of specified
@@ -225,10 +204,11 @@ class AnsibleRunner(object):
         any of these statuses
         :return: execution result, type AnsibleExecutionRecord
         """
+        raise_on_statuses = raise_on_statuses or DEFAULT_ERROR_STATUSES
         LOG.debug('Executing task: %s on hosts: %s with serial: %s',
                   task, hosts, self.serial)
 
-        host_vars = {h.ip: self._build_host_vars(h) for h in hosts}
+        host_vars = {h.ip: self._build_auth_host_vars(h.auth) for h in hosts}
         task_play = {'hosts': [h.ip for h in hosts],
                      'tasks': [task],
                      'serial': self.serial}
@@ -265,25 +245,24 @@ class AnsibleRunner(object):
 
         return result
 
-    def _build_host_vars(self, host):
-        if not host.auth:
+    def _build_auth_host_vars(self, auth):
+        if not auth:
             return {}
 
-        ssh_common_args = None
-        if 'jump' in host.auth:
-            ssh_common_args = SSH_COMMON_ARGS
+        ssh_common_args = SSH_COMMON_ARGS
+        if 'jump' in auth:
             ssh_common_args += self._build_proxy_arg(
-                jump_host=host.auth['jump']['host'],
-                jump_user=host.auth['jump'].get(
-                    'username', self.options.remote_user),
-                private_key_file=host.auth['jump'].get(
-                    'private_key_file', self.options.private_key_file))
+                jump_host=auth['jump']['host'],
+                jump_user=auth['jump'].get(
+                    'username', auth.get('username')),
+                private_key_file=auth['jump'].get('private_key_file'))
 
         return {
-            'ansible_user': host.auth.get('username'),
-            'ansible_ssh_pass': host.auth.get('password'),
-            'ansible_become': host.auth.get('become') or host.auth.get('sudo'),
-            'ansible_become_password': host.auth.get('become_password'),
-            'ansible_ssh_private_key_file': host.auth.get('private_key_file'),
+            'ansible_user': auth.get('username'),
+            'ansible_ssh_pass': auth.get('password'),
+            'ansible_become_user': auth.get('become_username'),
+            'ansible_become_pass': auth.get('become_password'),
+            'ansible_become_method': auth.get('become_method'),
+            'ansible_ssh_private_key_file': auth.get('private_key_file'),
             'ansible_ssh_common_args': ssh_common_args,
         }
