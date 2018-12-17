@@ -7,29 +7,19 @@
       rtd_webhook_id: '47124'
     check:
       jobs:
-        - os-faults-integration-py27
-        - os-faults-integration-py35
+        - os-faults-devstack
     gate:
       jobs:
-        - os-faults-integration-py27
-        - os-faults-integration-py35
+        - os-faults-devstack
 
 - job:
-    name: os-faults-integration-py27
-    parent: openstack-tox
+    name: os-faults-devstack
+    parent: devstack-minimal
     description: |
-      Run integration tests under Python 2.7
-
-      To run tests manually use ``tox -e integration-py27`` command.
+      Run os-faults integration tests on DevStack under Python 3
+    timeout: 2400
+    run: os_faults/tests/devstack/playbooks/run_on_devstack.yml
+    required-projects:
+      - openstack/os-faults
     vars:
-      tox_envlist: integration-py27
-
-- job:
-    name: os-faults-integration-py35
-    parent: openstack-tox
-    description: |
-      Run integration tests under Python 3.5
-
-      To run tests manually use ``tox -e integration-py35`` command.
-    vars:
-      tox_envlist: integration-py35
+      tox_envlist: devstack
