@@ -20,7 +20,6 @@ from os_faults.api import error
 from os_faults.api import node_collection
 from os_faults.api import service
 from os_faults.drivers.cloud import devstack
-from os_faults.drivers.cloud import universal
 from os_faults.drivers.power import libvirt
 from os_faults.tests.unit import test
 
@@ -31,7 +30,7 @@ class OSFaultsTestCase(test.TestCase):
         super(OSFaultsTestCase, self).setUp()
         self.cloud_config = {
             'cloud_management': {
-                'driver': 'universal',
+                'driver': 'devstack',
                 'args': {
                     'address': '10.30.00.5',
                     'auth': {
@@ -108,7 +107,7 @@ class OSFaultsTestCase(test.TestCase):
 
     def test_connect_fuel_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
-        self.assertIsInstance(destructor, universal.UniversalCloudManagement)
+        self.assertIsInstance(destructor, devstack.DevStackManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
         self.assertIsInstance(destructor.power_manager.power_drivers[0],
                               libvirt.LibvirtDriver)

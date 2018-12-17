@@ -16,40 +16,17 @@ import logging
 from os_faults.ansible import executor
 from os_faults.api import cloud_management
 from os_faults.api import error
-from os_faults.api import node_collection
-from os_faults.api import node_discover
-from os_faults.drivers import shared_schemas
 
 LOG = logging.getLogger(__name__)
 
 
-class UniversalCloudManagement(cloud_management.CloudManagement,
-                               node_discover.NodeDiscover):
+class UniversalCloudManagement(cloud_management.CloudManagement):
     """Universal cloud management driver
 
     This driver is suitable for the most abstract (and thus universal) case.
-    The driver does not have any built-in services, all services need
-    to be listed explicitly in a config file.
-
-    By default the Universal driver works with only one node. To specify
-    more nodes use `node_list` node discovery driver. Authentication
-    parameters can be shared or overridden by corresponding parameters
-    from node discovery.
-
-    **Example of single node configuration:**
-
-    .. code-block:: yaml
-
-        cloud_management:
-          driver: universal
-          args:
-            address: 192.168.1.10
-            auth:
-              username: ubuntu
-              private_key_file: devstack_key
-              become_password: my_secret_password
-            iface: eth1
-            serial: 10
+    The driver does not have any built-in services nor node discovery
+    capabilities. All services need to be listed explicitly in a config file.
+    Node list is specified using `node_list` node discovery driver.
 
     **Example of multi-node configuration:**
 
@@ -68,23 +45,12 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
                 username: developer
                 private_key_file: cloud_key
                 become_password: my_secret_password
+            - ip: 192.168.5.150
+              auth:
+                username: developer
+                private_key_file: cloud_key
+                become_password: my_secret_password
 
-    parameters:
-
-    - **address** - address of the node (optional, but if not set
-      a node discovery driver is mandatory)
-    - **auth** - SSH related parameters (optional):
-        - **username** - SSH username (optional)
-        - **password** - SSH password (optional)
-        - **private_key_file** - SSH key file (optional)
-        - **become_password** - privilege escalation password (optional)
-        - **jump** - SSH proxy parameters (optional):
-            - **host** - SSH proxy host
-            - **username** - SSH proxy user
-            - **private_key_file** - SSH proxy key file (optional)
-    - **iface** - network interface name to retrieve mac address (optional)
-    - **serial** - how many hosts Ansible should manage at a single time
-      (optional) default: 10
     """
 
     NAME = 'universal'
@@ -92,38 +58,14 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
     CONFIG_SCHEMA = {
         'type': 'object',
         '$schema': 'http://json-schema.org/draft-04/schema#',
-        'properties': {
-            'address': {'type': 'string'},
-            'auth': shared_schemas.AUTH_SCHEMA,
-            'iface': {'type': 'string'},
-            'serial': {'type': 'integer', 'minimum': 1},
-        },
+        'properties': {},
         'additionalProperties': False,
     }
 
     def __init__(self, cloud_management_params):
         super(UniversalCloudManagement, self).__init__()
-        self.node_discover = self  # by default can discover itself
 
-        self.address = cloud_management_params.get('address')
-        self.iface = cloud_management_params.get('iface')
-        serial = cloud_management_params.get('serial')
-
-        auth = cloud_management_params.get('auth') or {}
-        jump = auth.get('jump') or {}
-
-        self.cloud_executor = executor.AnsibleRunner(
-            remote_user=auth.get('username'),
-            password=auth.get('password'),
-            private_key_file=auth.get('private_key_file'),
-            become=auth.get('become'),
-            become_password=auth.get('become_password'),
-            jump_host=jump.get('host'),
-            jump_user=jump.get('user'),
-            serial=serial,
-        )
-
-        self.cached_hosts = None  # cache for node discovery
+        self.cloud_executor = executor.AnsibleRunner()
 
     def verify(self):
         """Verify connection to the cloud."""
@@ -150,32 +92,3 @@ class UniversalCloudManagement(cloud_management.CloudManagement,
             return self.cloud_executor.execute(hosts, task)
         else:
             return self.cloud_executor.execute(hosts, task, [])
-
-    def discover_hosts(self):
-        # this function is called when no node-discovery driver is specified;
-        # discover the default host set in config for this driver
-
-        if not self.address:
-            raise error.OSFError('Cloud has no nodes. Specify address in '
-                                 'cloud management driver or add node '
-                                 'discovery driver')
-
-        if not self.cached_hosts:
-            LOG.info('Discovering host name and MAC address for %s',
-                     self.address)
-            host = node_collection.Host(ip=self.address)
-
-            mac = None
-            if self.iface:
-                cmd = 'cat /sys/class/net/{}/address'.format(self.iface)
-                res = self.execute_on_cloud([host], {'command': cmd})
-                mac = res[0].payload['stdout']
-
-            res = self.execute_on_cloud([host], {'command': 'hostname'})
-            hostname = res[0].payload['stdout']
-
-            # update my hosts
-            self.cached_hosts = [node_collection.Host(
-                ip=self.address, mac=mac, fqdn=hostname)]
-
-        return self.cached_hosts

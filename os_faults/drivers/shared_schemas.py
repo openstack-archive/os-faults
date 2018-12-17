@@ -42,3 +42,5 @@ AUTH_SCHEMA = {
     },
     'additionalProperties': False,
 }
+
+SERIAL = {'type': 'integer', 'minimum': 1}
