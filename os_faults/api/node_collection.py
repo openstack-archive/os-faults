@@ -99,11 +99,6 @@ class NodeCollection(utils.ReprMixin):
     def get_fqdns(self):
         return [host.fqdn for host in self.hosts]
 
-    def iterate_hosts(self):
-        warnings.warn('iterate_hosts is deprecated, use __iter__ instead',
-                      DeprecationWarning, stacklevel=2)
-        return self.__iter__()
-
     def pick(self, count=1):
         """Pick one Node out of collection
 

@@ -39,12 +39,12 @@ class OSFaultsTestCase(test.TestCase):
                     },
                 }
             },
-            'power_management': {
+            'power_managements': [{
                 'driver': 'libvirt',
                 'args': {
                     'connection_uri': "qemu+ssh://user@10.30.20.21/system"
                 }
-            }
+            }]
         }
 
     def test_connect_devstack(self):
@@ -105,7 +105,7 @@ class OSFaultsTestCase(test.TestCase):
         self.assertEqual(['01:ab:cd:01:ab:cd', '02:ab:cd:02:ab:cd'],
                          nodes.get_macs())
 
-    def test_connect_fuel_with_libvirt(self):
+    def test_connect_with_libvirt(self):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
