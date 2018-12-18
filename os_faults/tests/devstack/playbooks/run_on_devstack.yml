@@ -1,30 +1,65 @@
 ---
 
 - hosts: all
-  roles:
-    - orchestrate-devstack
-
-
-- hosts: all
+  vars:
+    - stack_home: "/opt/stack"
+    - os_faults_home: "/opt/stack/os-faults"
   tasks:
+
+    - name: Create folder for SSH keys (as stack user)
+      file:
+        path: "{{ stack_home }}/.ssh"
+        state: directory
+        mode: 0755
+      become: yes
+      become_user: stack
+
+    - name: Generate SSH key pair
+      command: "ssh-keygen -t rsa -f {{ os_faults_home }}/os_faults_key -N ''"
+      become: yes
+      become_user: stack
+
+    - name: List os-faults folder
+      command: "ls -al {{ os_faults_home }}"
+      ignore_errors: True
+      become: yes
+      become_user: stack
+
+    - name: Add os-faults key into authorized_keys for stack user
+      shell: |
+        cat {{ os_faults_home}}/os_faults_key.pub >> {{ stack_home }}/.ssh/authorized_keys
+      become: yes
+      become_user: stack
+      ignore_errors: True
+
+    - name: Check SSH connection using os-faults key
+      command: "ssh -vvv -i os_faults_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes stack@localhost"
+      args:
+        chdir: "{{ os_faults_home }}"
+      become: yes
+      become_user: stack
+      ignore_errors: True
+
     - name: Run integration tests
       command: "tox -e {{tox_envlist}}"
       args:
-        chdir: "/opt/stack/os-faults"
-
-
-- hosts: all
-  vars:
-    - test_results_path: "/opt/stack/os-faults/.tox/{{tox_envlist}}/log/pytest_results.html"
-  tasks:
-    - name: Copy job results
+        chdir: "{{ os_faults_home }}"
       become: yes
-      synchronize:
-        src: "{{ test_results_path }}"
-        dest: "{{ zuul.executor.log_root }}"
-        mode: pull
-        copy_links: true
-        verify_host: true
-        rsync_opts:
-          - "--include=/**"
-          - "--include=*/"
+      become_user: stack
+      ignore_errors: True
+
+    - name: Try to inject fault
+      shell: |
+        cd /opt/stack/os-faults
+        . .tox/devstack/bin/activate
+        os-inject-fault -c /opt/stack/os-faults/os_faults/tests/devstack/os-faults-universal.yaml -vd
+      become: yes
+      become_user: stack
+      ignore_errors: True
+
+    - name: Try to inject fault (should fail)
+      shell: |
+        cd /opt/stack/os-faults
+        . .tox/devstack/bin/activate
+        os-inject-fault -c /opt/stack/os-faults/os_faults/tests/devstack/os-faults-universal.yaml -vd
+      ignore_errors: True
