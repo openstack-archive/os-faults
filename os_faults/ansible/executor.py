@@ -163,8 +163,9 @@ class AnsibleRunner(object):
         playbook_file_name = os.path.join(temp_dir, 'playbook')
 
         with open(inventory_file_name, 'w') as fd:
-            print(yaml.safe_dump(full_inventory, default_flow_style=False),
-                  file=fd)
+            cnt = yaml.safe_dump(full_inventory, default_flow_style=False)
+            print(cnt, file=fd)
+            LOG.debug('Inventory:\n%s', cnt)
 
         play = {
             'hosts': 'all',
@@ -173,7 +174,9 @@ class AnsibleRunner(object):
         }
 
         with open(playbook_file_name, 'w') as fd:
-            print(yaml.safe_dump([play], default_flow_style=False), file=fd)
+            cnt = yaml.safe_dump([play], default_flow_style=False)
+            print(cnt, file=fd)
+            LOG.debug('Playbook:\n%s', cnt)
 
         cmd = ('%(ansible)s --module-path %(module_path)s '
                '-i %(inventory)s %(playbook)s' %

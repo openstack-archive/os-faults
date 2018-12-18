@@ -1,0 +1,23 @@
+---
+
+- hosts: all
+  vars:
+    - test_results_path: "/opt/stack/os-faults/.tox/{{tox_envlist}}/log/pytest_results.html"
+  tasks:
+    - name: Check whether test results file exists
+      stat:
+        path: "{{ test_results_path }}"
+      register: test_results
+
+    - name: Copy job results
+      become: yes
+      synchronize:
+        src: "{{ test_results_path }}"
+        dest: "{{ zuul.executor.log_root }}"
+        mode: pull
+        copy_links: true
+        verify_host: true
+        rsync_opts:
+          - "--include=/**"
+          - "--include=*/"
+      when: test_results.stat.exists
