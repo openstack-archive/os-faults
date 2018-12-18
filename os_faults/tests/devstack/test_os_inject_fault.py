@@ -28,7 +28,7 @@ class TestOSInjectFaultUniversalDriver(test.TestCase):
                                'os-faults-universal.yaml')
 
     def test_connect(self):
-        cmd = 'os-inject-fault -c %s -v' % self.CONFIG_FILE
+        cmd = 'os-inject-fault --debug -c %s -v' % self.CONFIG_FILE
 
         command_stdout, command_stderr = processutils.execute(
             *shlex.split(cmd))
@@ -37,7 +37,7 @@ class TestOSInjectFaultUniversalDriver(test.TestCase):
         self.assertTrue(success)
 
     def test_restart_etcd(self):
-        cmd = 'os-inject-fault -c %s restart etcd service' % self.CONFIG_FILE
+        cmd = 'os-inject-fault --debug -c %s restart etcd service' % self.CONFIG_FILE
 
         command_stdout, command_stderr = processutils.execute(
             *shlex.split(cmd))
