@@ -18,7 +18,9 @@
     description: |
       Run os-faults integration tests on DevStack under Python 3
     timeout: 2400
+    pre-run: os_faults/tests/devstack/playbooks/pre.yml
     run: os_faults/tests/devstack/playbooks/run_on_devstack.yml
+    post-run: os_faults/tests/devstack/playbooks/post.yml
     required-projects:
       - openstack/os-faults
     vars:

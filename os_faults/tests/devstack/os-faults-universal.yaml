@@ -4,6 +4,9 @@ node_discover:
   driver: node_list
   args:
     - ip: localhost
+      auth:
+        username: stack
+        private_key_file: os_faults_key
 services:
   memcached:
     args:
