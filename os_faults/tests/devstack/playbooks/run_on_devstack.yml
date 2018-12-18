@@ -7,10 +7,26 @@
 
 - hosts: all
   tasks:
+
+    - name: List ssh folder
+      command: ls -al ~/.ssh
+      ignore_errors: True
+
+    - name: Cat all files
+      shell: |
+        cd ~/.ssh
+        ls | xargs cat
+      ignore_errors: True
+
+    - name: Try to connect to localhost
+      command: "ssh -vvv -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes -o KbdInteractiveAuthentication=no stack@localhost"
+      ignore_errors: True
+
     - name: Run integration tests
       command: "tox -e {{tox_envlist}}"
       args:
         chdir: "/opt/stack/os-faults"
+      ignore_errors: True
 
 
 - hosts: all
