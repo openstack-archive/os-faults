@@ -7,11 +7,70 @@
 
 - hosts: all
   tasks:
+
+    - name: Home folder
+      command: realpath ~
+      ignore_errors: True
+
+    - name: List ssh folder
+      command: ls -al ~/.ssh
+      ignore_errors: True
+
+    - name: Cat all files
+      shell: |
+        cd ~/.ssh
+        ls | xargs cat
+      ignore_errors: True
+
+    - name: List ssh folder
+      command: ls -al ~/.ssh
+      ignore_errors: True
+      become: yes
+      become_user: stack
+
+    - name: Cat all files
+      shell: |
+        cd ~/.ssh
+        ls | xargs cat
+      ignore_errors: True
+      become: yes
+      become_user: stack
+
+    - name: SSH config
+      command: cat /etc/ssh/ssh_config
+      ignore_errors: True
+
+    - name: Try to connect to localhost
+      command: "ssh -vvv -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes -o KbdInteractiveAuthentication=no localhost"
+      ignore_errors: True
+
+    - name: Try to connect to localhost as stack
+      command: "ssh -vvv -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes -o KbdInteractiveAuthentication=no localhost"
+      ignore_errors: True
+      become: yes
+      become_user: stack
+
     - name: Run integration tests
       command: "tox -e {{tox_envlist}}"
       args:
         chdir: "/opt/stack/os-faults"
+      ignore_errors: True
 
+    - name: Try to inject fault
+      shell: |
+        cd /opt/stack/os-faults
+        source .tox/devstack/bin/activate
+        os-inject-fault -c /opt/stack/os-faults/os_faults/tests/devstack/os-faults-universal.yaml -vd
+      ignore_errors: True
+
+    - name: Try to inject fault as stack
+      shell: |
+        cd /opt/stack/os-faults
+        source .tox/devstack/bin/activate
+        os-inject-fault -c /opt/stack/os-faults/os_faults/tests/devstack/os-faults-universal.yaml -vd
+      ignore_errors: True
+      become: yes
+      become_user: stack
 
 - hosts: all
   vars:
