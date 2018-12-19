@@ -1,13 +1,13 @@
 - project:
-    templates:
-      - docs-on-readthedocs
-      - openstack-python-jobs
-      - openstack-python35-jobs
+#    templates:
+#      - docs-on-readthedocs
+#      - openstack-python-jobs
+#      - openstack-python35-jobs
     vars:
       rtd_webhook_id: '47124'
     check:
       jobs:
-        - os-faults-devstack
+        - os-faults-rally
     gate:
       jobs:
         - os-faults-devstack
@@ -25,3 +25,17 @@
       - openstack/os-faults
     vars:
       tox_envlist: devstack
+
+- job:
+    name: os-faults-rally
+    parent: rally-task-at-devstack
+    timeout: 10800
+    pre-run: os_faults/tests/rally/playbooks/pre.yml
+    vars:
+      devstack_services:
+        dstat: true
+        etcd3: true
+        mysql: true
+        peakmem_tracker: true
+        key: true
+      rally_task: os_faults/tests/rally/task-os-faults.yaml
