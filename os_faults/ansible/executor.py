@@ -240,7 +240,7 @@ class AnsibleRunner(object):
 
             if errors:
                 msg = 'Execution failed: %s' % ', '.join((
-                    '(host: %s, status: %s)' % (r.host, r.status))
+                    '(host: %s, status: %s, info: %s)' % (r.host, r.status, r.payload))
                     for r in errors)
                 ek = (AnsibleExecutionUnreachable if only_unreachable
                       else AnsibleExecutionException)
