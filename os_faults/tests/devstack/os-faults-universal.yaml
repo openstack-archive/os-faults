@@ -18,3 +18,8 @@ services:
       grep: etcd
       service_name: devstack@etcd
     driver: system_service
+  keystone:
+    driver: system_service
+    args:
+      grep: keystone
+      service_name: devstack@keystone
