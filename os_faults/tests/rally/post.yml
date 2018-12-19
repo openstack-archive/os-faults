@@ -1,0 +1,19 @@
+---
+
+- hosts: all
+  tasks:
+    - name: Dump rally database
+      shell: |
+        mysqldump -u root -psecretdatabase rally > /tmp/rallydb.txt
+
+    - name: Copy job results
+      become: yes
+      synchronize:
+        src: /tmp/rallydb.txt
+        dest: "{{ zuul.executor.log_root }}"
+        mode: pull
+        copy_links: true
+        verify_host: true
+        rsync_opts:
+          - "--include=/**"
+          - "--include=*/"
