@@ -6,7 +6,7 @@ node_discover:
     - ip: localhost
       auth:
         username: stack
-        private_key_file: os_faults_key
+        private_key_file: /opt/stack/os-faults/os_faults_key
 services:
   memcached:
     args:
@@ -18,3 +18,8 @@ services:
       grep: etcd
       service_name: devstack@etcd
     driver: system_service
+  keystone:
+    driver: system_service
+    args:
+      grep: keystone
+      service_name: devstack@keystone
