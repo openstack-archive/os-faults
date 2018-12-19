@@ -1,0 +1,15 @@
+---
+
+- hosts: all
+  vars:
+    - stack_home: "/opt/stack"
+    - os_faults_home: "/opt/stack/os-faults"
+  tasks:
+
+    - name: Check action
+      command: tox -e venv -- os-inject-fault -d restart memcached service on one node
+      args:
+        chdir: "{{ os_faults_home }}"
+      become: yes
+      become_user: stack
+      ignore_errors: True
