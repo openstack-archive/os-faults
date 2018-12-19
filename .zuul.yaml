@@ -8,6 +8,7 @@
     check:
       jobs:
         - os-faults-devstack
+        - os-faults-rally
     gate:
       jobs:
         - os-faults-devstack
@@ -27,3 +28,22 @@
       tox_envlist: devstack
       devstack_plugins:
         os-faults: https://git.openstack.org/openstack/os-faults
+
+- job:
+    name: os-faults-rally
+    parent: rally-task-at-devstack
+    timeout: 3600
+#    pre-run: os_faults/tests/rally/playbooks/pre.yml
+#    post-run: os_faults/tests/rally/playbooks/post.yml
+    required-projects:
+      - openstack/os-faults
+      - openstack/osprofiler
+    vars:
+      devstack_plugins:
+        os-faults: https://git.openstack.org/openstack/os-faults
+        osprofiler: https://git.openstack.org/openstack/osprofiler
+      devstack_localrc:
+        RALLY_DEBUG: true
+        OSPROFILER_COLLECTOR: redis
+        OSPROFILER_HMAC_KEYS: "hmac-key-used-in-zuul-ci"
+      rally_task: os_faults/tests/rally/task-os-faults.yaml

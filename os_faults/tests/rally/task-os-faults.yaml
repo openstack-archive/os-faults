@@ -1,0 +1,33 @@
+---
+  Authenticate.keystone:
+    -
+      runner:
+        type: "constant_for_duration"
+        duration: 60
+        concurrency: 2
+      context:
+        users:
+          tenants: 3
+          users_per_tenant: 5
+      sla:
+        failure_rate:
+          max: 50
+      hooks:
+        -
+          name: fault_injection
+          args:
+            action: restart memcached service
+          trigger:
+            name: event
+            args:
+              unit: time
+              at: [20]
+        -
+          name: fault_injection
+          args:
+            action: restart keystone service
+          trigger:
+            name: event
+            args:
+              unit: time
+              at: [40]
