@@ -116,7 +116,7 @@ class SaltCloudManagement(cloud_management.CloudManagement,
         'rabbitmq': {
             'driver': 'salt_service',
             'args': {
-                'grep': 'beam\.smp .*rabbitmq_server',
+                'grep': r'beam\.smp .*rabbitmq_server',
                 'salt_service': 'rabbitmq-server',
             }
         },

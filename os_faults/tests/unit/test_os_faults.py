@@ -47,7 +47,8 @@ class OSFaultsTestCase(test.TestCase):
             }]
         }
 
-    def test_connect_devstack(self):
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_connect_devstack(self, _):
         cloud_config = {
             'cloud_management': {
                 'driver': 'devstack',
@@ -63,7 +64,8 @@ class OSFaultsTestCase(test.TestCase):
         destructor = os_faults.connect(cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackCloudManagement)
 
-    def test_config_with_services(self):
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_config_with_services(self, _):
         self.cloud_config['services'] = {
             'app': {
                 'driver': 'process',
@@ -74,7 +76,8 @@ class OSFaultsTestCase(test.TestCase):
         app = destructor.get_service('app')
         self.assertIsNotNone(app)
 
-    def test_config_with_services_and_hosts(self):
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_config_with_services_and_hosts(self, _):
         self.cloud_config['node_discover'] = {
             'driver': 'node_list',
             'args': [
@@ -105,7 +108,8 @@ class OSFaultsTestCase(test.TestCase):
         self.assertEqual(['01:ab:cd:01:ab:cd', '02:ab:cd:02:ab:cd'],
                          nodes.get_macs())
 
-    def test_connect_with_libvirt(self):
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_connect_with_libvirt(self, _):
         destructor = os_faults.connect(self.cloud_config)
         self.assertIsInstance(destructor, devstack.DevStackCloudManagement)
         self.assertEqual(1, len(destructor.power_manager.power_drivers))
