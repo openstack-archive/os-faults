@@ -122,6 +122,9 @@ class NodeCollectionTestCase(test.TestCase):
     def test_iter(self):
         self.assertEqual(self.hosts, list(self.node_collection))
 
+    def test_getitem(self):
+        self.assertEqual(self.hosts[0], self.node_collection[0])
+
     def test_get_ips(self):
         self.assertEqual(['10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5'],
                          self.node_collection.get_ips())

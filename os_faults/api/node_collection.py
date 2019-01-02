@@ -85,6 +85,9 @@ class NodeCollection(utils.ReprMixin):
         for host in self.hosts:
             yield host
 
+    def __getitem__(self, item):
+        return self.hosts[item]
+
     def _make_instance(self, hosts):
         return self.__class__(cloud_management=self.cloud_management,
                               hosts=hosts)

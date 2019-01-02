@@ -22,7 +22,7 @@ from os_faults.drivers import shared_schemas
 LOG = logging.getLogger(__name__)
 
 
-class DevStackNode(node_collection.NodeCollection):
+class DevStackNodeCollection(node_collection.NodeCollection):
     def connect(self, network_name):
         raise NotImplementedError
 
@@ -62,7 +62,7 @@ class DevStackCloudManagement(cloud_management.CloudManagement,
 
     NAME = 'devstack'
     DESCRIPTION = 'DevStack driver'
-    NODE_CLS = DevStackNode
+    NODE_CLS = DevStackNodeCollection
     SERVICES = {
         'cinder-api': {
             'driver': 'system_service',

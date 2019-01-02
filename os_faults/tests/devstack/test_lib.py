@@ -16,11 +16,10 @@ from oslotest import base
 
 import os_faults
 
-
 LOG = logging.getLogger(__name__)
 
 
-class TestOSFaultsLibrary(base.BaseTestCase):
+class TestOSFaultsUniversalDriverLibrary(base.BaseTestCase):
     def test_connection_stack_user(self):
         cloud_config = {
             'cloud_management': {
@@ -46,3 +45,44 @@ class TestOSFaultsLibrary(base.BaseTestCase):
 
         LOG.info('# Verify connection to the cloud')
         cloud_management.verify()
+
+
+class TestOSFaultsDevstackDriverLibrary(base.BaseTestCase):
+    def test_connection_stack_user(self):
+        address = 'localhost'
+        cloud_config = {
+            'cloud_management': {
+                'driver': 'devstack',
+                'args':
+                    {
+                        'address': address,
+                        'iface': 'lo',
+                        'auth': {
+                            'username': 'stack',
+                            'private_key_file': 'os_faults_key'
+                        }
+                    }
+            }
+        }
+
+        LOG.info('# Create connection to the cloud')
+        cloud_management = os_faults.connect(cloud_config)
+        self.assertIsNotNone(cloud_management)
+
+        LOG.info('# Verify connection to the cloud')
+        cloud_management.verify()
+
+        nodes = cloud_management.get_nodes()
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(address, nodes[0].ip)
+
+        service = cloud_management.get_service('etcd')
+        self.assertIsNotNone(service)
+        nodes = service.get_nodes()
+        self.assertEqual(1, len(nodes))
+        self.assertEqual(address, nodes[0].ip)
+
+        selection = nodes.pick()
+        self.assertIsNotNone(selection)
+        self.assertEqual(1, len(selection))
+        self.assertEqual(address, selection[0].ip)

@@ -46,3 +46,8 @@ class TestOSInjectFaultUniversalDriver(test.TestCase):
         print('stderr', command_stderr)
         success = re.search('successfully', command_stderr)
         self.assertTrue(success)
+
+
+class TestOSInjectFaultDevstackDriver(TestOSInjectFaultUniversalDriver):
+    CONFIG_FILE = os.path.join(os.path.dirname(__file__),
+                               'os-faults-devstack.yaml')
