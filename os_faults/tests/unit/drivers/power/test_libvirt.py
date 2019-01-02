@@ -34,8 +34,10 @@ class LibvirtDriverTestCase(test.TestCase):
         self.host = node_collection.Host(
             ip='10.0.0.2', mac='00:00:00:00:00:00', fqdn='node1.com')
 
-    @mock.patch('libvirt.open')
-    def test__get_connection_no_cached_connection(self, mock_libvirt_open):
+    @mock.patch('oslo_utils.importutils.try_import')
+    def test__get_connection_no_cached_connection(self, mock_import):
+        mock_libvirt = mock_import.return_value = mock.Mock()
+        mock_libvirt_open = mock_libvirt.open = mock.Mock()
         self.driver._get_connection()
         self.assertNotEqual(self.driver._cached_conn, None)
 

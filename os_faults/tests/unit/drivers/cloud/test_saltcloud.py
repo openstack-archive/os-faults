@@ -16,7 +16,7 @@ import mock
 
 from os_faults.ansible import executor
 from os_faults.api import node_collection
-from os_faults.drivers.cloud import tcpcloud
+from os_faults.drivers.cloud import saltcloud
 from os_faults.tests.unit import fakes
 from os_faults.tests.unit import test
 
@@ -98,7 +98,7 @@ class SaltCloudManagementTestCase(test.TestCase):
     def test_init(self, config, expected_runner_calls, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
 
-        tcp_managment = tcpcloud.SaltCloudManagement(config)
+        tcp_managment = saltcloud.SaltCloudManagement(config)
 
         mock_ansible_runner.assert_has_calls(expected_runner_calls)
         self.assertIs(tcp_managment.master_node_executor, ansible_runner_inst)
@@ -114,7 +114,7 @@ class SaltCloudManagementTestCase(test.TestCase):
              fakes.FakeAnsibleResult(payload={'stdout': ''})],
         ]
         self.tcp_conf['slave_name_regexp'] = '(ctl*|cmp*)'
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         tcp_managment.verify()
 
         get_nodes_cmd = "salt -E '(ctl*|cmp*)' network.interfaces --out=yaml"
@@ -126,8 +126,9 @@ class SaltCloudManagementTestCase(test.TestCase):
             mock.call(self.hosts, {'command': 'hostname'}),
         ])
 
-    def test_validate_services(self):
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_validate_services(self, _):
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         tcp_managment.validate_services()
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
@@ -137,7 +138,7 @@ class SaltCloudManagementTestCase(test.TestCase):
             [self.fake_ansible_result],
             [self.fake_node_ip_result],
         ]
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes()
 
         ansible_runner_inst.execute.assert_has_calls([
@@ -158,7 +159,7 @@ class SaltCloudManagementTestCase(test.TestCase):
         ]
         node_discover_driver = mock.Mock()
         node_discover_driver.discover_hosts.return_value = hosts
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         tcp_managment.set_node_discover(node_discover_driver)
         nodes = tcp_managment.get_nodes()
 
@@ -174,7 +175,7 @@ class SaltCloudManagementTestCase(test.TestCase):
             [fakes.FakeAnsibleResult(payload={'stdout': ''}),
              fakes.FakeAnsibleResult(payload={'stdout': ''})]
         ]
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes()
         result = tcp_managment.execute_on_cloud(
             nodes.hosts, {'command': 'mycmd'}, raise_on_error=False)
@@ -196,13 +197,13 @@ class SaltCloudManagementTestCase(test.TestCase):
             [self.fake_ansible_result],
             [self.fake_node_ip_result],
         ]
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
         nodes = tcp_managment.get_nodes(fqdns=['cmp02.mk20.local'])
 
         self.assertEqual(nodes.hosts, [self.hosts[1]])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*tcpcloud.SaltCloudManagement.SERVICES.keys())
+    @ddt.data(*saltcloud.SaltCloudManagement.SERVICES.keys())
     def test_get_service_nodes(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -215,7 +216,7 @@ class SaltCloudManagementTestCase(test.TestCase):
                                      host='10.0.0.3')]
         ]
 
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
 
         service = tcp_managment.get_service(service_name)
         nodes = service.get_nodes()
@@ -274,7 +275,7 @@ class SaltCloudServiceTestCase(test.TestCase):
         ]
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*tcpcloud.SaltCloudManagement.SERVICES.keys())
+    @ddt.data(*saltcloud.SaltCloudManagement.SERVICES.keys())
     def test_restart(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -291,7 +292,7 @@ class SaltCloudServiceTestCase(test.TestCase):
                                      host='10.0.0.3')]
         ]
 
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
 
         service = tcp_managment.get_service(service_name)
         service.restart()
@@ -307,7 +308,7 @@ class SaltCloudServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*tcpcloud.SaltCloudManagement.SERVICES.keys())
+    @ddt.data(*saltcloud.SaltCloudManagement.SERVICES.keys())
     def test_terminate(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -324,7 +325,7 @@ class SaltCloudServiceTestCase(test.TestCase):
                                      host='10.0.0.3')]
         ]
 
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
 
         service = tcp_managment.get_service(service_name)
         service.terminate()
@@ -340,7 +341,7 @@ class SaltCloudServiceTestCase(test.TestCase):
         ])
 
     @mock.patch('os_faults.ansible.executor.AnsibleRunner', autospec=True)
-    @ddt.data(*tcpcloud.SaltCloudManagement.SERVICES.keys())
+    @ddt.data(*saltcloud.SaltCloudManagement.SERVICES.keys())
     def test_start(self, service_name, mock_ansible_runner):
         ansible_runner_inst = mock_ansible_runner.return_value
         ansible_runner_inst.execute.side_effect = [
@@ -357,7 +358,7 @@ class SaltCloudServiceTestCase(test.TestCase):
                                      host='10.0.0.3')]
         ]
 
-        tcp_managment = tcpcloud.SaltCloudManagement(self.tcp_conf)
+        tcp_managment = saltcloud.SaltCloudManagement(self.tcp_conf)
 
         service = tcp_managment.get_service(service_name)
         service.start()

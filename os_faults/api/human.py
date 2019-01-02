@@ -60,23 +60,23 @@ NODE_ACTIONS = list_actions(node_collection_pkg.NodeCollection)
 NODE_ACTIONS_PATTERN = '|'.join(NODE_ACTIONS)
 
 PATTERNS = [
-    re.compile('(?P<action>%s)'
-               '\s+(?P<service>\S+)\s+service'
-               '(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
-               '(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
+    re.compile(r'(?P<action>%s)'
+               r'\s+(?P<service>\S+)\s+service'
+               r'(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
+               r'(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
                SERVICE_ACTIONS_PATTERN),
-    re.compile('(?P<action>%s)'
-               '\s+(?P<container>\S+)\s+container'
-               '(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
-               '(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
+    re.compile(r'(?P<action>%s)'
+               r'\s+(?P<container>\S+)\s+container'
+               r'(\s+on(\s+(?P<node>\S+))?\s+nodes?)?'
+               r'(\s+for\s+(?P<duration>\d+)\s+seconds)?' %
                CONTAINER_ACTIONS_PATTERN),
-    re.compile('(?P<action>%s)'
-               '(\s+(?P<network>\w+)\s+network\s+on)?'
-               '(\s+(?P<target>\w+)'
-               '(\s+for\s+(?P<duration>\d+)\s+seconds)(\s+on)?)?'
-               '(\s+(?P<node>%s|\S+))?'
-               '\s+nodes?'
-               '(\s+with\s+(?P<service>\S+)\s+service)?' %
+    re.compile(r'(?P<action>%s)'
+               r'(\s+(?P<network>\w+)\s+network\s+on)?'
+               r'(\s+(?P<target>\w+)'
+               r'(\s+for\s+(?P<duration>\d+)\s+seconds)(\s+on)?)?'
+               r'(\s+(?P<node>%s|\S+))?'
+               r'\s+nodes?'
+               r'(\s+with\s+(?P<service>\S+)\s+service)?' %
                (NODE_ACTIONS_PATTERN, NODE_ALIASES_PATTERN)),
 ]
 

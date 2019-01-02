@@ -130,7 +130,8 @@ class DevStackManagementTestCase(test.TestCase):
                                   fqdn='')],
             nodes.hosts)
 
-    def test_validate_services(self):
+    @mock.patch('os_faults.ansible.executor.AnsibleRunner')
+    def test_validate_services(self, _):
         devstack_management = devstack.DevStackCloudManagement(self.conf)
         devstack_management.validate_services()
 

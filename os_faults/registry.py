@@ -27,8 +27,9 @@ DRIVERS = {}
 def _import_modules_from_package():
     folder = os.path.dirname(os_faults.__file__)
     library_root = os.path.normpath(os.path.join(folder, os.pardir))
+    drivers_folder = os.path.join(folder, 'drivers')
 
-    for root, dirs, files in os.walk(folder):
+    for root, dirs, files in os.walk(drivers_folder):
         for filename in files:
             if (filename.startswith('__') or
                     filename.startswith('test') or
