@@ -20,5 +20,5 @@ def public(func):
 
 
 def is_public(obj):
-    return ((inspect.isfunction(obj) or inspect.ismethod(obj))
-            and hasattr(obj, '__public__'))
+    return ((inspect.isfunction(obj) or inspect.ismethod(obj)) and
+            hasattr(obj, '__public__'))

@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from ansible.module_utils.basic import *  # noqa
+from ansible.module_utils.basic import AnsibleModule  # noqa
 
 
 def main():
