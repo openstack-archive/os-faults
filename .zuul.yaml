@@ -15,6 +15,7 @@
 - job:
     name: os-faults-devstack
     parent: devstack-minimal
+    nodeset: ubuntu-bionic
     description: |
       Run os-faults integration tests on DevStack under Python 3
     timeout: 2400
