@@ -1,0 +1,14 @@
+# This file contains runtime (non-python) dependencies
+# More info at: http://docs.openstack.org/infra/bindep/readme.html
+
+# install Ansible as system package
+ansible
+
+# cffi (required by oslo.privsep) and PyNaCL (required by paramiko)
+libffi-dev [platform:dpkg]
+libffi-devel [platform:rpm]
+
+# requirements from paramiko which requires cryptography which requires ssl
+libssl-dev [platform:dpkg]
+openssl-devel [platform:rpm !platform:suse]
+libopenssl-devel [platform:suse !platform:rpm]
