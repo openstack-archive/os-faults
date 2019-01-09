@@ -5,35 +5,9 @@
     - stack_home: "/opt/stack"
     - os_faults_home: "/opt/stack/os-faults"
   tasks:
-
-    - name: Create folder for SSH keys (as stack user)
-      file:
-        path: "{{ stack_home }}/.ssh"
-        state: directory
-        mode: 0755
-      become: yes
-      become_user: stack
-
-    - name: Generate SSH key pair
-      command: "ssh-keygen -t rsa -f {{ os_faults_home }}/os_faults_key -N ''"
-      become: yes
-      become_user: stack
-
-    - name: List os-faults folder
-      command: "ls -al {{ os_faults_home }}"
-      become: yes
-      become_user: stack
-
-    - name: Add os-faults key into authorized_keys for stack user
+    - name: Check connectivity using command-line tool
       shell: |
-        cat {{ os_faults_home}}/os_faults_key.pub >> {{ stack_home }}/.ssh/authorized_keys
-      become: yes
-      become_user: stack
-
-    - name: Check SSH connection using os-faults key
-      command: "ssh -vvv -i os_faults_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes stack@localhost"
-      args:
-        chdir: "{{ os_faults_home }}"
+        os-inject-fault -vd
       become: yes
       become_user: stack
 
@@ -41,13 +15,5 @@
       command: "tox -e {{tox_envlist}}"
       args:
         chdir: "{{ os_faults_home }}"
-      become: yes
-      become_user: stack
-
-    - name: Check connectivity using command-line tool
-      shell: |
-        cd /opt/stack/os-faults
-        . .tox/devstack/bin/activate
-        os-inject-fault -c /opt/stack/os-faults/os_faults/tests/devstack/os-faults-universal.yaml -vd
       become: yes
       become_user: stack
