@@ -25,3 +25,5 @@
       - openstack/os-faults
     vars:
       tox_envlist: devstack
+      devstack_plugins:
+        os-faults: https://git.openstack.org/openstack/os-faults

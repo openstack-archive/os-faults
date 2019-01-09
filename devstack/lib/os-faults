@@ -1,0 +1,20 @@
+#!/bin/bash
+
+CONF_DIR=/etc/openstack
+SSH_DIR=~/.ssh
+PROJECT_DIR=${DEST}/os-faults
+
+function install_os_faults() {
+    setup_develop ${PROJECT_DIR}
+    install_package ansible
+}
+
+function configure_os_faults() {
+    mkdir -p ${SSH_DIR}
+    ssh-keygen -t rsa -f ${SSH_DIR}/os-faults-key -N ''
+    cat ${SSH_DIR}/os-faults-key.pub >> ${SSH_DIR}/authorized_keys
+    cp ${SSH_DIR}/os-faults-key* ${PROJECT_DIR}
+    ssh -vvv -i ${SSH_DIR}/os-faults-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes stack@localhost hostname
+    cp ${PROJECT_DIR}/devstack/lib/os-faults.yaml ${CONF_DIR}
+    os-faults --debug verify
+}

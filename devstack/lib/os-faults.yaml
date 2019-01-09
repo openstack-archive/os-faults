@@ -1,0 +1,8 @@
+cloud_management:
+  driver: devstack
+  args:
+    address: localhost
+    auth:
+      username: stack
+      private_key_file: /opt/stack/.ssh/os-faults-key
+    iface: lo
