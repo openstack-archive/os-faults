@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# lib/os-faults
+# Functions to control the configuration and operation of the **OS-Faults**
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+CONF_DIR=/etc/openstack
+
+function configure_os_faults() {
+    mkdir -p ~/.ssh
+    ssh-keygen -t rsa -f ${CONF_DIR}/os-faults-key -N ''
+    cat ${CONF_DIR}/os-faults-key.pub >> ~/.ssh/authorized_keys
+    cp ${CONF_DIR}/os-faults-key* ${DEST}/os-faults
+    ssh -vvv -i ${CONF_DIR}/os-faults-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes stack@localhost hostname
+    cp ${DEST}/os-faults/devstack/lib/os-faults.yaml ${CONF_DIR}
+}
+
+
+# Restore xtrace
+$XTRACE
