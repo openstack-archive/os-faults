@@ -32,7 +32,7 @@ class TestOSFaultsUniversalDriverLibrary(base.BaseTestCase):
                         'ip': 'localhost',
                         'auth': {
                             'username': 'stack',
-                            'private_key_file': 'os_faults_key'
+                            'private_key_file': '/opt/stack/.ssh/os-faults-key'
                         }
                     }
                 ]
@@ -59,7 +59,7 @@ class TestOSFaultsDevstackDriverLibrary(base.BaseTestCase):
                         'iface': 'lo',
                         'auth': {
                             'username': 'stack',
-                            'private_key_file': 'os_faults_key'
+                            'private_key_file': '/opt/stack/.ssh/os-faults-key'
                         }
                     }
             }

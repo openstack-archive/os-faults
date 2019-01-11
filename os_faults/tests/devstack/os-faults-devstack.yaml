@@ -4,5 +4,5 @@ cloud_management:
     address: localhost
     auth:
       username: stack
-      private_key_file: os_faults_key
+      private_key_file: /opt/stack/.ssh/os-faults-key
     iface: lo
