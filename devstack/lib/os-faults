@@ -11,7 +11,7 @@ function install_os_faults() {
 
 function configure_os_faults() {
     mkdir -p ${SSH_DIR}
-    ssh-keygen -t rsa -f ${SSH_DIR}/os-faults-key -N ''
+    yes y | ssh-keygen -t rsa -f ${SSH_DIR}/os-faults-key -N ''
     cat ${SSH_DIR}/os-faults-key.pub >> ${SSH_DIR}/authorized_keys
     cp ${SSH_DIR}/os-faults-key* ${PROJECT_DIR}
     ssh -vvv -i ${SSH_DIR}/os-faults-key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=60 -o IdentitiesOnly=yes stack@localhost hostname
