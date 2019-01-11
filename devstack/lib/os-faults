@@ -10,7 +10,9 @@ function install_os_faults() {
 }
 
 function configure_os_faults() {
+    # if no key existed, create it; otherwise overwrite
     mkdir -p ${SSH_DIR}
+    rm -f ${SSH_DIR}/os-faults-key*
     ssh-keygen -t rsa -f ${SSH_DIR}/os-faults-key -N ''
     cat ${SSH_DIR}/os-faults-key.pub >> ${SSH_DIR}/authorized_keys
     cp ${SSH_DIR}/os-faults-key* ${PROJECT_DIR}
