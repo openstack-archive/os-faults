@@ -3,6 +3,7 @@
       - docs-on-readthedocs
       - openstack-python-jobs
       - openstack-python36-jobs
+      - openstack-python37-jobs
     vars:
       rtd_webhook_id: '47124'
     check:
