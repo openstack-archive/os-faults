@@ -3,10 +3,10 @@
 # process, which may cause wedges in the gate later.
 
 hacking>=1.1.0,<1.2.0 # Apache-2.0
-pytest<=3.0.2,>=2.7 # MIT
-pytest-cov<=2.3.1,>=2.2.1 # MIT
-pytest-html<=1.10.0,>=1.10.0 # Mozilla Public License 2.0 (MPL 2.0)
-pytest-logging==2015.11.4 # Apache-2.0
+pytest # MIT
+pytest-cov # MIT
+pytest-html # Mozilla Public License 2.0 (MPL 2.0)
+pytest-logging # Apache-2.0
 
 coverage>=4.0 # Apache-2.0
 ddt>=1.0.1 # MIT
